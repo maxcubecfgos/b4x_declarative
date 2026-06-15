@@ -4,17 +4,18 @@ ModulesStructureVersion=1
 Type=Class
 Version=13.5
 @EndOfDesignText@
-' Módulo de Clase: UICard
 Sub Class_Globals
 	Private mChild As Object
 	Private mBaseView As B4XView
 	Private mBgColor As Int
 	Private mRadius As Int
+	Private mParent As B4XView
+	Private mLeft, mTop, mWidth, mHeight As Int
 End Sub
 
 Public Sub Initialize As UICard
 	mBgColor = Colors.White
-	mRadius = 12dip ' Ajustado a 12dip para que haga juego con el nuevo diseño
+	mRadius = 12dip
 	mChild = Null
 	Return Me
 End Sub
@@ -34,34 +35,38 @@ Public Sub Child(c As Object) As UICard
 	Return Me
 End Sub
 
-Public Sub Render(Parent As B4XView, Left As Int, Top As Int, Width As Int, Height As Int)
+Public Sub SetParent(Parent As B4XView)
+	mParent = Parent
+End Sub
+
+Public Sub SetPosition(Left As Int, Top As Int)
+	mLeft = Left
+	mTop = Top
+End Sub
+
+Public Sub SetSize(Width As Int, Height As Int)
+	mWidth = Width
+	mHeight = Height
+End Sub
+
+Public Sub Render
 	If mBaseView.IsInitialized = False Then
 		Dim pnl As Panel
 		pnl.Initialize("")
 		mBaseView = pnl
-		Parent.AddView(mBaseView, Left, Top, Width, Height)
+		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
+	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     
-	mBaseView.SetLayoutAnimated(0, Left, Top, Width, Height)
-    
-	' Solución al error de background en B4XView aplicando casteo nativo
 	Dim NativePanel As Panel = mBaseView
 	Dim cd As ColorDrawable
-	cd.Initialize2(mBgColor, mRadius, 1dip, 0xFFE0E0E0) ' Borde gris sutil
+	cd.Initialize2(mBgColor, mRadius, 1dip, 0xFFE0E0E0)
 	NativePanel.Background = cd
     
-	' Renderizamos el hijo único
-	If mChild <> Null And SubExists(mChild, "RenderBridge") Then
-		Dim dimensions(5) As Object
-		dimensions(0) = mBaseView
-		dimensions(1) = 0
-		dimensions(2) = 0
-		dimensions(3) = Width
-		dimensions(4) = Height
-		CallSub3(mChild, "RenderBridge", dimensions, Null)
+	If mChild <> Null Then
+		CallSub2(mChild, "SetParent", mBaseView)
+		CallSub3(mChild, "SetPosition", 0, 0)
+		CallSub3(mChild, "SetSize", mWidth, mHeight)
+		CallSub(mChild, "Render")
 	End If
-End Sub
-
-Public Sub RenderBridge(Args() As Object)
-	Render(Args(0), Args(1), Args(2), Args(3), Args(4))
 End Sub

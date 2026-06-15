@@ -7,6 +7,8 @@ Version=13.5
 Sub Class_Globals
 	Private mChildren As List
 	Private mBaseView As B4XView
+	Private mParent As B4XView
+	Private mLeft, mTop, mWidth, mHeight As Int
 End Sub
 
 Public Sub Initialize As UIColumn
@@ -19,25 +21,37 @@ Public Sub AddChild(child As Object) As UIColumn
 	Return Me
 End Sub
 
-Public Sub Render(Parent As B4XView, Left As Int, Top As Int, Width As Int, Height As Int)
+Public Sub SetParent(Parent As B4XView)
+	mParent = Parent
+End Sub
+
+Public Sub SetPosition(Left As Int, Top As Int)
+	mLeft = Left
+	mTop = Top
+End Sub
+
+Public Sub SetSize(Width As Int, Height As Int)
+	mWidth = Width
+	mHeight = Height
+End Sub
+
+Public Sub Render
+	' 1. Inicializar contenedor
 	If mBaseView.IsInitialized = False Then
 		Dim pnl As Panel
 		pnl.Initialize("")
 		mBaseView = pnl
-		Parent.AddView(mBaseView, Left, Top, Width, Height)
+		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
-	mBaseView.SetLayoutAnimated(0, Left, Top, Width, Height)
+	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     
-	Dim currentTop As Int = 0
-	Dim childHeight As Int = Height / mChildren.Size ' Distribución proporcional
-    
+	' 2. Posicionar hijos
+	Dim yOffset As Int = 0
 	For Each child As Object In mChildren
-		Dim dims(5) As Object = Array(mBaseView, 0, currentTop, Width, childHeight)
-		CallSub3(child, "RenderBridge", dims, Null)
-		currentTop = currentTop + childHeight
+		CallSub2(child, "SetParent", mBaseView)
+		CallSub3(child, "SetPosition", 0, yOffset)
+		CallSub3(child, "SetSize", mWidth, 100dip) ' Damos una altura fija para probar
+		CallSub(child, "Render")
+		yOffset = yOffset + 110dip ' Sumamos altura + margen
 	Next
-End Sub
-
-Public Sub RenderBridge(Args() As Object)
-	Render(Args(0), Args(1), Args(2), Args(3), Args(4))
 End Sub

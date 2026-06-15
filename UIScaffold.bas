@@ -4,16 +4,22 @@ ModulesStructureVersion=1
 Type=Class
 Version=13.5
 @EndOfDesignText@
-' Class Module: UIScaffold
 Sub Class_Globals
 	Private mAppBar As Object
 	Private mBody As Object
 	Private mFabLeft As Object
 	Private mFabRight As Object
 	Private mBaseView As B4XView
+	Private mParent As B4XView
+	Private mLeft, mTop, mWidth, mHeight As Int
 End Sub
 
 Public Sub Initialize As UIScaffold
+	' ESTO EVITA EL CLASSCAST EXCEPTION DE OBJETOS FANTASMAS
+	mAppBar = Null
+	mBody = Null
+	mFabLeft = Null
+	mFabRight = Null
 	Return Me
 End Sub
 
@@ -37,40 +43,74 @@ Public Sub FloatingActionButtonRight(fab As Object) As UIScaffold
 	Return Me
 End Sub
 
-Public Sub Render(Parent As B4XView, Left As Int, Top As Int, Width As Int, Height As Int)
-	' Solo inicializamos una vez.
+Public Sub SetParent(Parent As B4XView)
+	mParent = Parent
+End Sub
+
+Public Sub SetPosition(Left As Int, Top As Int)
+	mLeft = Left
+	mTop = Top
+End Sub
+
+Public Sub SetSize(Width As Int, Height As Int)
+	mWidth = Width
+	mHeight = Height
+End Sub
+
+Public Sub Render
 	If mBaseView.IsInitialized = False Then
 		Dim pnl As Panel
 		pnl.Initialize("")
 		mBaseView = pnl
-		mBaseView.Color = Colors.Transparent
-		Parent.AddView(mBaseView, Left, Top, Width, Height)
+		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
+	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     
-	mBaseView.SetLayoutAnimated(0, Left, Top, Width, Height)
-    
-	' En lugar de RemoveAllViews, llamamos al render de los hijos.
-	' Los hijos (AppBar, Body, FABs) ya saben cómo actualizarse a sí mismos.
+	' Definimos variables de estado para el cálculo dinámico
+	Dim topOffset As Int = 0
+	Dim bottomOffset As Int = 0
 	Dim appBarHeight As Int = 56dip
+	Dim fabSpace As Int = 80dip ' Espacio total reservado para la zona de FABs
     
+	' 1. Renderizar AppBar
 	If mAppBar <> Null Then
-		CallSub3(mAppBar, "RenderBridge", Array(mBaseView, 0, 0, Width, appBarHeight), Null)
+		CallSub2(mAppBar, "SetParent", mBaseView)
+		CallSub3(mAppBar, "SetPosition", 0, 0)
+		CallSub3(mAppBar, "SetSize", mWidth, appBarHeight)
+		CallSub(mAppBar, "Render")
+		topOffset = appBarHeight ' El body empezará debajo de la AppBar
 	End If
     
+	' 2. Renderizar FABs (Calculamos si hay alguno para reservar espacio abajo)
+	Dim hasFab As Boolean = (mFabLeft <> Null Or mFabRight <> Null)
+	If hasFab Then
+		bottomOffset = fabSpace
+	End If
+    
+	' 3. Renderizar Body (Cálculo dinámico del espacio restante)
 	If mBody <> Null Then
-		CallSub3(mBody, "RenderBridge", Array(mBaseView, 0, appBarHeight, Width, Height - appBarHeight - 80dip), Null)
+		Dim bodyHeight As Int = mHeight - topOffset - bottomOffset
+		If bodyHeight < 0 Then bodyHeight = 0
+        
+		CallSub2(mBody, "SetParent", mBaseView)
+		CallSub3(mBody, "SetPosition", 0, topOffset)
+		CallSub3(mBody, "SetSize", mWidth, bodyHeight)
+		CallSub(mBody, "Render")
 	End If
     
+	' 4. Renderizar botones FAB
 	Dim fabSize As Int = 56dip
 	If mFabRight <> Null Then
-		CallSub3(mFabRight, "RenderBridge", Array(mBaseView, Width - fabSize - 16dip, Height - fabSize - 16dip, fabSize, fabSize), Null)
+		CallSub2(mFabRight, "SetParent", mBaseView)
+		CallSub3(mFabRight, "SetPosition", mWidth - fabSize - 16dip, mHeight - fabSize - 16dip)
+		CallSub3(mFabRight, "SetSize", fabSize, fabSize)
+		CallSub(mFabRight, "Render")
 	End If
     
 	If mFabLeft <> Null Then
-		CallSub3(mFabLeft, "RenderBridge", Array(mBaseView, 16dip, Height - fabSize - 16dip, fabSize, fabSize), Null)
+		CallSub2(mFabLeft, "SetParent", mBaseView)
+		CallSub3(mFabLeft, "SetPosition", 16dip, mHeight - fabSize - 16dip)
+		CallSub3(mFabLeft, "SetSize", fabSize, fabSize)
+		CallSub(mFabLeft, "Render")
 	End If
-End Sub
-
-Public Sub RenderBridge(Args() As Object)
-	Render(Args(0), Args(1), Args(2), Args(3), Args(4))
 End Sub

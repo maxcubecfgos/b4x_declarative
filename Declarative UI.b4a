@@ -6,10 +6,11 @@ ManifestCode='This code will be applied to the manifest file during compilation.
 Module1=Starter
 Module10=UIFloatingActionButton
 Module11=UILabel
-Module12=UIPadding
-Module13=UIRow
-Module14=UIScaffold
-Module15=UISpace
+Module12=UINavigator
+Module13=UIPadding
+Module14=UIRow
+Module15=UIScaffold
+Module16=UISpace
 Module2=UIAppBar
 Module3=UIBox
 Module4=UIButton
@@ -20,7 +21,7 @@ Module8=UIDivider
 Module9=UIExpanded
 NumberOfFiles=0
 NumberOfLibraries=2
-NumberOfModules=15
+NumberOfModules=16
 Version=13.5
 @EndOfDesignText@
 #Region  Project Attributes 
@@ -38,99 +39,112 @@ Version=13.5
 
 Sub Process_Globals
 	Private Counter As Int = 0
+	Private CurrentRoute As String = "Dashboard"
 End Sub
 
+' --- TODAS las vistas y componentes van aquí ---
 Sub Globals
 	Private Root As B4XView
     
-	' Structural Widgets
+	' Pantallas
+	Private DashboardScreen As UIScaffold
+	Private LoginScreen As UIScaffold
+    
+	' Elementos Dashboard
 	Private AppAppBar As UIAppBar
 	Private FabDecrement As UIFloatingActionButton
 	Private FabIncrement As UIFloatingActionButton
+	Private FabNavLogin As UIFloatingActionButton
     
-	' Atomic Widgets
 	Private LblTitle As UILabel
 	Private LblValue As UILabel
 	Private MyDivider As UIDivider
-    
-	' Containers
-	Private ValueCenter As UICenter ' Centrador para evitar cortes
 	Private ColumnCardBody As UIColumn
 	Private PaddingCard As UIPadding
 	Private MainCard As UICard
-    
-	' Root Scaffold
 	Private PaddingScreen As UIPadding
-	Private AppScaffold As UIScaffold
+    
+	' Elementos Login
+	Private LoginBody As UIColumn
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
 	Root = Activity
 	Root.Color = 0xFFF5F5F5
     
-	' 1. Initialize Components
-	AppAppBar.Initialize _
-        .Title("Declarative Dashboard") _
-        .BackgroundColor(0xFF1976D2)
-        
+	' 1. Inicializar Dashboard
+	AppAppBar.Initialize.Title("Dashboard").BackgroundColor(0xFF1976D2)
+    
 	FabDecrement.Initialize.Text("-").BackgroundColor(0xFFFF5252).OnClick(Me, "Decrement_Click")
 	FabIncrement.Initialize.Text("+").BackgroundColor(0xFF448AFF).OnClick(Me, "Increment_Click")
-        
+    
+	' Este botón flota en la esquina superior o donde quieras, pero lo añadimos al Scaffold
+	FabNavLogin.Initialize.Text("Login").BackgroundColor(0xFF673AB7).OnClick(Me, "NavigateToLogin")
+    
 	LblTitle.Initialize.Text("SYSTEM STATUS").Size(14).Color(0xFF607D8B)
 	LblValue.Initialize.Size(96).Color(0xFF212121)
-    
 	MyDivider.Initialize
-	ValueCenter.Initialize.Child(LblValue)
     
-	' 2. Build Card Tree
-	ColumnCardBody.Initialize _
-        .AddChild(LblTitle) _
-        .AddChild(MyDivider) _
-        .AddChild(ValueCenter)
-        
+	ColumnCardBody.Initialize.AddChild(LblTitle).AddChild(MyDivider).AddChild(LblValue)
 	PaddingCard.Initialize.All(24dip).Child(ColumnCardBody)
-    
-	MainCard.Initialize _
-        .BackgroundColor(Colors.White) _
-        .CornerRadius(16dip) _
-        .Child(PaddingCard)
-        
-	' 3. Scaffold Assembly
+	MainCard.Initialize.BackgroundColor(Colors.White).CornerRadius(16dip).Child(PaddingCard)
 	PaddingScreen.Initialize.All(20dip).Child(MainCard)
     
-	AppScaffold.Initialize _
+	DashboardScreen.Initialize _
         .AppBar(AppAppBar) _
         .Body(PaddingScreen) _
         .FloatingActionButtonLeft(FabDecrement) _
         .FloatingActionButtonRight(FabIncrement)
         
-	BuildUI
-End Sub
-
-Private Sub SetState(NewCounterValue As Int)
-	Counter = NewCounterValue
-	BuildUI
-End Sub
-
-Private Sub BuildUI
-	LblValue.Text("" & Counter)
+	' 2. Inicializar Login
+	Private LblLogin As UILabel
+	LblLogin.Initialize.Text("LOGIN SCREEN").Size(20)
+	LoginBody.Initialize.AddChild(LblLogin)
+	LoginScreen.Initialize.Body(LoginBody)
     
-	' Reactive Color Logic
-	If Counter < 0 Then
-		LblValue.Color(0xFFD32F2F)
+	BuildUI
+End Sub
+
+Sub BuildUI
+	Root.RemoveAllViews
+    
+	If CurrentRoute = "Dashboard" Then
+		LblValue.Text("" & Counter)
+        
+		' --- NUEVO PARADIGMA DE RENDERIZADO ---
+		DashboardScreen.SetParent(Root)
+		DashboardScreen.SetPosition(0, 0)
+		DashboardScreen.SetSize(Root.Width, Root.Height)
+		DashboardScreen.Render
+        
+		' Renderizamos el botón de navegación manualmente si queremos que flote sobre todo
+		FabNavLogin.SetParent(Root)
+		FabNavLogin.SetPosition(Root.Width - 120dip, 80dip)
+		FabNavLogin.SetSize(100dip, 56dip)
+		FabNavLogin.Render
+        
 	Else
-		LblValue.Color(0xFF212121)
+        
+		' --- NUEVO PARADIGMA DE RENDERIZADO ---
+		LoginScreen.SetParent(Root)
+		LoginScreen.SetPosition(0, 0)
+		LoginScreen.SetSize(Root.Width, Root.Height)
+		LoginScreen.Render
+        
 	End If
-    
-	' Render
-	AppScaffold.Render(Root, 0, 0, Root.Width, Root.Height)
 End Sub
 
-' --- Event Handlers ---
 Sub Increment_Click
-	SetState(Counter + 1)
+	Counter = Counter + 1
+	BuildUI
 End Sub
 
 Sub Decrement_Click
-	SetState(Counter - 1)
+	Counter = Counter - 1
+	BuildUI
+End Sub
+
+Sub NavigateToLogin
+	CurrentRoute = "Login"
+	BuildUI
 End Sub

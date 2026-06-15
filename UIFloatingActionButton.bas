@@ -4,7 +4,6 @@ ModulesStructureVersion=1
 Type=Class
 Version=13.5
 @EndOfDesignText@
-' Módulo de Clase: UIFloatingActionButton
 Sub Class_Globals
 	Private mText As String
 	Private mBgColor As Int
@@ -12,12 +11,17 @@ Sub Class_Globals
 	Private mTarget As Object
 	Private mEventName As String
 	Private mBaseView As B4XView
+	Private mParent As B4XView
+	Private mLeft, mTop, mWidth, mHeight As Int
 End Sub
 
 Public Sub Initialize As UIFloatingActionButton
 	mText = "+"
-	mBgColor = 0xFF00C853 ' Verde vibrante Material
+	mBgColor = 0xFF00C853
 	mTextColor = Colors.White
+	' PREVENCIÓN DE ERROR: Nulificamos el objetivo explícitamente
+	mTarget = Null
+	mEventName = ""
 	Return Me
 End Sub
 
@@ -37,49 +41,50 @@ Public Sub OnClick(Target As Object, EventName As String) As UIFloatingActionBut
 	Return Me
 End Sub
 
-' Módulo de Clase: UIFloatingActionButton (Versión Corregida)
-Public Sub Render(Parent As B4XView, Left As Int, Top As Int, Width As Int, Height As Int)
-	' 1. La BaseView de cara al Scaffold SIEMPRE debe ser un Panel (ViewGroup)
+Public Sub SetParent(Parent As B4XView)
+	mParent = Parent
+End Sub
+
+Public Sub SetPosition(Left As Int, Top As Int)
+	mLeft = Left
+	mTop = Top
+End Sub
+
+Public Sub SetSize(Width As Int, Height As Int)
+	mWidth = Width
+	mHeight = Height
+End Sub
+
+Public Sub Render
 	If mBaseView.IsInitialized = False Then
 		Dim pnl As Panel
 		pnl.Initialize("")
 		mBaseView = pnl
-		Parent.AddView(mBaseView, Left, Top, Width, Height)
+		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
+	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     
-	mBaseView.SetLayoutAnimated(0, Left, Top, Width, Height)
-    
-	' 2. El botón real lo manejamos como una sub-vista interna ocupando el 100% del panel
 	Dim btn As Button
 	If mBaseView.NumberOfViews = 0 Then
 		btn.Initialize("btn")
 		Dim xBtn As B4XView = btn
-		mBaseView.AddView(xBtn, 0, 0, Width, Height)
+		mBaseView.AddView(xBtn, 0, 0, mWidth, mHeight)
 	Else
 		Dim xBtn As B4XView = mBaseView.GetView(0)
 		btn = xBtn
 	End If
     
-	' 3. Seteamos las propiedades sobre el botón nativo
 	btn.Text = mText
 	btn.TextSize = 24
 	btn.TextColor = mTextColor
     
-	' 4. El truco del fondo circular se lo aplicamos directamente al botón interno
 	Dim cd As ColorDrawable
-	cd.Initialize2(mBgColor, Width / 2, 0, 0)
+	cd.Initialize2(mBgColor, mWidth / 2, 0, 0)
 	btn.Background = cd
 End Sub
 
-' Cambiamos el interceptor para capturar el evento del botón interno de forma segura
 Private Sub btn_Click
 	If mTarget <> Null And mEventName <> "" Then
-		If SubExists(mTarget, mEventName) Then
-			CallSub(mTarget, mEventName)
-		End If
+		CallSub(mTarget, mEventName)
 	End If
-End Sub
-
-Public Sub RenderBridge(Args() As Object)
-	Render(Args(0), Args(1), Args(2), Args(3), Args(4))
 End Sub

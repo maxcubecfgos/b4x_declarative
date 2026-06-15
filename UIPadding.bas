@@ -4,28 +4,27 @@ ModulesStructureVersion=1
 Type=Class
 Version=13.5
 @EndOfDesignText@
-' Módulo de Clase: UIPadding
 Sub Class_Globals
 	Private mChild As Object
 	Private mBaseView As B4XView
-	Private mTop, mBottom, mLeft, mRight As Int
+	Private mTop, mBottom, mLeftPad, mRightPad As Int
+	Private mParent As B4XView
+	Private mLeft, mTopCoord, mWidth, mHeight As Int
 End Sub
 
 Public Sub Initialize As UIPadding
-	mTop = 0 : mBottom = 0 : mLeft = 0 : mRight = 0
+	mTop = 0 : mBottom = 0 : mLeftPad = 0 : mRightPad = 0
 	mChild = Null
 	Return Me
 End Sub
 
-' Margen uniforme para los 4 lados
 Public Sub All(Value As Int) As UIPadding
-	mTop = Value : mBottom = Value : mLeft = Value : mRight = Value
+	mTop = Value : mBottom = Value : mLeftPad = Value : mRightPad = Value
 	Return Me
 End Sub
 
-' Márgenes simétricos por ejes
 Public Sub Symmetric(Horizontal As Int, Vertical As Int) As UIPadding
-	mLeft = Horizontal : mRight = Horizontal
+	mLeftPad = Horizontal : mRightPad = Horizontal
 	mTop = Vertical : mBottom = Vertical
 	Return Me
 End Sub
@@ -35,34 +34,39 @@ Public Sub Child(c As Object) As UIPadding
 	Return Me
 End Sub
 
-Public Sub Render(Parent As B4XView, Left As Int, Top As Int, Width As Int, Height As Int)
+Public Sub SetParent(Parent As B4XView)
+	mParent = Parent
+End Sub
+
+Public Sub SetPosition(Left As Int, Top As Int)
+	mLeft = Left
+	mTopCoord = Top
+End Sub
+
+Public Sub SetSize(Width As Int, Height As Int)
+	mWidth = Width
+	mHeight = Height
+End Sub
+
+Public Sub Render
 	If mBaseView.IsInitialized = False Then
 		Dim pnl As Panel
 		pnl.Initialize("")
 		mBaseView = pnl
 		mBaseView.Color = Colors.Transparent
-		Parent.AddView(mBaseView, Left, Top, Width, Height)
+		mParent.AddView(mBaseView, mLeft, mTopCoord, mWidth, mHeight)
 	End If
+	mBaseView.SetLayoutAnimated(0, mLeft, mTopCoord, mWidth, mHeight)
     
-	mBaseView.SetLayoutAnimated(0, Left, Top, Width, Height)
-    
-	If mChild <> Null And SubExists(mChild, "RenderBridge") Then
-		Dim childLeft As Int = mLeft
+	If mChild <> Null Then
+		Dim childLeft As Int = mLeftPad
 		Dim childTop As Int = mTop
-		Dim childWidth As Int = Width - mLeft - mRight
-		Dim childHeight As Int = Height - mTop - mBottom
+		Dim childWidth As Int = mWidth - mLeftPad - mRightPad
+		Dim childHeight As Int = mHeight - mTop - mBottom
         
-		Dim dimensions(5) As Object
-		dimensions(0) = mBaseView
-		dimensions(1) = Max(0, childLeft)
-		dimensions(2) = Max(0, childTop)
-		dimensions(3) = Max(0, childWidth)
-		dimensions(4) = Max(0, childHeight)
-        
-		CallSub3(mChild, "RenderBridge", dimensions, Null)
+		CallSub2(mChild, "SetParent", mBaseView)
+		CallSub3(mChild, "SetPosition", Max(0, childLeft), Max(0, childTop))
+		CallSub3(mChild, "SetSize", Max(0, childWidth), Max(0, childHeight))
+		CallSub(mChild, "Render")
 	End If
-End Sub
-
-Public Sub RenderBridge(Args() As Object)
-	Render(Args(0), Args(1), Args(2), Args(3), Args(4))
 End Sub

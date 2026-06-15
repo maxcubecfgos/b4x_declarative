@@ -4,10 +4,11 @@ ModulesStructureVersion=1
 Type=Class
 Version=13.5
 @EndOfDesignText@
-' Módulo de Clase: UIRow (Versión Flex Avanzada)
 Sub Class_Globals
 	Private mChildren As List
 	Private mBaseView As B4XView
+	Private mParent As B4XView
+	Private mLeft, mTop, mWidth, mHeight As Int
 End Sub
 
 Public Sub Initialize As UIRow
@@ -20,23 +21,35 @@ Public Sub AddChild(Component As Object) As UIRow
 	Return Me
 End Sub
 
-Public Sub Render(Parent As B4XView, Left As Int, Top As Int, Width As Int, Height As Int)
+Public Sub SetParent(Parent As B4XView)
+	mParent = Parent
+End Sub
+
+Public Sub SetPosition(Left As Int, Top As Int)
+	mLeft = Left
+	mTop = Top
+End Sub
+
+Public Sub SetSize(Width As Int, Height As Int)
+	mWidth = Width
+	mHeight = Height
+End Sub
+
+Public Sub Render
 	If mBaseView.IsInitialized = False Then
 		Dim pnl As Panel
 		pnl.Initialize("")
 		mBaseView = pnl
 		mBaseView.Color = Colors.Transparent
-		Parent.AddView(mBaseView, Left, Top, Width, Height)
+		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
-    
-	mBaseView.SetLayoutAnimated(0, Left, Top, Width, Height)
+	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     
 	If mChildren.Size = 0 Then Return
     
-	' Contamos cuántos hijos son de tipo "UIExpanded" y cuántos son fijos (como UISpace)
 	Dim expandedCount As Int = 0
 	Dim fixedWidthsTotal As Int = 0
-	Dim fixedSpaceWidth As Int = 12dip ' Tamaño estándar de un UISpace horizontal
+	Dim fixedSpaceWidth As Int = 12dip
     
 	For Each child As Object In mChildren
 		If GetType(child).Contains("uiexpanded") Then
@@ -46,8 +59,7 @@ Public Sub Render(Parent As B4XView, Left As Int, Top As Int, Width As Int, Heig
 		End If
 	Next
     
-	' El espacio sobrante se divide equitativamente solo entre los objetos Expanded
-	Dim remainingWidth As Int = Width - fixedWidthsTotal
+	Dim remainingWidth As Int = mWidth - fixedWidthsTotal
 	Dim expandedWidth As Int = 0
 	If expandedCount > 0 Then expandedWidth = remainingWidth / expandedCount
     
@@ -59,31 +71,21 @@ Public Sub Render(Parent As B4XView, Left As Int, Top As Int, Width As Int, Heig
         
 		If GetType(child).Contains("uiexpanded") Then
 			currentWidth = expandedWidth
-			' Extraemos el hijo real de adentro del envoltorio Expanded
 			Dim exp As UIExpanded = child
 			targetObject = exp.GetChild
 		Else If GetType(child).Contains("uispace") Then
 			currentWidth = fixedSpaceWidth
 		Else
-			' Si no es ni expanded ni space, le damos un tamaño por defecto
 			currentWidth = remainingWidth / Max(1, mChildren.Size)
 		End If
         
-		Dim dimensions(5) As Object
-		dimensions(0) = mBaseView
-		dimensions(1) = currentLeft
-		dimensions(2) = 0
-		dimensions(3) = currentWidth
-		dimensions(4) = Height
-        
-		If SubExists(targetObject, "RenderBridge") Then
-			CallSub3(targetObject, "RenderBridge", dimensions, Null)
+		If targetObject <> Null Then
+			CallSub2(targetObject, "SetParent", mBaseView)
+			CallSub3(targetObject, "SetPosition", currentLeft, 0)
+			CallSub3(targetObject, "SetSize", currentWidth, mHeight)
+			CallSub(targetObject, "Render")
 		End If
         
 		currentLeft = currentLeft + currentWidth
 	Next
-End Sub
-
-Public Sub RenderBridge(Args() As Object)
-	Render(Args(0), Args(1), Args(2), Args(3), Args(4))
 End Sub

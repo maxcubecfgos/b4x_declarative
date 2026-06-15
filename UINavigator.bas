@@ -5,23 +5,24 @@ Type=Class
 Version=13.5
 @EndOfDesignText@
 Sub Class_Globals
-	Private mChild As Object
+	Private mScreens As Map
+	Private mCurrentScreen As String
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
 End Sub
 
-Public Sub Initialize As UIExpanded
-	mChild = Null
+Public Sub Initialize As UINavigator
+	mScreens.Initialize
 	Return Me
 End Sub
 
-Public Sub Child(c As Object) As UIExpanded
-	mChild = c
+Public Sub AddScreen(Name As String, Component As Object) As UINavigator
+	mScreens.Put(Name, Component)
 	Return Me
 End Sub
 
-Public Sub GetChild As Object
-	Return mChild
+Public Sub NavigateTo(Name As String)
+	mCurrentScreen = Name
 End Sub
 
 Public Sub SetParent(Parent As B4XView)
@@ -39,10 +40,11 @@ Public Sub SetSize(Width As Int, Height As Int)
 End Sub
 
 Public Sub Render
-	If mChild <> Null Then
-		CallSub2(mChild, "SetParent", mParent)
-		CallSub3(mChild, "SetPosition", mLeft, mTop)
-		CallSub3(mChild, "SetSize", mWidth, mHeight)
-		CallSub(mChild, "Render")
+	Dim Screen As Object = mScreens.Get(mCurrentScreen)
+	If Screen <> Null Then
+		CallSub2(Screen, "SetParent", mParent)
+		CallSub3(Screen, "SetPosition", mLeft, mTop)
+		CallSub3(Screen, "SetSize", mWidth, mHeight)
+		CallSub(Screen, "Render")
 	End If
 End Sub

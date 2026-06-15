@@ -4,10 +4,11 @@ ModulesStructureVersion=1
 Type=Class
 Version=13.5
 @EndOfDesignText@
-' Módulo de Clase: UICenter
 Sub Class_Globals
 	Private mChild As Object
 	Private mBaseView As B4XView
+	Private mParent As B4XView
+	Private mLeft, mTop, mWidth, mHeight As Int
 End Sub
 
 Public Sub Initialize As UICenter
@@ -20,40 +21,42 @@ Public Sub Child(c As Object) As UICenter
 	Return Me
 End Sub
 
-Public Sub Render(Parent As B4XView, Left As Int, Top As Int, Width As Int, Height As Int)
+Public Sub SetParent(Parent As B4XView)
+	mParent = Parent
+End Sub
+
+Public Sub SetPosition(Left As Int, Top As Int)
+	mLeft = Left
+	mTop = Top
+End Sub
+
+Public Sub SetSize(Width As Int, Height As Int)
+	mWidth = Width
+	mHeight = Height
+End Sub
+
+Public Sub Render
 	If mBaseView.IsInitialized = False Then
 		Dim pnl As Panel
 		pnl.Initialize("")
 		mBaseView = pnl
 		mBaseView.Color = Colors.Transparent
-		Parent.AddView(mBaseView, Left, Top, Width, Height)
+		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
+	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     
-	mBaseView.SetLayoutAnimated(0, Left, Top, Width, Height)
-    
-	If mChild <> Null And SubExists(mChild, "RenderBridge") Then
-		' Le damos al hijo un tamaño fijo o proporcional más controlado para evitar deformaciones
-		' En el caso de filas/botones, limitamos la altura para que no actúe como un bloque gigante
-		Dim childWidth As Int = Width
-		Dim childHeight As Int = Height
+	If mChild <> Null Then
+		Dim childWidth As Int = mWidth
+		Dim childHeight As Int = mHeight
         
-		' Si el hijo es un contenedor como una Fila, limitamos su altura a un estándar de botón (48dip)
-		If GetType(mChild).Contains("uirow") Then childHeight = Min(48dip, Height)
+		If GetType(mChild).Contains("uirow") Then childHeight = Min(48dip, mHeight)
         
-		Dim childLeft As Int = (Width - childWidth) / 2
-		Dim childTop As Int = (Height - childHeight) / 2
+		Dim childLeft As Int = (mWidth - childWidth) / 2
+		Dim childTop As Int = (mHeight - childHeight) / 2
         
-		Dim dimensions(5) As Object
-		dimensions(0) = mBaseView
-		dimensions(1) = childLeft
-		dimensions(2) = childTop
-		dimensions(3) = childWidth
-		dimensions(4) = childHeight
-        
-		CallSub3(mChild, "RenderBridge", dimensions, Null)
+		CallSub2(mChild, "SetParent", mBaseView)
+		CallSub3(mChild, "SetPosition", childLeft, childTop)
+		CallSub3(mChild, "SetSize", childWidth, childHeight)
+		CallSub(mChild, "Render")
 	End If
-End Sub
-
-Public Sub RenderBridge(Args() As Object)
-	Render(Args(0), Args(1), Args(2), Args(3), Args(4))
 End Sub
