@@ -1,0 +1,8 @@
+# B4X / Android specific
+Objects/
+AutoBackups/
+
+# Opcional: archivos temporales de B4A
+*.bak
+*.tmp
+*.log

@@ -7,17 +7,18 @@ Version=13.5
 ' Módulo de Clase: UILabel
 Sub Class_Globals
 	Private mText As String
-	Private mTextSize As Float
+	Public mSize As Int
 	Private mTextColor As Int
-	Private mGravity As Int
+	Private mGravityValue As Int ' <-- Cambiado para evitar conflictos de nombres
 	Private mBaseView As B4XView
 End Sub
 
 Public Sub Initialize As UILabel
 	mText = ""
-	mTextSize = 16
+	mSize = 14
 	mTextColor = Colors.Black
-	mGravity = Bit.Or(Gravity.CENTER_HORIZONTAL, Gravity.CENTER_VERTICAL)
+	' Usamos el objeto global nativo sin problemas aquí
+	mGravityValue = Bit.Or(Gravity.CENTER_HORIZONTAL, Gravity.CENTER_VERTICAL)
 	Return Me
 End Sub
 
@@ -26,8 +27,8 @@ Public Sub Text(t As String) As UILabel
 	Return Me
 End Sub
 
-Public Sub Size(s As Float) As UILabel
-	mTextSize = s
+Public Sub Size(s As Int) As UILabel
+	mSize = s
 	Return Me
 End Sub
 
@@ -36,8 +37,9 @@ Public Sub Color(c As Int) As UILabel
 	Return Me
 End Sub
 
-Public Sub AlignLeft As UILabel
-	mGravity = Bit.Or(Gravity.LEFT, Gravity.CENTER_VERTICAL)
+' CORRECCIÓN: Renombramos el método a TextGravity para que no choque con la palabra reservada
+Public Sub TextGravity(g As Int) As UILabel
+	mGravityValue = g
 	Return Me
 End Sub
 
@@ -51,17 +53,13 @@ Public Sub Render(Parent As B4XView, Left As Int, Top As Int, Width As Int, Heig
     
 	mBaseView.SetLayoutAnimated(0, Left, Top, Width, Height)
     
-	If mBaseView.Text <> mText Then mBaseView.Text = mText
-    
-	' Corrección: Casteo a Label nativo y asignación correcta de gravedad
-	Dim nativeLabel As Label = mBaseView
-	nativeLabel.Gravity = mGravity
-    
-	If nativeLabel.TextSize <> mTextSize Then nativeLabel.TextSize = mTextSize
-	If nativeLabel.TextColor <> mTextColor Then nativeLabel.TextColor = mTextColor
+	Dim NativeLabel As Label = mBaseView
+	NativeLabel.Text = mText
+	NativeLabel.TextSize = mSize
+	NativeLabel.TextColor = mTextColor
+	NativeLabel.Gravity = mGravityValue
 End Sub
 
-' Añade esto al final de la clase UILabel para habilitar el puente de paso de parámetros
 Public Sub RenderBridge(Args() As Object)
 	Render(Args(0), Args(1), Args(2), Args(3), Args(4))
 End Sub

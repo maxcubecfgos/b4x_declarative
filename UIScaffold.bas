@@ -4,16 +4,16 @@ ModulesStructureVersion=1
 Type=Class
 Version=13.5
 @EndOfDesignText@
-' Módulo de Clase: UIScaffold
+' Class Module: UIScaffold
 Sub Class_Globals
 	Private mAppBar As Object
 	Private mBody As Object
+	Private mFabLeft As Object
+	Private mFabRight As Object
 	Private mBaseView As B4XView
 End Sub
 
 Public Sub Initialize As UIScaffold
-	mAppBar = Null
-	mBody = Null
 	Return Me
 End Sub
 
@@ -27,7 +27,18 @@ Public Sub Body(b As Object) As UIScaffold
 	Return Me
 End Sub
 
+Public Sub FloatingActionButtonLeft(fab As Object) As UIScaffold
+	mFabLeft = fab
+	Return Me
+End Sub
+
+Public Sub FloatingActionButtonRight(fab As Object) As UIScaffold
+	mFabRight = fab
+	Return Me
+End Sub
+
 Public Sub Render(Parent As B4XView, Left As Int, Top As Int, Width As Int, Height As Int)
+	' Solo inicializamos una vez.
 	If mBaseView.IsInitialized = False Then
 		Dim pnl As Panel
 		pnl.Initialize("")
@@ -38,29 +49,25 @@ Public Sub Render(Parent As B4XView, Left As Int, Top As Int, Width As Int, Heig
     
 	mBaseView.SetLayoutAnimated(0, Left, Top, Width, Height)
     
-	Dim appBarHeight As Int = 0
+	' En lugar de RemoveAllViews, llamamos al render de los hijos.
+	' Los hijos (AppBar, Body, FABs) ya saben cómo actualizarse a sí mismos.
+	Dim appBarHeight As Int = 56dip
     
-	' 1. Si hay AppBar, la dibujamos fija arriba (56dip es el estándar de Android)
-	If mAppBar <> Null And SubExists(mAppBar, "RenderBridge") Then
-		appBarHeight = 56dip
-		Dim barDims(5) As Object
-		barDims(0) = mBaseView
-		barDims(1) = 0
-		barDims(2) = 0
-		barDims(3) = Width
-		barDims(4) = appBarHeight
-		CallSub3(mAppBar, "RenderBridge", barDims, Null)
+	If mAppBar <> Null Then
+		CallSub3(mAppBar, "RenderBridge", Array(mBaseView, 0, 0, Width, appBarHeight), Null)
 	End If
     
-	' 2. El cuerpo ocupa todo el espacio restante de la pantalla
-	If mBody <> Null And SubExists(mBody, "RenderBridge") Then
-		Dim bodyDims(5) As Object
-		bodyDims(0) = mBaseView
-		bodyDims(1) = 0
-		bodyDims(2) = appBarHeight
-		bodyDims(3) = Width
-		bodyDims(4) = Height - appBarHeight
-		CallSub3(mBody, "RenderBridge", bodyDims, Null)
+	If mBody <> Null Then
+		CallSub3(mBody, "RenderBridge", Array(mBaseView, 0, appBarHeight, Width, Height - appBarHeight - 80dip), Null)
+	End If
+    
+	Dim fabSize As Int = 56dip
+	If mFabRight <> Null Then
+		CallSub3(mFabRight, "RenderBridge", Array(mBaseView, Width - fabSize - 16dip, Height - fabSize - 16dip, fabSize, fabSize), Null)
+	End If
+    
+	If mFabLeft <> Null Then
+		CallSub3(mFabLeft, "RenderBridge", Array(mBaseView, 16dip, Height - fabSize - 16dip, fabSize, fabSize), Null)
 	End If
 End Sub
 
