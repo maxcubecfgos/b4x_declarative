@@ -1,0 +1,147 @@
+﻿Build1=Default,b4a.example
+Group=Default Group
+Library1=core
+Library2=xui
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="35"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
+Module1=Starter
+Module10=UIScaffold
+Module11=UISpace
+Module2=UIAppBar
+Module3=UIButton
+Module4=UICard
+Module5=UICenter
+Module6=UIColumn
+Module7=UILabel
+Module8=UIPadding
+Module9=UIRow
+NumberOfFiles=0
+NumberOfLibraries=2
+NumberOfModules=11
+Version=13.5
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: B4A Example
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: False
+	#IncludeTitle: False
+#End Region
+
+Sub Process_Globals
+	Private Counter As Int = 0
+End Sub
+
+Sub Globals
+	Private RootContainer As B4XView
+    
+	' Componentes del árbol virtual de UI
+	Private MiAppBar As UIAppBar
+	Private lblTitulo As UILabel
+	Private lblValor As UILabel
+	Private btnRestar As UIButton
+	Private btnSumar As UIButton
+    
+	Private SpaceBoton, SpaceCol, SpaceSeccion As UISpace
+	Private FilaBotones As UIRow
+	Private CentroBotones As UICenter
+	Private CuerpoCard As UIColumn
+	Private PaddingCard As UIPadding
+	Private TargetaContenedor As UICard
+    
+	Private LayoutContenido As UIColumn
+	Private CentradorGeneral As UICenter
+	Private PaddingPantalla As UIPadding
+	Private PantallaPrincipal As UIScaffold
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	RootContainer = Activity
+	RootContainer.Color = 0xF5F5F5
+    
+	' 1. Inicialización estructural estilo Flutter
+	MiAppBar.Initialize _
+        .Title("B4A Declarativo") _
+        .BackgroundColor(0xFF1976D2)
+        
+	lblTitulo.Initialize.Text("MONITOR DE ESTADO").Size(14).Color(0xFF757575)
+	lblValor.Initialize.Size(64).Color(0xFF1976D2)
+    
+	' Inicializamos botones con un diseño más limpio
+	btnRestar.Initialize.Text("DECREMENTAR").BackgroundColor(0xFFE0E0E0).OnClick(Me, "Decrement_Click")
+	btnSumar.Initialize.Text("INCREMENTAR").BackgroundColor(0xFF2196F3).OnClick(Me, "Increment_Click")
+    
+	' Inicialización de espaciadores
+	SpaceBoton.Initialize : SpaceCol.Initialize : SpaceSeccion.Initialize
+	
+	' Construimos la fila de acciones y la envolvemos en un UICenter
+	' para evitar que la columna la deforme verticalmente
+	FilaBotones.Initialize _
+        .AddChild(btnRestar) _
+        .AddChild(SpaceBoton) _
+        .AddChild(btnSumar)
+        
+	CentroBotones.Initialize.Child(FilaBotones)
+    
+	' Diseño interno de la tarjeta central
+	CuerpoCard.Initialize _
+        .AddChild(lblTitulo) _
+        .AddChild(lblValor) _
+        .AddChild(SpaceCol) _
+        .AddChild(CentroBotones) ' Metemos los botones ya centrados y protegidos
+        
+	PaddingCard.Initialize.All(24dip).Child(CuerpoCard)
+    
+	TargetaContenedor.Initialize _
+        .BackgroundColor(Colors.White) _
+        .CornerRadius(12dip) _
+        .Child(PaddingCard)
+        
+	' Diseño general del cuerpo de la pantalla
+	LayoutContenido.Initialize _
+        .AddChild(TargetaContenedor)
+        
+	' Centramos la tarjeta horizontal y verticalmente en el área del body
+	CentradorGeneral.Initialize.Child(LayoutContenido)
+	PaddingPantalla.Initialize.All(16dip).Child(CentradorGeneral)
+    
+	' El Armazón Raíz une la AppBar con nuestro contenido centrado
+	PantallaPrincipal.Initialize _
+        .AppBar(MiAppBar) _
+        .Body(PaddingPantalla)
+        
+	BuildUI
+End Sub
+
+Private Sub SetState(NewCounterValue As Int)
+	Counter = NewCounterValue
+	BuildUI
+End Sub
+
+Private Sub BuildUI
+	lblValor.Text("" & Counter)
+    
+	' Validación de estado visual en tiempo real
+	If Counter < 0 Then
+		lblValor.Color(Colors.Red)
+	Else
+		lblValor.Color(0xFF1976D2)
+	End If
+    
+	' Se dispara el flujo declarativo desde la raíz del Scaffold ocupando el 100% de la pantalla
+	PantallaPrincipal.Render(RootContainer, 0, 0, RootContainer.Width, RootContainer.Height)
+End Sub
+
+' --- Eventos ---
+Sub Increment_Click
+	SetState(Counter + 1)
+End Sub
+
+Sub Decrement_Click
+	SetState(Counter - 1)
+End Sub
