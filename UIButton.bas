@@ -97,9 +97,9 @@ End Sub
 
 Public Sub TriggerClick
 	If mTarget <> Null And mEventName <> "" Then
-		' Diferir el callback evita reentrar en el árbol de vistas mientras
-		' Android todavía está procesando el evento Click.
-		CallSubDelayed(mTarget, mEventName)
+		' Ejecutar el callback directamente, igual que el FAB.
+		' La navegación se mantiene simple y no se pierde el evento.
+		CallSub(mTarget, mEventName)
 	End If
 End Sub
 
