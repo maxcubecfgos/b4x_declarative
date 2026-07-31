@@ -1,154 +1,249 @@
-# Declarative UI para B4X
+# Declarative UI for B4A
 
-Framework experimental de composición y layout declarativo para B4A. El proyecto está inspirado en patrones de Flutter (`Row`, `Column`, `Expanded`, `Scaffold`) pero está implementado como clases B4X que generan y posicionan vistas nativas.
+A small, code-first declarative UI layer for native B4A applications.
 
-> **Estado:** prototipo avanzado para B4A. La arquitectura está preparada para evolucionar hacia B4J, pero esta revisión no afirma compatibilidad compilada con B4J.
+This project explores a Flutter-inspired way to compose Android interfaces in B4A while keeping the result native, lightweight, and understandable. It does not try to recreate Flutter internally. Instead, it provides a focused set of composable widgets with a predictable mount, measure, layout, render, and unmount lifecycle.
 
-## Objetivo
+The included **NOVA Control Center** is a demonstration application designed to show the framework's capabilities in a practical interface:
 
-El proyecto busca reducir el uso de coordenadas manuales y permitir construir una pantalla como un árbol composable:
+- Declarative screen composition
+- Natural child measurement
+- Vertical and horizontal layout
+- Flexible children through `UIExpanded`
+- A native `ScrollView` wrapped as `UIScrollView`
+- Virtual navigation inside one real B4A Activity
+- Automatic safe-area handling below the Android status area
+- Reusable light and dark palettes through `UITheme`
+- Runtime state updates for counters, activity refreshes, and theme changes
+- Native B4A buttons and floating action buttons with declarative callbacks
+
+## Project structure
+
+| File | Responsibility |
+| --- | --- |
+| `Declarative UI.b4a` | NOVA demo Activity and screen composition |
+| `UITheme.bas` | Reusable light/dark color palette |
+| `UIScrollView.bas` | Declarative wrapper around the native B4A `ScrollView` |
+| `UINavigator.bas` | Virtual screen registration, navigation, and safe-area host |
+| `UIScaffold.bas` | App bar, body, and optional floating action button layout |
+| `UIColumn.bas` | Vertical child layout with natural measurement |
+| `UIRow.bas` | Horizontal child layout with natural measurement |
+| `UIExpanded.bas` | Flexible space marker for Column and Row |
+| `UIPadding.bas` | Padding around a child |
+| `UICard.bas` | Rounded surface with background and border colors |
+| `UIBox.bas` | Lightweight padded child container |
+| `UICenter.bas` | Centers a child using its measured natural size |
+| `UILabel.bas` | Native label wrapper |
+| `UIButton.bas` | Native button wrapper and callback dispatch |
+| `UIFloatingActionButton.bas` | Compact native floating action button wrapper |
+| `UIAppBar.bas` | App bar with a persistent, vertically centered title |
+| `UIDivider.bas` | Themed horizontal divider |
+| `UISpace.bas` | Fixed-size layout spacer |
+
+## Declarative composition
+
+Widgets are composed as objects and then mounted by their parent:
 
 ```basic
-Dim Title As UILabel
-Title.Initialize.Text("Título").Size(20)
+Dim content As UIColumn
+content.Initialize _
+    .Spacing(12dip) _
+    .AddChild(title) _
+    .AddChild(description) _
+    .AddChild(actions)
 
-Dim Content As UIColumn
-Content.Initialize
+Dim padded As UIPadding
+padded.Initialize.All(16dip).Child(content)
 
-Dim Padding As UIPadding
-Padding.Initialize.All(16dip).Child(Content)
-
-Dim Footer As UILabel
-Footer.Initialize.Text("Footer")
-
-Dim FooterExpanded As UIExpanded
-FooterExpanded.Initialize.Child(Footer)
-
-Dim Body As UIColumn
-Body.Initialize.Spacing(12dip) _
-    .AddChild(Title) _
-    .AddChild(Padding) _
-    .AddChild(FooterExpanded)
-
-Dim Screen As UIScaffold
-Screen.Initialize.Body(Body)
+Dim screen As UIScaffold
+screen.Initialize _
+    .AppBar(appBar) _
+    .Body(padded)
 ```
 
-La API actual es fluida: los métodos de configuración devuelven `Me`, por lo que los componentes se pueden encadenar.
+The application describes the tree. The framework handles native view creation and positioning during `Render`.
 
-## Componentes principales
+## Widget lifecycle
 
-- `UIRow`: distribución horizontal.
-- `UIColumn`: distribución vertical.
-- `UIExpanded`: hijo flexible que acepta el espacio restante.
-- `UISpace`: espacio intrínseco fijo.
-- `UIPadding`, `UIBox`, `UICard`, `UICenter`: wrappers de composición.
-- `UILabel`, `UIButton`, `UIFloatingActionButton`, `UIAppBar`, `UIDivider`: componentes visuales.
-- `UIScaffold`: composición de AppBar, body y FABs.
-- `UINavigator`: registro y reemplazo de pantallas dentro de un host aislado.
+Every layout-aware widget follows the same basic contract:
 
-## Contrato de componente
+1. `Initialize` creates the declarative object.
+2. Fluent methods configure text, colors, children, spacing, and callbacks.
+3. `SetParent`, `SetPosition`, and `SetSize` receive layout information.
+4. `GetContentSize` reports the natural size when the widget has one.
+5. `Render` creates or updates the native B4A view.
+6. `Unmount` releases native references before a remount.
 
-B4X no proporciona interfaces de usuario con comprobación estática. El framework usa un contrato por convención y `CallSub`:
+This convention keeps containers reusable and lets `UIColumn`, `UIRow`, `UICenter`, and `UIScrollView` work with different child types through the same small protocol.
 
-```text
-SetParent(Parent As B4XView)
-SetPosition(Left As Int, Top As Int)
-SetSize(Width As Int, Height As Int)
-Render
-GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
-Unmount                  ' recomendado; opcional para componentes legacy
+## Natural measurement
+
+A child can return a two-item `List` from `GetContentSize`:
+
+```basic
+Dim result As List
+result.Initialize
+result.Add(naturalWidth)
+result.Add(naturalHeight)
+Return result
 ```
 
-Un componente externo que se añada a `UIRow`, `UIColumn` o un wrapper debe implementar las cinco primeras subs. `Unmount` es opcional porque los contenedores comprueban `xui.SubExists` antes de invocarlo.
+An empty list represents a flexible child. `UIColumn` and `UIRow` first measure natural children, then distribute the remaining space among flexible children such as `UIExpanded`.
 
-`AddChild(Null)` se ignora para evitar que un árbol inválido falle más tarde durante la medición. Solo ese caso se filtra automáticamente; la validación del resto del contrato ocurre en tiempo de ejecución y puede producir un error si faltan subs o sus firmas no coinciden.
+This avoids hard-coding every label height and prevents common clipping problems caused by positioning text using arbitrary constants.
 
-## Medición y layout
+## UIScrollView
 
-`GetContentSize` devuelve una `List` de dos posiciones:
+`UIScrollView` wraps the native B4A `ScrollView` while keeping the child declarative:
 
-```text
-[width, height]
+```basic
+Dim events As UIColumn
+ events.Initialize.Spacing(8dip) _
+    .AddChild(eventCardOne) _
+    .AddChild(eventCardTwo) _
+    .AddChild(eventCardThree)
+
+Dim scroll As UIScrollView
+scroll.Initialize.Child(events)
 ```
 
-- Una lista representa tamaño intrínseco.
-- `Null` significa que el componente acepta espacio flexible.
-- `UIRow` suma anchos y usa la mayor altura.
-- `UIColumn` suma alturas y usa el mayor ancho.
-- Una fila/columna con hijos flexibles recibe el espacio restante.
-- `Spacing(Value)` añade gaps únicamente entre hijos, nunca antes del primero ni después del último.
-- Si la división del espacio no es exacta, los primeros hijos flexibles reciben el píxel sobrante.
+The wrapper:
 
-La medición todavía usa límites enteros y una convención histórica de valores no positivos como “sin límite”. La siguiente evolución debería introducir un objeto de constraints explícito para distinguir “sin límite”, “cero” y “error”.
+- Creates the native `ScrollView` only when mounted.
+- Uses the native `ScrollView.Panel` as the content parent.
+- Measures the child with a large content-height limit.
+- Sets the panel height to the child's natural height or the viewport height, whichever is larger.
+- Remounts the child safely after navigation, layout changes, or theme changes.
+- Exposes `ScrollTo` and `GetScrollPosition` for programmatic control.
 
-## Ciclo de vida
+A scroll view is normally placed inside `UIExpanded` when it shares a `UIColumn` with a fixed header or footer:
 
-El ciclo actual es retenido e imperativo, aunque la composición de componentes sea declarativa:
+```basic
+ActivityBody.Initialize.Spacing(10dip) _
+    .AddChild(header) _
+    .AddChild(UIExpanded.Initialize.Child(scroll)) _
+    .AddChild(refreshButton)
+```
 
-1. Se construye el árbol con clases B4X.
-2. El padre asigna `SetParent`, posición y tamaño.
-3. `Render` monta o actualiza la vista nativa.
-4. `Unmount` limpia referencias y desmonta recursivamente los componentes que lo soportan.
+## UITheme
 
-`Render` debe poder llamarse repetidamente sobre un componente montado. `Unmount` es importante cuando se retira el árbol, se cambia de pantalla o se reconstruye una raíz.
+`UITheme` centralizes palette decisions without coupling the framework widgets to one application:
 
-## Navegación
+```basic
+Private AppTheme As UITheme
 
-`UINavigator` es el propietario de la raíz de navegación:
+AppTheme.Initialize
+Dim background As Int = AppTheme.Background
+Dim cardSurface As Int = AppTheme.Surface
+Dim primaryText As Int = AppTheme.PrimaryText
+```
+
+Switch palettes at runtime:
+
+```basic
+AppTheme.Toggle
+ApplyTheme
+```
+
+Available palette groups include:
+
+- `Background`
+- `Surface`
+- `SurfaceVariant`
+- `PrimaryText`
+- `SecondaryText`
+- `MutedText`
+- `DashboardBar`
+- `SecondaryBar`
+- `HeroSurface`
+- `Accent`
+- `Info`
+- `Negative`
+- `Divider`
+- `Border`
+- `ButtonText`
+- `ThemeAction`
+
+The demo's `ApplyTheme` method injects these colors into the existing widget instances and then remounts the active virtual screen. The palette remains reusable because `UITheme` only provides values; it does not know about NOVA screens or controls.
+
+## Navigation and safe area
+
+`UINavigator` provides virtual screens inside one real native B4A Activity:
 
 ```basic
 Navigator.Initialize _
     .AddScreen("Dashboard", DashboardScreen) _
-    .AddScreen("Login", LoginScreen)
+    .AddScreen("Activity", ActivityScreen) _
+    .AddScreen("Settings", SettingsScreen)
 
-Navigator.SetParent(Root)
-Navigator.SetPosition(0, 0)
-Navigator.SetSize(Root.Width, Root.Height)
-Navigator.Render
-
-Navigator.NavigateTo("Login")
+Navigator.NavigateTo("Activity")
 ```
 
-El navigator crea un host propio, desmonta la pantalla actual, limpia el host y monta solo la nueva pantalla. Una pantalla legacy que no implemente `Unmount` no se reemplaza automáticamente: el navigator conserva la pantalla actual para no dejar referencias nativas en un estado desconocido.
+The host uses the available content rectangle reported by the B4A `IME` API. This keeps the declarative root below the Android status area, including the battery and clock region, without requiring every screen to calculate top insets independently.
 
-Cuando `UINavigator` es la raíz, la aplicación no debe ejecutar `Root.RemoveAllViews` para reconstruir cada pantalla: eso elimina el host desde fuera y rompe la propiedad del árbol visual.
+This is intentionally a single-Activity navigation model. It avoids pretending that a virtual declarative screen is a physical B4A Activity or layout file. Native Activity behavior can still be added later when a real Activity is genuinely required.
 
-## Overflow y límites actuales
+## NOVA Control Center demo
 
-Los hijos intrínsecos conservan su tamaño natural. Si el tamaño natural más los gaps excede el contenedor, el framework no comprime automáticamente los controles; el resultado depende del clipping del contenedor nativo. Esta política evita deformar botones y etiquetas, pero todavía debe formalizarse con un sistema de constraints y pruebas visuales.
+The example contains three virtual screens:
 
-`UILabel` usa actualmente una medición aproximada de texto. Multilínea, wrapping, fuentes, RTL, accesibilidad y tamaños dinámicos requieren trabajo adicional.
+### Dashboard
 
-## Compatibilidad
+- Live counter controlled by the two floating action buttons
+- Hero status card
+- Active-user and uptime metrics
+- Navigation buttons for Activity and Settings
 
-- **B4A:** plataforma objetivo; se realizaron validaciones estáticas, pero no se pudo compilar en este entorno.
-- **B4J:** todavía no compilado en esta revisión.
-- **B4X compartido:** el contrato usa `B4XView`, pero varias clases crean `Panel` directamente. Para avanzar hacia B4J, la ruta recomendada es encapsular la creación con `xui.CreatePanel("")` y aislar propiedades nativas (`Panel`, `Button`, `ColorDrawable`) detrás de adaptadores.
+### Activity
 
-## Deuda técnica priorizada
+- A six-item event stream
+- Natural card measurement
+- A real scrollable content area
+- Refresh state updated at runtime
+- Navigation back to Dashboard
 
-1. Introducir `UIConstraints`, `UISize` y un resultado de medición no ambiguo.
-2. Validar el contrato completo al añadir componentes y producir errores de debug claros.
-3. Separar formalmente `Measure`, `Layout`, `Mount`, `Update` y `Unmount`.
-4. Mejorar medición de texto, wrapping, teclado y accesibilidad.
-5. Añadir temas y estilos propagables.
-6. Crear una matriz de pruebas real para B4A y B4J.
-7. Migrar progresivamente la creación de paneles a XUI para portabilidad.
+### Settings
 
-Todavía no hay reconciliación/diffing, estado reactivo, Virtual DOM ni soporte de modificadores. No se deben prometer estas capacidades como si ya existieran.
+- Runtime theme switch
+- Explicit light/dark status text
+- Theme-aware cards, bars, labels, borders, dividers, and buttons
+- Navigation back to Dashboard
 
-## Validación
+## Building
 
-En el entorno de desarrollo usado para esta evolución no está instalado el compilador B4A. Por eso se han realizado validaciones estáticas: balance de `Sub`/`End Sub`, `git diff --check`, revisión de contratos, comprobación de referencias y modelos matemáticos del layout. La validación definitiva requiere compilar y ejecutar el proyecto en B4A, y posteriormente en B4J.
+1. Open `Declarative UI.b4a` in the B4A IDE.
+2. Confirm that all project modules are included, especially:
+   - `UIScrollView`
+   - `UITheme`
+3. Compile the project with B4A.
+4. Run it from the IDE on a device or emulator.
 
-## Commits de esta evolución
+The project currently uses the following B4A libraries:
 
-- `4209f7d` — checkpoint del progreso previo.
-- `497fefd` — ciclo seguro `Unmount`.
-- `6ef8360` — expansión de filas basada en capacidad, no en `GetType`.
-- `906a0c8` — host aislado y navegación real.
-- `3d61ef8` — integración del navigator en la aplicación de ejemplo.
-- `a7a0b88` — spacing consistente en Row y Column.
+- `core`
+- `ime`
+- `xui`
 
-Cada bloque se mantiene separado para poder revertirlo sin perder el trabajo anterior.
+## Suggested demonstration flow
+
+For a forum presentation, use this sequence:
+
+1. Start on the Dashboard and tap `+` to show state-driven updates.
+2. Open `VIEW ACTIVITY` and scroll through the event stream.
+3. Tap `REFRESH STREAM` and show the refresh counter changing.
+4. Return to Dashboard and open `SETTINGS`.
+5. Toggle the theme and show the complete palette transition.
+6. Return to Dashboard and verify that navigation and state remain intact.
+
+The most important comparison with imperative UI code is that the demo describes a reusable tree of widgets. Native views are still used underneath, but screen composition, measurement, and mounting are handled consistently by the declarative layer.
+
+## Design principles
+
+- Prefer a small, explicit API over a complete Flutter clone.
+- Keep widgets independent from application-specific state and colors.
+- Reuse native B4A controls where they are appropriate.
+- Measure content before assigning layout bounds.
+- Keep virtual navigation separate from native Activity lifecycle.
+- Treat safe-area handling as a root-layout concern.
+- Keep runtime diagnostics out of production code.
+- Add complexity only when a concrete UI problem requires it.

@@ -37,25 +37,19 @@ Public Sub AddScreen(Name As String, Screen As Object) As UINavigator
 End Sub
 
 Public Sub NavigateTo(Name As String)
-	Log("[DBG_UI] UINavigator.NavigateTo requested=" & Name & " current=" & mCurrentScreen & " screenExists=" & mScreens.ContainsKey(Name) & " hostSet=" & (mHost <> Null))
 	If mScreens.ContainsKey(Name) = False Then
-		Log("[DBG_UI] UINavigator.NavigateTo stopped: screen not found")
 		Return
 	End If
 	If mCurrentScreen = Name And mIsMounted Then
-		Log("[DBG_UI] UINavigator.NavigateTo stopped: already mounted")
 		Return
 	End If
 	mCurrentScreen = Name
 	If mHost <> Null Then
 		If mHost.IsInitialized Then
-			Log("[DBG_UI] UINavigator.NavigateTo rendering screen=" & Name)
 			Render
 		Else
-			Log("[DBG_UI] UINavigator.NavigateTo stopped: host not initialized")
 		End If
 	Else
-		Log("[DBG_UI] UINavigator.NavigateTo stopped: host is Null")
 	End If
 End Sub
 
@@ -77,13 +71,10 @@ Public Sub SetSize(Width As Int, Height As Int)
 End Sub
 
 Public Sub Render
-	Log("[DBG_UI] UINavigator.Render current=" & mCurrentScreen & " bounds=" & mLeft & "," & mTop & "," & mWidth & "," & mHeight & " parentSet=" & (mParent <> Null) & " hostSet=" & (mHost <> Null))
 	If mParent = Null Then
-		Log("[DBG_UI] UINavigator.Render skipped: parent is Null")
 		Return
 	End If
 	If mParent.IsInitialized = False Then
-		Log("[DBG_UI] UINavigator.Render skipped: parent is not initialized")
 		Return
 	End If
 
@@ -119,20 +110,17 @@ Public Sub Render
 
 	Dim Screen As Object = mScreens.Get(mCurrentScreen)
 	If Screen <> Null Then
-		Log("[DBG_UI] UINavigator.Render mounting screen=" & mCurrentScreen & " contentBounds=" & contentLeft & "," & contentTop & "," & contentWidth & "," & contentHeight)
 		CallSub2(Screen, "SetParent", mHost)
 		CallSub3(Screen, "SetPosition", 0, 0)
 		CallSub3(Screen, "SetSize", contentWidth, contentHeight)
 		CallSub(Screen, "Render")
 		mMountedScreen = Screen
-		Log("[DBG_UI] UINavigator.Render mounted screen=" & mCurrentScreen)
 	Else
-		Log("[DBG_UI] UINavigator.Render skipped: screen object is Null")
 	End If
 	mIsMounted = mHost.IsInitialized
 End Sub
 
-' Vuelve a medir el área segura y remonta solo si cambió.
+' Re-measure the safe area and remount only when an inset changes.
 Public Sub RefreshInsets
 	If mParent = Null Or mHost = Null Then Return
 	If mParent.IsInitialized = False Or mHost.IsInitialized = False Then Return
@@ -177,10 +165,10 @@ Public Sub Unmount
 	mIsMounted = False
 End Sub
 
-' --- SISTEMA DE MEDICIÓN ---
-' Navigator ocupa todo el espacio disponible (como Scaffold).
+' Natural measurement used by parent layout containers.
+' The navigator fills the available space, just like the scaffold.
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
-	' Una lista vacía representa un tamaño flexible.
+	' An empty list represents a flexible size.
 	Dim flexibleSize As List
 	flexibleSize.Initialize
 	Return flexibleSize

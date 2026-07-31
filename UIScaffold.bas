@@ -16,7 +16,7 @@ Sub Class_Globals
 End Sub
 
 Public Sub Initialize As UIScaffold
-	' ESTO EVITA EL CLASSCAST EXCEPTION DE OBJETOS FANTASMAS
+	' Initialize optional slots explicitly to avoid invalid object references.
 	mAppBar = Null
 	mBody = Null
 	mFabLeft = Null
@@ -76,13 +76,13 @@ Public Sub Render
 	End If
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     
-	' Definimos variables de estado para el cálculo dinámico
+	' Calculate offsets for the app bar, body, and floating action buttons.
 	Dim topOffset As Int = 0
 	Dim bottomOffset As Int = 0
 	Dim appBarHeight As Int = 56dip
 	Dim fabSpace As Int = 80dip ' Espacio total reservado para la zona de FABs
     
-	' 1. Renderizar AppBar
+	' Render the app bar first.
 	If mAppBar <> Null Then
 		CallSub2(mAppBar, "SetParent", mBaseView)
 		CallSub3(mAppBar, "SetPosition", 0, 0)
@@ -91,13 +91,13 @@ Public Sub Render
 		topOffset = appBarHeight ' El body empezará debajo de la AppBar
 	End If
     
-	' 2. Renderizar FABs (Calculamos si hay alguno para reservar espacio abajo)
+	' Reserve bottom space when one or more floating action buttons are present.
 	Dim hasFab As Boolean = (mFabLeft <> Null Or mFabRight <> Null)
 	If hasFab Then
 		bottomOffset = fabSpace
 	End If
     
-	' 3. Renderizar Body (Cálculo dinámico del espacio restante)
+	' Render the body using the remaining height.
 	If mBody <> Null Then
 		Dim bodyHeight As Int = mHeight - topOffset - bottomOffset
 		If bodyHeight < 0 Then bodyHeight = 0
@@ -108,7 +108,7 @@ Public Sub Render
 		CallSub(mBody, "Render")
 	End If
     
-	' 4. Renderizar botones FAB
+	' Render the floating action buttons above the body layer.
 	Dim fabSize As Int = 56dip
 	If mFabRight <> Null Then
 		CallSub2(mFabRight, "SetParent", mBaseView)
@@ -134,10 +134,10 @@ Public Sub Unmount
 	mParent = Null
 End Sub
 
-' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
-' Scaffold ocupa todo el espacio disponible (es el layout raíz).
+' Natural measurement used by parent layout containers.
+' Scaffold fills all available space as the root layout.
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
-	' Una lista vacía representa un tamaño flexible.
+	' An empty list represents a flexible size.
 	Dim flexibleSize As List
 	flexibleSize.Initialize
 	Return flexibleSize

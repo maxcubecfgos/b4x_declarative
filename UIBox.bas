@@ -49,8 +49,8 @@ Public Sub Unmount
 	mParent = Null
 End Sub
 
-' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
-' UIBox mide al hijo y agrega el padding igual que UIPadding.
+' Natural measurement used by parent layout containers.
+' UIBox measures its child and adds the configured padding.
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim result As List
 	result.Initialize

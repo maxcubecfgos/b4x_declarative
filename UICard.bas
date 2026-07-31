@@ -94,8 +94,8 @@ Public Sub Unmount
 	mParent = Null
 End Sub
 
-' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
-' UICard mide a su hijo y agrega el padding del borde (cornerRadius).
+' Natural measurement used by parent layout containers.
+' UICard measures its child and reserves its internal margin.
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim result As List
 	result.Initialize
@@ -106,7 +106,7 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	If safeMaxHeight <= 0 Then safeMaxHeight = 10000
 	
 	If mChild <> Null Then
-		' Medir al hijo con el espacio disponible menos bordes de la card
+		' Measure the child with space reserved for the card margin.
 		Dim childMargin As Int = 16dip
 		Dim childMaxW As Int = Max(0, safeMaxWidth - 2 * childMargin)
 		Dim childMaxH As Int = Max(0, safeMaxHeight - 2 * childMargin)
@@ -123,7 +123,7 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 		End If
 	End If
 	
-	' Hijo Null o quiere llenar espacio: usar todo el disponible
+	' A missing child or flexible child uses the available space.
 	result.Add(safeMaxWidth)
 	result.Add(safeMaxHeight)
 	Return result

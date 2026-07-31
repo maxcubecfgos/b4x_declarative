@@ -10,7 +10,7 @@ Sub Class_Globals
 	Private mBaseView As B4XView
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
-	Private mTitleLabel As Label ' Referencia persistente al Label del título
+	Private mTitleLabel As Label ' Persistent reference to the title label.
 End Sub
 
 Public Sub Initialize As UIAppBar
@@ -80,9 +80,9 @@ Public Sub Render
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
 	mBaseView.Color = mColor
 	
-	' Mantener el título centrado verticalmente en toda la franja.
+	' Keep the title vertically centered across the whole bar.
 	mTitleLabel.Gravity = Gravity.CENTER_VERTICAL
-	' ACTUALIZAR título en CADA render (no solo en el inicial)
+	' Refresh the title on every render, not only during the first mount.
 	mTitleLabel.Text = mTitle
 End Sub
 
@@ -92,8 +92,8 @@ Public Sub Unmount
 	mParent = Null
 End Sub
 
-' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
-' AppBar: altura fija de 56dip (Material Design), ancho completo.
+' Natural measurement used by parent layout containers.
+' Use the standard 56dip Material bar height and the full available width.
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim result As List
 	result.Initialize

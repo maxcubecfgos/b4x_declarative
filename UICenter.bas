@@ -56,8 +56,8 @@ Public Sub Render
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     
 	If mChild <> Null Then
-		' --- SISTEMA DE MEDICIÓN: Centrado REAL usando GetContentSize ---
-		' 1. Preguntar al hijo su tamaño natural
+		' Measure the child so it can be centered using its natural size.
+		' Ask the child for its natural size.
 		Dim childSize As List = CallSub3(mChild, "GetContentSize", mWidth, mHeight)
 		
 		Dim childWidth As Int = mWidth
@@ -70,13 +70,13 @@ Public Sub Render
 			End If
 		End If
 		If hasNaturalSize Then
-			' El hijo tiene un tamaño natural definido -> centrarlo
+			' A measured child can be centered inside the available bounds.
 			childWidth = Min(childSize.Get(0), mWidth)
 			childHeight = Min(childSize.Get(1), mHeight)
 		End If
 		
-		' 2. Calcular posición centrada
-		' Fórmula: (contenedor - hijo) / 2
+		' Calculate the centered position.
+		' Position formula: (container size - child size) / 2.
 		Dim childLeft As Int = Max(0, (mWidth - childWidth) / 2)
 		Dim childTop As Int = Max(0, (mHeight - childHeight) / 2)
         
@@ -93,8 +93,8 @@ Public Sub Unmount
 	mParent = Null
 End Sub
 
-' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
-' UICenter: delega al hijo, el centro no afecta el tamaño natural.
+' Natural measurement used by parent layout containers.
+' UICenter delegates natural measurement to its child.
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	If mChild <> Null Then
 		Dim result As List = CallSub3(mChild, "GetContentSize", MaxWidth, MaxHeight)

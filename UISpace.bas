@@ -18,7 +18,7 @@ Public Sub Initialize As UISpace
 	Return Me
 End Sub
 
-' Define el mismo tamaño en ambas direcciones
+' Use the same fixed size in both directions.
 Public Sub Size(s As Int) As UISpace
 	mFixedWidth = s
 	mFixedHeight = s
@@ -64,10 +64,10 @@ Public Sub Unmount
 	mParent = Null
 End Sub
 
-' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
-' UISpace retorna su tamaño INTRÍNSECO (mFixedWidth/mFixedHeight).
-' NO usa mWidth/mHeight porque SetSize aún no ha sido llamado
-' durante la fase de medición (primera pasada del layout).
+' Natural measurement used by parent layout containers.
+' UISpace returns its intrinsic fixed size.
+' It does not use mWidth or mHeight because SetSize has not been called
+' yet during the first layout measurement pass.
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim result As List
 	result.Initialize

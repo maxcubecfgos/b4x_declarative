@@ -47,7 +47,7 @@ Public Sub Render
 	If mParent = Null Then Return
 	If mParent.IsInitialized = False Then Return
 
-	' 1. Inicializar contenedor
+	' Create the native container when needed.
 	Dim needsCreate As Boolean = False
 	If mBaseView = Null Then
 		needsCreate = True
@@ -64,8 +64,8 @@ Public Sub Render
     
 	If mChildren.Size = 0 Then Return
 	
-	' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
-	' PRIMERA PASADA: medir todos los hijos con GetContentSize
+	' First pass: measure children and classify flexible items.
+	' Measure every child through GetContentSize.
 	Dim totalNaturalHeight As Int = 0
 	Dim expandedCount As Int = 0
 	
@@ -80,13 +80,13 @@ Public Sub Render
 		If hasNaturalSize Then
 			totalNaturalHeight = totalNaturalHeight + size.Get(1)
 		Else
-			' Una lista vacía representa espacio flexible.
+			' An empty list represents flexible space.
 			expandedCount = expandedCount + 1
 		End If
 	Next
 	totalNaturalHeight = totalNaturalHeight + mSpacing * Max(0, mChildren.Size - 1)
 	
-	' Espacio restante para hijos "expandidos"
+	' Distribute remaining height among flexible children.
 	' Fixed children keep their natural size; overflow is clipped by the parent.
 	Dim remainingHeight As Int = Max(0, mHeight - totalNaturalHeight)
 	Dim expandedHeight As Int = 0
@@ -96,7 +96,7 @@ Public Sub Render
 		expandedRemainder = remainingHeight Mod expandedCount
 	End If
 	
-	' SEGUNDA PASADA: posicionar cada hijo
+	' Second pass: position and render each child.
 	Dim yOffset As Int = 0
 	Dim childIndex As Int = 0
 	For Each child As Object In mChildren
@@ -139,8 +139,8 @@ Public Sub Unmount
 	mParent = Null
 End Sub
 
-' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
-' Column: ancho = max ancho hijo, alto = suma altos hijos
+' Natural measurement used by parent layout containers.
+' Column width is the widest child and height is the sum of child heights.
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim result As List
 	result.Initialize

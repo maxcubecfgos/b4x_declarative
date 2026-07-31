@@ -56,11 +56,11 @@ Public Sub Unmount
 	mParent = Null
 End Sub
 
-' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
-' UIExpanded retorna una lista vacía porque QUIERE ocupar TODO el espacio disponible.
-' Esto le indica a Column/Row que debe darle el espacio restante.
+' Natural measurement used by parent layout containers.
+' UIExpanded returns an empty list because it wants all remaining space.
+' Column and Row use this marker to distribute the remaining space.
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
-	' Una lista vacía representa un tamaño flexible.
+	' An empty list represents a flexible size.
 	Dim flexibleSize As List
 	flexibleSize.Initialize
 	Return flexibleSize

@@ -59,8 +59,8 @@ Public Sub Unmount
 	mParent = Null
 End Sub
 
-' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
-' UIDivider: ocupa todo el ancho disponible, 1dip de alto.
+' Natural measurement used by parent layout containers.
+' UIDivider uses the full available width and a one-dip line.
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim result As List
 	result.Initialize
@@ -72,7 +72,7 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	If safeMaxWidth <= 0 Then safeMaxWidth = 10000
 	If safeMaxHeight <= 0 Then safeMaxHeight = 10000
 	
-	result.Add(safeMaxWidth) ' ocupa todo el ancho
-	result.Add(Min(dividerHeight + 16dip, safeMaxHeight)) ' 1dip + espacio vertical
+	result.Add(safeMaxWidth) ' Use the full available width.
+	result.Add(Min(dividerHeight + 16dip, safeMaxHeight)) ' Include vertical breathing room around the line.
 	Return result
 End Sub

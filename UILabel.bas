@@ -81,25 +81,24 @@ Public Sub Unmount
 	mParent = Null
 End Sub
 
-' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
-' Retorna el tamaño NATURAL del texto para que Column/Row/Center
-' puedan calcular layouts precisos.
+' Natural measurement used by parent layout containers.
+' Return the natural text size so Column, Row, and Center can calculate precise layouts.
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim result As List
 	result.Initialize
 	
-	' Medir ancho usando Canvas.MeasureStringWidth (API estándar de B4A)
+	' Measure text width through the standard B4A Canvas API.
 	Dim bmp As Bitmap
 	bmp.InitializeMutable(1dip, 1dip)
 	Dim cvs As Canvas
 	cvs.Initialize2(bmp)
 	Dim textWidth As Float = cvs.MeasureStringWidth(mText, Typeface.DEFAULT, mSize)
 	
-	' Android necesita margen adicional para descendentes y el padding del TextView.
-	' La altura anterior (fontSize * 1.5) recortaba la parte inferior de algunos labels.
+	' Android needs extra room for descenders and TextView padding.
+	' The minimum height prevents the lower part of labels from being clipped.
 	Dim textHeight As Int = Max(mSize * 1.6 + 10dip, 28dip)
 	
-	' Acotar a los límites máximos disponibles
+	' Clamp the result to the available maximum bounds.
 	Dim safeMaxWidth As Int = MaxWidth
 	Dim safeMaxHeight As Int = MaxHeight
 	If safeMaxWidth <= 0 Then safeMaxWidth = 10000

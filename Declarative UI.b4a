@@ -11,7 +11,9 @@ Module12=UINavigator
 Module13=UIPadding
 Module14=UIRow
 Module15=UIScaffold
-Module16=UISpace
+Module16=UIScrollView
+Module17=UISpace
+Module18=UITheme
 Module2=UIAppBar
 Module3=UIBox
 Module4=UIButton
@@ -22,13 +24,13 @@ Module8=UIDivider
 Module9=UIExpanded
 NumberOfFiles=0
 NumberOfLibraries=3
-NumberOfModules=16
+NumberOfModules=18
 Version=13.62
 @EndOfDesignText@
 #Region  Project Attributes
     #ApplicationLabel: NOVA Control Center
-    #VersionCode: 2
-    #VersionName: 1.0
+    #VersionCode: 3
+    #VersionName: 1.1
     #SupportedOrientations: unspecified
     #CanInstallToExternalStorage: False
 #End Region
@@ -41,11 +43,11 @@ Version=13.62
 Sub Process_Globals
     Private Counter As Int = 24
     Private ActivityRefreshes As Int = 0
-    Private ThemeDark As Boolean = False
 End Sub
 
 Sub Globals
     Private Root As B4XView
+    Private AppTheme As UITheme
     Private Navigator As UINavigator
     Private UiMounted As Boolean
     Private LastWidth, LastHeight As Int
@@ -95,25 +97,24 @@ Sub Globals
     Private ActivityBody As UIColumn
     Private ActivityPadding As UIPadding
     Private ActivityList As UIColumn
-    Private ActivityCardOne As UICard
-    Private ActivityCardTwo As UICard
-    Private ActivityCardThree As UICard
-    Private ActivityOnePadding As UIPadding
-    Private ActivityTwoPadding As UIPadding
-    Private ActivityThreePadding As UIPadding
-    Private ActivityOneBody As UIColumn
-    Private ActivityTwoBody As UIColumn
-    Private ActivityThreeBody As UIColumn
+    Private ActivityScroll As UIScrollView
+    Private ActivityScrollExpanded As UIExpanded
+    Private ActivityCardOne, ActivityCardTwo, ActivityCardThree As UICard
+    Private ActivityCardFour, ActivityCardFive, ActivityCardSix As UICard
+    Private ActivityOnePadding, ActivityTwoPadding, ActivityThreePadding As UIPadding
+    Private ActivityFourPadding, ActivityFivePadding, ActivitySixPadding As UIPadding
+    Private ActivityOneBody, ActivityTwoBody, ActivityThreeBody As UIColumn
+    Private ActivityFourBody, ActivityFiveBody, ActivitySixBody As UIColumn
     Private LblActivityOverline As UILabel
     Private LblActivityTitle As UILabel
     Private LblActivitySummary As UILabel
     Private LblActivityRefreshes As UILabel
-    Private LblActivityOne As UILabel
-    Private LblActivityOneMeta As UILabel
-    Private LblActivityTwo As UILabel
-    Private LblActivityTwoMeta As UILabel
-    Private LblActivityThree As UILabel
-    Private LblActivityThreeMeta As UILabel
+    Private LblActivityOne, LblActivityOneMeta As UILabel
+    Private LblActivityTwo, LblActivityTwoMeta As UILabel
+    Private LblActivityThree, LblActivityThreeMeta As UILabel
+    Private LblActivityFour, LblActivityFourMeta As UILabel
+    Private LblActivityFive, LblActivityFiveMeta As UILabel
+    Private LblActivitySix, LblActivitySixMeta As UILabel
     Private BtnRefreshActivity As UIButton
     Private BtnActivityBack As UIButton
 
@@ -132,10 +133,11 @@ Sub Globals
     Private BtnSettingsBack As UIButton
 End Sub
 
+' Creates the activity root and all declarative screens.
 Sub Activity_Create(FirstTime As Boolean)
-    Log("[DBG_UI] Main.Activity_Create firstTime=" & FirstTime)
     Root = Activity
-    Root.Color = 0xFFF4F7FB
+    AppTheme.Initialize
+    Root.Color = AppTheme.Background
     ActiveRoute = "Dashboard"
     InitializeDashboard
     InitializeActivity
@@ -148,45 +150,46 @@ Sub Activity_Create(FirstTime As Boolean)
     BuildUI
 End Sub
 
+' Builds the dashboard screen and its live counter controls.
 Private Sub InitializeDashboard
-    DashboardBar.Initialize.Title("NOVA  /  CONTROL CENTER").BackgroundColor(0xFF132238)
-    FabDecrease.Initialize.Text("-").BackgroundColor(0xFFE45757).OnClick(Me, "Decrement_Click")
-    FabIncrease.Initialize.Text("+").BackgroundColor(0xFF00A896).OnClick(Me, "Increment_Click")
+    DashboardBar.Initialize.Title("NOVA  /  CONTROL CENTER").BackgroundColor(AppTheme.DashboardBar)
+    FabDecrease.Initialize.Text("-").BackgroundColor(AppTheme.Negative).OnClick(Me, "Decrement_Click")
+    FabIncrease.Initialize.Text("+").BackgroundColor(AppTheme.Accent).OnClick(Me, "Increment_Click")
 
-    LblDashboardOverline.Initialize.Text("NOVA OPERATIONS").Size(12).Color(0xFF5B6B82)
-    LblDashboardTitle.Initialize.Text("Good evening, operator").Size(26).Color(0xFF132238)
-    LblDashboardSubtitle.Initialize.Text("Your control center is healthy and ready.").Size(14).Color(0xFF6B7B91)
-    LblHeroOverline.Initialize.Text("LIVE SIGNAL").Size(12).Color(0xFF00A896)
-    LblValue.Initialize.Text("" & Counter).Size(48).Color(0xFF132238)
-    LblValueCaption.Initialize.Text("active sessions").Size(14).Color(0xFF6B7B91)
-    LblHealth.Initialize.Text("ALL SYSTEMS NOMINAL").Size(13).Color(0xFF00A896)
-    LblSync.Initialize.Text("Last sync  •  just now").Size(12).Color(0xFF7D8CA1)
+    LblDashboardOverline.Initialize.Text("NOVA OPERATIONS").Size(12).Color(AppTheme.MutedText)
+    LblDashboardTitle.Initialize.Text("Good evening, operator").Size(26).Color(AppTheme.PrimaryText)
+    LblDashboardSubtitle.Initialize.Text("Your control center is healthy and ready.").Size(14).Color(AppTheme.SecondaryText)
+    LblHeroOverline.Initialize.Text("LIVE SIGNAL").Size(12).Color(AppTheme.Accent)
+    LblValue.Initialize.Text("" & Counter).Size(48).Color(AppTheme.PrimaryText)
+    LblValueCaption.Initialize.Text("active sessions").Size(14).Color(AppTheme.SecondaryText)
+    LblHealth.Initialize.Text("ALL SYSTEMS NOMINAL").Size(13).Color(AppTheme.Accent)
+    LblSync.Initialize.Text("Last sync  •  just now").Size(12).Color(AppTheme.MutedText)
 
     HeroContent.Initialize.Spacing(6).AddChild(LblHeroOverline).AddChild(LblValue).AddChild(LblValueCaption).AddChild(LblHealth).AddChild(LblSync)
     HeroPadding.Initialize.All(18dip).Child(HeroContent)
-    DashboardHero.Initialize.BackgroundColor(0xFFE8F8F5).CornerRadius(18dip).Child(HeroPadding)
+    DashboardHero.Initialize.BackgroundColor(AppTheme.HeroSurface).CornerRadius(18dip).Child(HeroPadding)
 
-    LblActiveCaption.Initialize.Text("ACTIVE USERS").Size(11).Color(0xFF6B7B91)
-    LblActiveValue.Initialize.Text("1,284").Size(25).Color(0xFF132238)
-    LblActiveNote.Initialize.Text("+12.8% this week").Size(12).Color(0xFF00A896)
+    LblActiveCaption.Initialize.Text("ACTIVE USERS").Size(11).Color(AppTheme.SecondaryText)
+    LblActiveValue.Initialize.Text("1,284").Size(25).Color(AppTheme.PrimaryText)
+    LblActiveNote.Initialize.Text("+12.8% this week").Size(12).Color(AppTheme.Accent)
     MetricActiveBody.Initialize.Spacing(4).AddChild(LblActiveCaption).AddChild(LblActiveValue).AddChild(LblActiveNote)
     MetricActivePadding.Initialize.All(14dip).Child(MetricActiveBody)
-    MetricCardActive.Initialize.BackgroundColor(Colors.White).CornerRadius(14dip).Child(MetricActivePadding)
+    MetricCardActive.Initialize.BackgroundColor(AppTheme.Surface).CornerRadius(14dip).Child(MetricActivePadding)
     MetricActiveExpanded.Initialize.Child(MetricCardActive)
 
-    LblUptimeCaption.Initialize.Text("UPTIME").Size(11).Color(0xFF6B7B91)
-    LblUptimeValue.Initialize.Text("99.98%").Size(25).Color(0xFF132238)
-    LblUptimeNote.Initialize.Text("Excellent reliability").Size(12).Color(0xFF3D6FE8)
+    LblUptimeCaption.Initialize.Text("UPTIME").Size(11).Color(AppTheme.SecondaryText)
+    LblUptimeValue.Initialize.Text("99.98%").Size(25).Color(AppTheme.PrimaryText)
+    LblUptimeNote.Initialize.Text("Excellent reliability").Size(12).Color(AppTheme.Info)
     MetricUptimeBody.Initialize.Spacing(4).AddChild(LblUptimeCaption).AddChild(LblUptimeValue).AddChild(LblUptimeNote)
     MetricUptimePadding.Initialize.All(14dip).Child(MetricUptimeBody)
-    MetricCardUptime.Initialize.BackgroundColor(Colors.White).CornerRadius(14dip).Child(MetricUptimePadding)
+    MetricCardUptime.Initialize.BackgroundColor(AppTheme.Surface).CornerRadius(14dip).Child(MetricUptimePadding)
     MetricUptimeExpanded.Initialize.Child(MetricCardUptime)
     MetricsRow.Initialize.Spacing(10dip).AddChild(MetricActiveExpanded).AddChild(MetricUptimeExpanded)
 
-    BtnOpenActivity.Initialize.Text("VIEW ACTIVITY").BackgroundColor(0xFF00A896).TextColor(Colors.White).OnClick(Me, "NavigateToActivity_Click")
-    BtnOpenSettings.Initialize.Text("SETTINGS").BackgroundColor(0xFFDCE5F2).TextColor(0xFF132238).OnClick(Me, "NavigateToSettings_Click")
+    BtnOpenActivity.Initialize.Text("VIEW ACTIVITY").BackgroundColor(AppTheme.Accent).TextColor(Colors.White).OnClick(Me, "NavigateToActivity_Click")
+    BtnOpenSettings.Initialize.Text("SETTINGS").BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText).OnClick(Me, "NavigateToSettings_Click")
     HeroActions.Initialize.Spacing(8dip).AddChild(BtnOpenActivity).AddChild(BtnOpenSettings)
-    DashboardDivider.Initialize
+    DashboardDivider.Initialize.Color(AppTheme.Divider)
     DashboardBody.Initialize.Spacing(10dip) _
         .AddChild(LblDashboardOverline) _
         .AddChild(LblDashboardTitle) _
@@ -203,69 +206,88 @@ Private Sub InitializeDashboard
         .FloatingActionButtonRight(FabIncrease)
 End Sub
 
+' Builds a scrollable event stream with enough content to demonstrate natural measurement.
 Private Sub InitializeActivity
-    ActivityBar.Initialize.Title("ACTIVITY  /  EVENT STREAM").BackgroundColor(0xFF253B5B)
-    LblActivityOverline.Initialize.Text("RECENT EVENTS").Size(12).Color(0xFF5B6B82)
-    LblActivityTitle.Initialize.Text("Signal timeline").Size(26).Color(0xFF132238)
-    LblActivitySummary.Initialize.Text("A focused view of what is happening now.").Size(14).Color(0xFF6B7B91)
-    LblActivityRefreshes.Initialize.Text("Refresh cycles: 0").Size(12).Color(0xFF3D6FE8)
+    ActivityBar.Initialize.Title("ACTIVITY  /  EVENT STREAM").BackgroundColor(AppTheme.SecondaryBar)
+    LblActivityOverline.Initialize.Text("RECENT EVENTS").Size(12).Color(AppTheme.MutedText)
+    LblActivityTitle.Initialize.Text("Signal timeline").Size(26).Color(AppTheme.PrimaryText)
+    LblActivitySummary.Initialize.Text("A focused view of what is happening now.").Size(14).Color(AppTheme.SecondaryText)
+    LblActivityRefreshes.Initialize.Text("Refresh cycles: 0").Size(12).Color(AppTheme.Info)
 
-    LblActivityOne.Initialize.Text("Deployment completed").Size(15).Color(0xFF132238)
-    LblActivityOneMeta.Initialize.Text("Production  •  2 minutes ago").Size(12).Color(0xFF7D8CA1)
+    LblActivityOne.Initialize.Text("Deployment completed").Size(15).Color(AppTheme.PrimaryText)
+    LblActivityOneMeta.Initialize.Text("Production  •  2 minutes ago").Size(12).Color(AppTheme.MutedText)
     ActivityOneBody.Initialize.Spacing(4).AddChild(LblActivityOne).AddChild(LblActivityOneMeta)
     ActivityOnePadding.Initialize.All(14dip).Child(ActivityOneBody)
-    ActivityCardOne.Initialize.BackgroundColor(Colors.White).CornerRadius(14dip).Child(ActivityOnePadding)
+    ActivityCardOne.Initialize.BackgroundColor(AppTheme.Surface).CornerRadius(14dip).Child(ActivityOnePadding)
 
-    LblActivityTwo.Initialize.Text("Workspace synchronized").Size(15).Color(0xFF132238)
-    LblActivityTwoMeta.Initialize.Text("Europe cluster  •  8 minutes ago").Size(12).Color(0xFF7D8CA1)
+    LblActivityTwo.Initialize.Text("Workspace synchronized").Size(15).Color(AppTheme.PrimaryText)
+    LblActivityTwoMeta.Initialize.Text("Europe cluster  •  8 minutes ago").Size(12).Color(AppTheme.MutedText)
     ActivityTwoBody.Initialize.Spacing(4).AddChild(LblActivityTwo).AddChild(LblActivityTwoMeta)
     ActivityTwoPadding.Initialize.All(14dip).Child(ActivityTwoBody)
-    ActivityCardTwo.Initialize.BackgroundColor(Colors.White).CornerRadius(14dip).Child(ActivityTwoPadding)
+    ActivityCardTwo.Initialize.BackgroundColor(AppTheme.Surface).CornerRadius(14dip).Child(ActivityTwoPadding)
 
-    LblActivityThree.Initialize.Text("Security policy verified").Size(15).Color(0xFF132238)
-    LblActivityThreeMeta.Initialize.Text("Automated check  •  21 minutes ago").Size(12).Color(0xFF7D8CA1)
+    LblActivityThree.Initialize.Text("Security policy verified").Size(15).Color(AppTheme.PrimaryText)
+    LblActivityThreeMeta.Initialize.Text("Automated check  •  21 minutes ago").Size(12).Color(AppTheme.MutedText)
     ActivityThreeBody.Initialize.Spacing(4).AddChild(LblActivityThree).AddChild(LblActivityThreeMeta)
     ActivityThreePadding.Initialize.All(14dip).Child(ActivityThreeBody)
-    ActivityCardThree.Initialize.BackgroundColor(Colors.White).CornerRadius(14dip).Child(ActivityThreePadding)
+    ActivityCardThree.Initialize.BackgroundColor(AppTheme.Surface).CornerRadius(14dip).Child(ActivityThreePadding)
 
-    ActivityList.Initialize.Spacing(8).AddChild(ActivityCardOne).AddChild(ActivityCardTwo).AddChild(ActivityCardThree)
-    BtnRefreshActivity.Initialize.Text("REFRESH STREAM").BackgroundColor(0xFF3D6FE8).TextColor(Colors.White).OnClick(Me, "RefreshActivity_Click")
-    BtnActivityBack.Initialize.Text("BACK TO DASHBOARD").BackgroundColor(0xFFDCE5F2).TextColor(0xFF132238).OnClick(Me, "NavigateToDashboard_Click")
+    LblActivityFour.Initialize.Text("Database backup verified").Size(15).Color(AppTheme.PrimaryText)
+    LblActivityFourMeta.Initialize.Text("North America  •  34 minutes ago").Size(12).Color(AppTheme.MutedText)
+    ActivityFourBody.Initialize.Spacing(4).AddChild(LblActivityFour).AddChild(LblActivityFourMeta)
+    ActivityFourPadding.Initialize.All(14dip).Child(ActivityFourBody)
+    ActivityCardFour.Initialize.BackgroundColor(AppTheme.Surface).CornerRadius(14dip).Child(ActivityFourPadding)
+
+    LblActivityFive.Initialize.Text("API latency threshold changed").Size(15).Color(AppTheme.PrimaryText)
+    LblActivityFiveMeta.Initialize.Text("Observability  •  1 hour ago").Size(12).Color(AppTheme.MutedText)
+    ActivityFiveBody.Initialize.Spacing(4).AddChild(LblActivityFive).AddChild(LblActivityFiveMeta)
+    ActivityFivePadding.Initialize.All(14dip).Child(ActivityFiveBody)
+    ActivityCardFive.Initialize.BackgroundColor(AppTheme.Surface).CornerRadius(14dip).Child(ActivityFivePadding)
+
+    LblActivitySix.Initialize.Text("Operator session opened").Size(15).Color(AppTheme.PrimaryText)
+    LblActivitySixMeta.Initialize.Text("Control center  •  2 hours ago").Size(12).Color(AppTheme.MutedText)
+    ActivitySixBody.Initialize.Spacing(4).AddChild(LblActivitySix).AddChild(LblActivitySixMeta)
+    ActivitySixPadding.Initialize.All(14dip).Child(ActivitySixBody)
+    ActivityCardSix.Initialize.BackgroundColor(AppTheme.Surface).CornerRadius(14dip).Child(ActivitySixPadding)
+
+    ActivityList.Initialize.Spacing(8dip).AddChild(ActivityCardOne).AddChild(ActivityCardTwo).AddChild(ActivityCardThree).AddChild(ActivityCardFour).AddChild(ActivityCardFive).AddChild(ActivityCardSix)
+    ActivityScroll.Initialize.Child(ActivityList)
+    ActivityScrollExpanded.Initialize.Child(ActivityScroll)
+    BtnRefreshActivity.Initialize.Text("REFRESH STREAM").BackgroundColor(AppTheme.Info).TextColor(Colors.White).OnClick(Me, "RefreshActivity_Click")
+    BtnActivityBack.Initialize.Text("BACK TO DASHBOARD").BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText).OnClick(Me, "NavigateToDashboard_Click")
     ActivityBody.Initialize.Spacing(10dip) _
         .AddChild(LblActivityOverline) _
         .AddChild(LblActivityTitle) _
         .AddChild(LblActivitySummary) _
         .AddChild(LblActivityRefreshes) _
-        .AddChild(ActivityList) _
+        .AddChild(ActivityScrollExpanded) _
         .AddChild(BtnRefreshActivity) _
         .AddChild(BtnActivityBack)
     ActivityPadding.Initialize.All(16dip).Child(ActivityBody)
     ActivityScreen.Initialize.AppBar(ActivityBar).Body(ActivityPadding)
 End Sub
 
+' Builds the settings screen used to demonstrate runtime theme changes.
 Private Sub InitializeSettings
-    SettingsBar.Initialize.Title("SETTINGS  /  RUNTIME").BackgroundColor(0xFF253B5B)
-    LblSettingsOverline.Initialize.Text("PREFERENCES").Size(12).Color(0xFF5B6B82)
-    LblSettingsTitle.Initialize.Text("Tune your workspace").Size(26).Color(0xFF132238)
-    LblSettingsDescription.Initialize.Text("These controls are live and update the mounted screen.").Size(14).Color(0xFF6B7B91)
-    LblThemeStatus.Initialize.Text("Theme: light workspace").Size(15).Color(0xFF132238)
-    LblRuntimeStatus.Initialize.Text("Runtime: connected  •  latency 42 ms").Size(13).Color(0xFF00A896)
-    BtnTheme.Initialize.Text("TOGGLE THEME STATUS").BackgroundColor(0xFF132238).TextColor(Colors.White).OnClick(Me, "ToggleTheme_Click")
-    BtnSettingsBack.Initialize.Text("BACK TO DASHBOARD").BackgroundColor(0xFFDCE5F2).TextColor(0xFF132238).OnClick(Me, "NavigateToDashboard_Click")
+    SettingsBar.Initialize.Title("SETTINGS  /  RUNTIME").BackgroundColor(AppTheme.SecondaryBar)
+    LblSettingsOverline.Initialize.Text("PREFERENCES").Size(12).Color(AppTheme.MutedText)
+    LblSettingsTitle.Initialize.Text("Tune your workspace").Size(26).Color(AppTheme.PrimaryText)
+    LblSettingsDescription.Initialize.Text("These controls are live and update the mounted screen.").Size(14).Color(AppTheme.SecondaryText)
+    LblThemeStatus.Initialize.Text("Theme: light workspace").Size(15).Color(AppTheme.PrimaryText)
+    LblRuntimeStatus.Initialize.Text("Runtime: connected  •  latency 42 ms").Size(13).Color(AppTheme.Accent)
+    BtnTheme.Initialize.Text("TOGGLE THEME STATUS").BackgroundColor(AppTheme.ThemeAction).TextColor(Colors.White).OnClick(Me, "ToggleTheme_Click")
+    BtnSettingsBack.Initialize.Text("BACK TO DASHBOARD").BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText).OnClick(Me, "NavigateToDashboard_Click")
     SettingsCardBody.Initialize.Spacing(8).AddChild(LblSettingsTitle).AddChild(LblSettingsDescription).AddChild(LblThemeStatus).AddChild(LblRuntimeStatus).AddChild(BtnTheme)
     SettingsCardPadding.Initialize.All(18dip).Child(SettingsCardBody)
-    SettingsCard.Initialize.BackgroundColor(Colors.White).CornerRadius(18dip).Child(SettingsCardPadding)
+    SettingsCard.Initialize.BackgroundColor(AppTheme.Surface).CornerRadius(18dip).Child(SettingsCardPadding)
     SettingsBody.Initialize.Spacing(10dip).AddChild(LblSettingsOverline).AddChild(SettingsCard).AddChild(BtnSettingsBack)
     SettingsPadding.Initialize.All(16dip).Child(SettingsBody)
     SettingsScreen.Initialize.AppBar(SettingsBar).Body(SettingsPadding)
 End Sub
 
+' Mounts the active virtual screen and refreshes safe-area insets.
 Private Sub BuildUI
-    Log("[DBG_UI] Main.BuildUI rootBounds=" & Root.Width & "," & Root.Height & " mounted=" & UiMounted & " route=" & ActiveRoute)
-    If Root.Width <= 0 Or Root.Height <= 0 Then
-        Log("[DBG_UI] Main.BuildUI skipped: root has invalid size")
-        Return
-    End If
+    If Root.Width <= 0 Or Root.Height <= 0 Then Return
     If UiMounted = False Or LastWidth <> Root.Width Or LastHeight <> Root.Height Then
         Navigator.SetParent(Root)
         Navigator.SetPosition(0, 0)
@@ -279,6 +301,7 @@ Private Sub BuildUI
     UpdateActiveLabels
 End Sub
 
+' Updates only the labels whose values are controlled by application state.
 Private Sub UpdateActiveLabels
     If UiMounted = False Then Return
     If ActiveRoute = "Dashboard" Then
@@ -288,7 +311,7 @@ Private Sub UpdateActiveLabels
         LblActivityRefreshes.Text("Refresh cycles: " & ActivityRefreshes)
         LblActivityRefreshes.Render
     Else If ActiveRoute = "Settings" Then
-        If ThemeDark Then
+        If AppTheme.IsDark Then
             LblThemeStatus.Text("Theme: dark workspace")
         Else
             LblThemeStatus.Text("Theme: light workspace")
@@ -297,170 +320,101 @@ Private Sub UpdateActiveLabels
     End If
 End Sub
 
-Sub Increment_Click
-    Log("[DBG_UI] Main.Increment_Click entered counterBefore=" & Counter)
-    Counter = Counter + 1
-    BuildUI
-End Sub
-
-Sub Decrement_Click
-    Log("[DBG_UI] Main.Decrement_Click entered counterBefore=" & Counter)
-    If Counter > 0 Then Counter = Counter - 1
-    BuildUI
-End Sub
-
-Sub RefreshActivity_Click
-    Log("[DBG_UI] Main.RefreshActivity_Click entered refreshesBefore=" & ActivityRefreshes)
-    ActivityRefreshes = ActivityRefreshes + 1
-    BuildUI
-End Sub
-
+' Applies the current UITheme palette to every mounted component.
 Private Sub ApplyTheme
-    Dim backgroundColor As Int
-    Dim surfaceColor As Int
-    Dim secondarySurfaceColor As Int
-    Dim primaryTextColor As Int
-    Dim secondaryTextColor As Int
-    Dim mutedTextColor As Int
-    Dim buttonTextColor As Int
-    Dim themeButtonColor As Int
-    Dim dividerColor As Int
-    Dim cardBorderColor As Int
-    Dim accentColor As Int = 0xFF00A896
-    Dim blueAccentColor As Int = 0xFF3D6FE8
-    Dim buttonSurfaceColor As Int
-    If ThemeDark Then
-        backgroundColor = 0xFF0F172A
-        surfaceColor = 0xFF1E293B
-        secondarySurfaceColor = 0xFF334155
-        primaryTextColor = 0xFFF8FAFC
-        secondaryTextColor = 0xFFCBD5E1
-        mutedTextColor = 0xFF94A3B8
-        buttonTextColor = Colors.White
-        themeButtonColor = 0xFF0F766E
-        dividerColor = 0xFF475569
-        cardBorderColor = 0xFF334155
-        buttonSurfaceColor = secondarySurfaceColor
-        Root.Color = backgroundColor
-        DashboardBar.BackgroundColor(0xFF0B1220)
-        ActivityBar.BackgroundColor(0xFF111827)
-        SettingsBar.BackgroundColor(0xFF111827)
-        DashboardHero.BackgroundColor(0xFF123C3C)
-        MetricCardActive.BackgroundColor(surfaceColor)
-        MetricCardUptime.BackgroundColor(surfaceColor)
-        ActivityCardOne.BackgroundColor(surfaceColor)
-        ActivityCardTwo.BackgroundColor(surfaceColor)
-        ActivityCardThree.BackgroundColor(surfaceColor)
-        SettingsCard.BackgroundColor(surfaceColor)
-    Else
-        backgroundColor = 0xFFF4F7FB
-        surfaceColor = Colors.White
-        secondarySurfaceColor = 0xFFDCE5F2
-        primaryTextColor = 0xFF132238
-        secondaryTextColor = 0xFF6B7B91
-        mutedTextColor = 0xFF7D8CA1
-        buttonTextColor = primaryTextColor
-        themeButtonColor = primaryTextColor
-        dividerColor = 0xFFE0E0E0
-        cardBorderColor = 0xFFE0E0E0
-        buttonSurfaceColor = secondarySurfaceColor
-        Root.Color = backgroundColor
-        DashboardBar.BackgroundColor(0xFF132238)
-        ActivityBar.BackgroundColor(0xFF253B5B)
-        SettingsBar.BackgroundColor(0xFF253B5B)
-        DashboardHero.BackgroundColor(0xFFE8F8F5)
-        MetricCardActive.BackgroundColor(surfaceColor)
-        MetricCardUptime.BackgroundColor(surfaceColor)
-        ActivityCardOne.BackgroundColor(surfaceColor)
-        ActivityCardTwo.BackgroundColor(surfaceColor)
-        ActivityCardThree.BackgroundColor(surfaceColor)
-        SettingsCard.BackgroundColor(surfaceColor)
-    End If
-    DashboardDivider.Color(dividerColor)
-    MetricCardActive.BorderColor(cardBorderColor)
-    MetricCardUptime.BorderColor(cardBorderColor)
-    ActivityCardOne.BorderColor(cardBorderColor)
-    ActivityCardTwo.BorderColor(cardBorderColor)
-    ActivityCardThree.BorderColor(cardBorderColor)
-    SettingsCard.BorderColor(cardBorderColor)
+    Root.Color = AppTheme.Background
+    DashboardBar.BackgroundColor(AppTheme.DashboardBar)
+    ActivityBar.BackgroundColor(AppTheme.SecondaryBar)
+    SettingsBar.BackgroundColor(AppTheme.SecondaryBar)
+    DashboardHero.BackgroundColor(AppTheme.HeroSurface)
 
-    ' Dashboard labels
-    LblDashboardOverline.Color(mutedTextColor)
-    LblDashboardTitle.Color(primaryTextColor)
-    LblDashboardSubtitle.Color(secondaryTextColor)
-    LblHeroOverline.Color(accentColor)
-    LblValue.Color(primaryTextColor)
-    LblValueCaption.Color(secondaryTextColor)
-    LblHealth.Color(accentColor)
-    LblSync.Color(mutedTextColor)
-    LblActiveCaption.Color(secondaryTextColor)
-    LblActiveValue.Color(primaryTextColor)
-    LblActiveNote.Color(accentColor)
-    LblUptimeCaption.Color(secondaryTextColor)
-    LblUptimeValue.Color(primaryTextColor)
-    LblUptimeNote.Color(blueAccentColor)
+    MetricCardActive.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border)
+    MetricCardUptime.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border)
+    ActivityCardOne.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border)
+    ActivityCardTwo.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border)
+    ActivityCardThree.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border)
+    ActivityCardFour.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border)
+    ActivityCardFive.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border)
+    ActivityCardSix.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border)
+    SettingsCard.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border)
+    DashboardDivider.Color(AppTheme.Divider)
 
-    ' Activity labels
-    LblActivityOverline.Color(mutedTextColor)
-    LblActivityTitle.Color(primaryTextColor)
-    LblActivitySummary.Color(secondaryTextColor)
-    LblActivityRefreshes.Color(blueAccentColor)
-    LblActivityOne.Color(primaryTextColor)
-    LblActivityOneMeta.Color(mutedTextColor)
-    LblActivityTwo.Color(primaryTextColor)
-    LblActivityTwoMeta.Color(mutedTextColor)
-    LblActivityThree.Color(primaryTextColor)
-    LblActivityThreeMeta.Color(mutedTextColor)
+    LblDashboardOverline.Color(AppTheme.MutedText)
+    LblDashboardTitle.Color(AppTheme.PrimaryText)
+    LblDashboardSubtitle.Color(AppTheme.SecondaryText)
+    LblHeroOverline.Color(AppTheme.Accent)
+    LblValue.Color(AppTheme.PrimaryText)
+    LblValueCaption.Color(AppTheme.SecondaryText)
+    LblHealth.Color(AppTheme.Accent)
+    LblSync.Color(AppTheme.MutedText)
+    LblActiveCaption.Color(AppTheme.SecondaryText)
+    LblActiveValue.Color(AppTheme.PrimaryText)
+    LblActiveNote.Color(AppTheme.Accent)
+    LblUptimeCaption.Color(AppTheme.SecondaryText)
+    LblUptimeValue.Color(AppTheme.PrimaryText)
+    LblUptimeNote.Color(AppTheme.Info)
 
-    ' Settings labels
-    LblSettingsOverline.Color(mutedTextColor)
-    LblSettingsTitle.Color(primaryTextColor)
-    LblSettingsDescription.Color(secondaryTextColor)
-    LblThemeStatus.Color(primaryTextColor)
-    LblRuntimeStatus.Color(accentColor)
+    LblActivityOverline.Color(AppTheme.MutedText)
+    LblActivityTitle.Color(AppTheme.PrimaryText)
+    LblActivitySummary.Color(AppTheme.SecondaryText)
+    LblActivityRefreshes.Color(AppTheme.Info)
+    LblActivityOne.Color(AppTheme.PrimaryText)
+    LblActivityOneMeta.Color(AppTheme.MutedText)
+    LblActivityTwo.Color(AppTheme.PrimaryText)
+    LblActivityTwoMeta.Color(AppTheme.MutedText)
+    LblActivityThree.Color(AppTheme.PrimaryText)
+    LblActivityThreeMeta.Color(AppTheme.MutedText)
+    LblActivityFour.Color(AppTheme.PrimaryText)
+    LblActivityFourMeta.Color(AppTheme.MutedText)
+    LblActivityFive.Color(AppTheme.PrimaryText)
+    LblActivityFiveMeta.Color(AppTheme.MutedText)
+    LblActivitySix.Color(AppTheme.PrimaryText)
+    LblActivitySixMeta.Color(AppTheme.MutedText)
 
-    ' Keep button contrast readable on both surfaces.
-    BtnOpenActivity.BackgroundColor(accentColor).TextColor(Colors.White)
-    BtnOpenSettings.BackgroundColor(buttonSurfaceColor).TextColor(buttonTextColor)
-    BtnRefreshActivity.BackgroundColor(blueAccentColor).TextColor(Colors.White)
-    BtnActivityBack.BackgroundColor(buttonSurfaceColor).TextColor(buttonTextColor)
-    BtnTheme.BackgroundColor(themeButtonColor).TextColor(Colors.White)
-    BtnSettingsBack.BackgroundColor(buttonSurfaceColor).TextColor(buttonTextColor)
+    LblSettingsOverline.Color(AppTheme.MutedText)
+    LblSettingsTitle.Color(AppTheme.PrimaryText)
+    LblSettingsDescription.Color(AppTheme.SecondaryText)
+    LblThemeStatus.Color(AppTheme.PrimaryText)
+    LblRuntimeStatus.Color(AppTheme.Accent)
+
+    BtnOpenActivity.BackgroundColor(AppTheme.Accent).TextColor(Colors.White)
+    BtnOpenSettings.BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText)
+    BtnRefreshActivity.BackgroundColor(AppTheme.Info).TextColor(Colors.White)
+    BtnActivityBack.BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText)
+    BtnTheme.BackgroundColor(AppTheme.ThemeAction).TextColor(Colors.White)
+    BtnSettingsBack.BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText)
 End Sub
 
+' Toggles the palette and remounts the active screen with the new colors.
 Sub ToggleTheme_Click
-    Log("[DBG_UI] Main.ToggleTheme_Click entered darkBefore=" & ThemeDark)
-    ThemeDark = Not(ThemeDark)
+    AppTheme.Toggle
     ApplyTheme
     If UiMounted Then Navigator.Render
     UpdateActiveLabels
 End Sub
 
+' Navigates to the activity stream.
 Sub NavigateToActivity_Click
-    Log("[DBG_UI] Main.NavigateToActivity_Click entered routeBefore=" & ActiveRoute)
     ActiveRoute = "Activity"
     Navigator.NavigateTo("Activity")
     UpdateActiveLabels
-    Log("[DBG_UI] Main.NavigateToActivity_Click completed routeAfter=" & ActiveRoute)
 End Sub
 
+' Navigates to the settings screen.
 Sub NavigateToSettings_Click
-    Log("[DBG_UI] Main.NavigateToSettings_Click entered routeBefore=" & ActiveRoute)
     ActiveRoute = "Settings"
     Navigator.NavigateTo("Settings")
     UpdateActiveLabels
-    Log("[DBG_UI] Main.NavigateToSettings_Click completed routeAfter=" & ActiveRoute)
 End Sub
 
+' Navigates back to the dashboard.
 Sub NavigateToDashboard_Click
-    Log("[DBG_UI] Main.NavigateToDashboard_Click entered routeBefore=" & ActiveRoute)
     ActiveRoute = "Dashboard"
     Navigator.NavigateTo("Dashboard")
     UpdateActiveLabels
-    Log("[DBG_UI] Main.NavigateToDashboard_Click completed routeAfter=" & ActiveRoute)
 End Sub
 
+' Reapplies layout after the activity resumes.
 Sub Activity_Resume
-    Log("[DBG_UI] Main.Activity_Resume")
     BuildUI
 End Sub

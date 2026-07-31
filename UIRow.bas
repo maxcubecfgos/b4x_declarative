@@ -64,8 +64,8 @@ Public Sub Render
     
 	If mChildren.Size = 0 Then Return
     
-	' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
-	' PRIMERA PASADA: clasificar y medir hijos
+	' First pass: measure children and classify flexible items.
+	' Measure every child and classify flexible items.
 	Dim expandedCount As Int = 0
 	Dim totalNaturalWidth As Int = 0
 	
@@ -80,7 +80,7 @@ Public Sub Render
 		If hasNaturalSize Then
 			totalNaturalWidth = totalNaturalWidth + size.Get(0)
 		Else
-			' Una lista vacía representa espacio flexible.
+			' An empty list represents flexible space.
 			expandedCount = expandedCount + 1
 		End If
 	Next
@@ -95,7 +95,7 @@ Public Sub Render
 		expandedRemainder = remainingWidth Mod expandedCount
 	End If
 	
-	' SEGUNDA PASADA: posicionar cada hijo
+	' Second pass: position and render each child.
 	Dim currentLeft As Int = 0
 	Dim childIndex As Int = 0
     
@@ -141,8 +141,8 @@ Public Sub Unmount
 	mParent = Null
 End Sub
 
-' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
-' Row: ancho = suma anchos hijos, alto = max alto hijo
+' Natural measurement used by parent layout containers.
+' Row width is the sum of child widths and height is the tallest child.
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim result As List
 	result.Initialize
@@ -175,15 +175,15 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Next
 	totalNaturalWidth = totalNaturalWidth + mSpacing * Max(0, mChildren.Size - 1)
 	
-	' Si todos son expandidos, retornar Null (ocupar todo)
+	' If every child is flexible, return the flexible marker.
 	If hasExpanded And naturalChildCount = 0 Then
 		Dim flexibleSize As List
 		flexibleSize.Initialize
 		Return flexibleSize
 	End If
 	
-	' Si hay expandidos: el ancho natural es el mínimo necesario
-	' Si no hay expandidos: el ancho natural es la suma total
+	' With flexible children, the natural width is the minimum required width.
+	' Without flexible children, the natural width is the total child width.
 	result.Add(Min(totalNaturalWidth, safeMaxWidth))
 	result.Add(Min(maxChildHeight, safeMaxHeight))
 	Return result

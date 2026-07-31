@@ -81,8 +81,8 @@ Public Sub Unmount
 	mParent = Null
 End Sub
 
-' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
-' Mide al hijo y suma el padding para obtener el tamaño total.
+' Natural measurement used by parent layout containers.
+' Measure the child and add padding to obtain the total size.
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim result As List
 	result.Initialize
@@ -108,7 +108,7 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 		End If
 	End If
 	
-	' Sin hijo: el padding define el tamaño (mínimo)
+	' Without a child, padding defines the minimum size.
 	result.Add(Min(mLeftPad + mRightPad, safeMaxWidth))
 	result.Add(Min(mTop + mBottom, safeMaxHeight))
 	Return result
