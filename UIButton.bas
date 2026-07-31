@@ -78,6 +78,7 @@ Public Sub Render
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
+	mBaseView.Tag = Me
     
 	If mBaseView.Text <> mText Then mBaseView.Text = mText
 	If mBaseView.Color <> mColor Then mBaseView.Color = mColor
@@ -92,15 +93,13 @@ End Sub
 Private Sub NativeBtn_Click
 	Dim btn As Button = Sender
 	Dim instance As UIButton = btn.Tag
+	If instance = Null Then Return
 	instance.TriggerClick
 End Sub
 
 Public Sub TriggerClick
-	If mTarget <> Null And mEventName <> "" Then
-		' Ejecutar el callback directamente, igual que el FAB.
-		' La navegación se mantiene simple y no se pierde el evento.
-		CallSub(mTarget, mEventName)
-	End If
+	If mTarget = Null Or mEventName = "" Then Return
+	CallSub(mTarget, mEventName)
 End Sub
 
 ' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
