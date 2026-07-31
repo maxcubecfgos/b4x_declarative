@@ -95,8 +95,9 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	cvs.Initialize2(bmp)
 	Dim textWidth As Float = cvs.MeasureStringWidth(mText, Typeface.DEFAULT, mSize)
 	
-	' Altura aproximada: fontSize * 1.5 para espacio entre líneas
-	Dim textHeight As Int = Max(mSize * 1.5, 20)
+	' Android necesita margen adicional para descendentes y el padding del TextView.
+	' La altura anterior (fontSize * 1.5) recortaba la parte inferior de algunos labels.
+	Dim textHeight As Int = Max(mSize * 1.5 + 6dip, 24dip)
 	
 	' Acotar a los límites máximos disponibles
 	Dim safeMaxWidth As Int = MaxWidth
