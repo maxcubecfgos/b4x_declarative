@@ -7,6 +7,7 @@ Version=13.5
 Sub Class_Globals
 	Private mText As String
 	Private mColor As Int
+	Private mTextColor As Int
 	Private mTarget As Object
 	Private mEventName As String
 	Private mBaseView As B4XView
@@ -17,6 +18,7 @@ End Sub
 Public Sub Initialize As UIButton
 	mText = ""
 	mColor = Colors.LightGray
+	mTextColor = Colors.Black
 	' PREVENCIÓN DE ERROR: Nulificamos el objetivo explícitamente
 	mTarget = Null
 	mEventName = ""
@@ -30,6 +32,11 @@ End Sub
 
 Public Sub BackgroundColor(c As Int) As UIButton
 	mColor = c
+	Return Me
+End Sub
+
+Public Sub TextColor(c As Int) As UIButton
+	mTextColor = c
 	Return Me
 End Sub
 
@@ -74,6 +81,7 @@ Public Sub Render
     
 	If mBaseView.Text <> mText Then mBaseView.Text = mText
 	If mBaseView.Color <> mColor Then mBaseView.Color = mColor
+	If mBaseView.TextColor <> mTextColor Then mBaseView.TextColor = mTextColor
 End Sub
 
 Public Sub Unmount
@@ -89,7 +97,9 @@ End Sub
 
 Public Sub TriggerClick
 	If mTarget <> Null And mEventName <> "" Then
-		CallSub(mTarget, mEventName)
+		' Diferir el callback evita reentrar en el árbol de vistas mientras
+		' Android todavía está procesando el evento Click.
+		CallSubDelayed(mTarget, mEventName)
 	End If
 End Sub
 

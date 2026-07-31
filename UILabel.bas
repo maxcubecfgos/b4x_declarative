@@ -97,7 +97,7 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	
 	' Android necesita margen adicional para descendentes y el padding del TextView.
 	' La altura anterior (fontSize * 1.5) recortaba la parte inferior de algunos labels.
-	Dim textHeight As Int = Max(mSize * 1.5 + 6dip, 24dip)
+	Dim textHeight As Int = Max(mSize * 1.6 + 10dip, 28dip)
 	
 	' Acotar a los límites máximos disponibles
 	Dim safeMaxWidth As Int = MaxWidth
