@@ -71,10 +71,16 @@ Public Sub Render
 	
 	For Each child As Object In mChildren
 		Dim size As List = CallSub3(child, "GetContentSize", mWidth, 0)
+		Dim hasNaturalSize As Boolean = False
 		If size <> Null Then
+			If size.IsInitialized Then
+				If size.Size >= 2 Then hasNaturalSize = True
+			End If
+		End If
+		If hasNaturalSize Then
 			totalNaturalHeight = totalNaturalHeight + size.Get(1)
 		Else
-			' Retorna Null = hijo quiere espacio flexible (como Expanded)
+			' Una lista vacía representa espacio flexible.
 			expandedCount = expandedCount + 1
 		End If
 	Next
@@ -97,7 +103,13 @@ Public Sub Render
 		Dim childHeight As Int
 		
 		Dim size As List = CallSub3(child, "GetContentSize", mWidth, 0)
+		Dim hasNaturalSize As Boolean = False
 		If size <> Null Then
+			If size.IsInitialized Then
+				If size.Size >= 2 Then hasNaturalSize = True
+			End If
+		End If
+		If hasNaturalSize Then
 			childHeight = size.Get(1) ' Altura natural
 		Else
 			childHeight = expandedHeight ' Espacio flexible
@@ -144,7 +156,13 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	
 	For Each child As Object In mChildren
 		Dim size As List = CallSub3(child, "GetContentSize", safeMaxWidth, 0)
+		Dim hasNaturalSize As Boolean = False
 		If size <> Null Then
+			If size.IsInitialized Then
+				If size.Size >= 2 Then hasNaturalSize = True
+			End If
+		End If
+		If hasNaturalSize Then
 			allExpanded = False
 			maxChildWidth = Max(maxChildWidth, size.Get(0))
 			totalChildHeight = totalChildHeight + size.Get(1)
@@ -153,7 +171,9 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	totalChildHeight = totalChildHeight + mSpacing * Max(0, mChildren.Size - 1)
 	
 	If mChildren.Size > 0 And allExpanded Then
-		Return Null ' Los hijos flexibles ocupan todo el espacio
+		Dim flexibleSize As List
+		flexibleSize.Initialize
+		Return flexibleSize
 	End If
 	
 	result.Add(Min(maxChildWidth, safeMaxWidth))

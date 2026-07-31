@@ -71,10 +71,16 @@ Public Sub Render
 	
 	For Each child As Object In mChildren
 		Dim size As List = CallSub3(child, "GetContentSize", mWidth, mHeight)
+		Dim hasNaturalSize As Boolean = False
 		If size <> Null Then
+			If size.IsInitialized Then
+				If size.Size >= 2 Then hasNaturalSize = True
+			End If
+		End If
+		If hasNaturalSize Then
 			totalNaturalWidth = totalNaturalWidth + size.Get(0)
 		Else
-			' Null means that the child accepts flexible space.
+			' Una lista vacía representa espacio flexible.
 			expandedCount = expandedCount + 1
 		End If
 	Next
@@ -96,7 +102,13 @@ Public Sub Render
 	For Each child As Object In mChildren
 		Dim currentWidth As Int = 0
 		Dim size As List = CallSub3(child, "GetContentSize", mWidth, mHeight)
+		Dim hasNaturalSize As Boolean = False
 		If size <> Null Then
+			If size.IsInitialized Then
+				If size.Size >= 2 Then hasNaturalSize = True
+			End If
+		End If
+		If hasNaturalSize Then
 			currentWidth = size.Get(0) ' Ancho natural
 		Else
 			currentWidth = expandedWidth ' También se expande
@@ -147,7 +159,13 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	
 	For Each child As Object In mChildren
 		Dim size As List = CallSub3(child, "GetContentSize", safeMaxWidth, safeMaxHeight)
+		Dim hasNaturalSize As Boolean = False
 		If size <> Null Then
+			If size.IsInitialized Then
+				If size.Size >= 2 Then hasNaturalSize = True
+			End If
+		End If
+		If hasNaturalSize Then
 			totalNaturalWidth = totalNaturalWidth + size.Get(0)
 			maxChildHeight = Max(maxChildHeight, size.Get(1))
 			naturalChildCount = naturalChildCount + 1
@@ -159,7 +177,9 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	
 	' Si todos son expandidos, retornar Null (ocupar todo)
 	If hasExpanded And naturalChildCount = 0 Then
-		Return Null
+		Dim flexibleSize As List
+		flexibleSize.Initialize
+		Return flexibleSize
 	End If
 	
 	' Si hay expandidos: el ancho natural es el mínimo necesario

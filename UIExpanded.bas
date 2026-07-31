@@ -57,8 +57,11 @@ Public Sub Unmount
 End Sub
 
 ' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
-' UIExpanded retorna Null porque QUIERE ocupar TODO el espacio disponible.
+' UIExpanded retorna una lista vacía porque QUIERE ocupar TODO el espacio disponible.
 ' Esto le indica a Column/Row que debe darle el espacio restante.
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
-	Return Null ' Quiere todo el espacio disponible
+	' Una lista vacía representa un tamaño flexible.
+	Dim flexibleSize As List
+	flexibleSize.Initialize
+	Return flexibleSize
 End Sub

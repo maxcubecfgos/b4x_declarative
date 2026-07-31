@@ -117,5 +117,8 @@ End Sub
 ' --- SISTEMA DE MEDICIÓN ---
 ' Navigator ocupa todo el espacio disponible (como Scaffold).
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
-	Return Null
+	' Una lista vacía representa un tamaño flexible.
+	Dim flexibleSize As List
+	flexibleSize.Initialize
+	Return flexibleSize
 End Sub

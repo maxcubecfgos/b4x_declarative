@@ -63,7 +63,13 @@ Public Sub Render
 		Dim childWidth As Int = mWidth
 		Dim childHeight As Int = mHeight
 		
+		Dim hasNaturalSize As Boolean = False
 		If childSize <> Null Then
+			If childSize.IsInitialized Then
+				If childSize.Size >= 2 Then hasNaturalSize = True
+			End If
+		End If
+		If hasNaturalSize Then
 			' El hijo tiene un tamaño natural definido -> centrarlo
 			childWidth = Min(childSize.Get(0), mWidth)
 			childHeight = Min(childSize.Get(1), mHeight)
@@ -91,8 +97,14 @@ End Sub
 ' UICenter: delega al hijo, el centro no afecta el tamaño natural.
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	If mChild <> Null Then
-		Dim result As Object = CallSub3(mChild, "GetContentSize", MaxWidth, MaxHeight)
-		If result <> Null Then Return result
+		Dim result As List = CallSub3(mChild, "GetContentSize", MaxWidth, MaxHeight)
+		If result <> Null Then
+			If result.IsInitialized Then
+				If result.Size >= 2 Then Return result
+			End If
+		End If
 	End If
-	Return Null
+	Dim flexibleSize As List
+	flexibleSize.Initialize
+	Return flexibleSize
 End Sub

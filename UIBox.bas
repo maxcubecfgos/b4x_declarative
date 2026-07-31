@@ -66,9 +66,13 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 		
 		Dim childSize As List = CallSub3(mChild, "GetContentSize", childMaxW, childMaxH)
 		If childSize <> Null Then
-			result.Add(Min(childSize.Get(0) + 2 * mPadding, safeMaxWidth))
-			result.Add(Min(childSize.Get(1) + 2 * mPadding, safeMaxHeight))
-			Return result
+			If childSize.IsInitialized Then
+				If childSize.Size >= 2 Then
+					result.Add(Min(childSize.Get(0) + 2 * mPadding, safeMaxWidth))
+					result.Add(Min(childSize.Get(1) + 2 * mPadding, safeMaxHeight))
+					Return result
+				End If
+			End If
 		End If
 	End If
 	

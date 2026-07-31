@@ -137,5 +137,8 @@ End Sub
 ' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
 ' Scaffold ocupa todo el espacio disponible (es el layout raíz).
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
-	Return Null ' Ocupa todo el espacio disponible
+	' Una lista vacía representa un tamaño flexible.
+	Dim flexibleSize As List
+	flexibleSize.Initialize
+	Return flexibleSize
 End Sub
