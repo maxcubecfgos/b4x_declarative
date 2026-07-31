@@ -20,7 +20,7 @@ Public Sub Initialize As UIRow
 End Sub
 
 Public Sub AddChild(Component As Object) As UIRow
-	mChildren.Add(Component)
+	If Component <> Null Then mChildren.Add(Component)
 	Return Me
 End Sub
 

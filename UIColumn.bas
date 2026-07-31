@@ -20,7 +20,7 @@ Public Sub Initialize As UIColumn
 End Sub
 
 Public Sub AddChild(child As Object) As UIColumn
-	mChildren.Add(child)
+	If child <> Null Then mChildren.Add(child)
 	Return Me
 End Sub
 
