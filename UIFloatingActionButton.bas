@@ -57,23 +57,18 @@ End Sub
 
 Public Sub Render
 	If mBaseView.IsInitialized = False Then
-		Dim pnl As Panel
-		pnl.Initialize("")
-		mBaseView = pnl
+		' REFACTOR: Mismo patrón que UIButton.
+		' mBaseView es el Button directamente (no un Panel conteniendo un Button).
+		' Usamos Tag = Me para recuperar la instancia en el evento Click.
+		Dim btn As Button
+		btn.Initialize("FabBtn")
+		mBaseView = btn
+		mBaseView.Tag = Me
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     
-	Dim btn As Button
-	If mBaseView.NumberOfViews = 0 Then
-		btn.Initialize("btn")
-		Dim xBtn As B4XView = btn
-		mBaseView.AddView(xBtn, 0, 0, mWidth, mHeight)
-	Else
-		Dim xBtn As B4XView = mBaseView.GetView(0)
-		btn = xBtn
-	End If
-    
+	Dim btn As Button = mBaseView
 	btn.Text = mText
 	btn.TextSize = 24
 	btn.TextColor = mTextColor
@@ -83,8 +78,28 @@ Public Sub Render
 	btn.Background = cd
 End Sub
 
-Private Sub btn_Click
-	If mTarget <> Null And mEventName <> "" Then
-		CallSub(mTarget, mEventName)
+Private Sub FabBtn_Click
+	Dim btn As Button = Sender
+	Dim instance As UIFloatingActionButton = btn.Tag
+	If instance.mTarget <> Null And instance.mEventName <> "" Then
+		CallSub(instance.mTarget, instance.mEventName)
 	End If
+End Sub
+
+' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
+' FAB: tamaño fijo de 56dip (Material Design spec)
+Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
+	Dim result As List
+	result.Initialize
+	
+	Dim fabSize As Int = 56dip
+	
+	Dim safeMaxWidth As Int = MaxWidth
+	Dim safeMaxHeight As Int = MaxHeight
+	If safeMaxWidth <= 0 Then safeMaxWidth = 10000
+	If safeMaxHeight <= 0 Then safeMaxHeight = 10000
+	
+	result.Add(Min(fabSize, safeMaxWidth))
+	result.Add(Min(fabSize, safeMaxHeight))
+	Return result
 End Sub

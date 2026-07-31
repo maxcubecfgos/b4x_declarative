@@ -78,3 +78,30 @@ Public Sub TriggerClick
 		CallSub(mTarget, mEventName)
 	End If
 End Sub
+
+' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
+Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
+	Dim result As List
+	result.Initialize
+	
+	' Medir el texto del botón usando Canvas.MeasureStringWidth (API estándar B4A)
+	Dim bmp As Bitmap
+	bmp.InitializeMutable(1dip, 1dip)
+	Dim cvs As Canvas
+	cvs.Initialize2(bmp)
+	Dim textWidth As Float = cvs.MeasureStringWidth(mText, Typeface.DEFAULT, 14)
+	
+	' Botón Material Design: padding horizontal ~32dip, altura ~48dip
+	Dim btnPadding As Int = 32dip
+	Dim naturalWidth As Int = textWidth + btnPadding
+	Dim naturalHeight As Int = 48dip
+	
+	Dim safeMaxWidth As Int = MaxWidth
+	Dim safeMaxHeight As Int = MaxHeight
+	If safeMaxWidth <= 0 Then safeMaxWidth = 10000
+	If safeMaxHeight <= 0 Then safeMaxHeight = 10000
+	
+	result.Add(Min(naturalWidth, safeMaxWidth))
+	result.Add(Min(naturalHeight, safeMaxHeight))
+	Return result
+End Sub

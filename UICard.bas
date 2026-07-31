@@ -70,3 +70,34 @@ Public Sub Render
 		CallSub(mChild, "Render")
 	End If
 End Sub
+
+' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
+' UICard mide a su hijo y agrega el padding del borde (cornerRadius).
+Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
+	Dim result As List
+	result.Initialize
+	
+	Dim safeMaxWidth As Int = MaxWidth
+	Dim safeMaxHeight As Int = MaxHeight
+	If safeMaxWidth <= 0 Then safeMaxWidth = 10000
+	If safeMaxHeight <= 0 Then safeMaxHeight = 10000
+	
+	If mChild <> Null Then
+		' Medir al hijo con el espacio disponible menos bordes de la card
+		Dim childMargin As Int = 16dip
+		Dim childMaxW As Int = Max(0, safeMaxWidth - 2 * childMargin)
+		Dim childMaxH As Int = Max(0, safeMaxHeight - 2 * childMargin)
+		
+		Dim childSize As List = CallSub3(mChild, "GetContentSize", childMaxW, childMaxH)
+		If childSize <> Null Then
+			result.Add(Min(childSize.Get(0) + 2 * childMargin, safeMaxWidth))
+			result.Add(Min(childSize.Get(1) + 2 * childMargin, safeMaxHeight))
+			Return result
+		End If
+	End If
+	
+	' Hijo Null o quiere llenar espacio: usar todo el disponible
+	result.Add(safeMaxWidth)
+	result.Add(safeMaxHeight)
+	Return result
+End Sub

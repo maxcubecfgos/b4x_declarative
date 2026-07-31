@@ -37,11 +37,6 @@ Public Sub Color(c As Int) As UILabel
 	Return Me
 End Sub
 
-Public Sub TextGravity(g As Int) As UILabel
-	mGravityValue = g
-	Return Me
-End Sub
-
 Public Sub SetParent(Parent As B4XView)
 	mParent = Parent
 End Sub
@@ -70,4 +65,32 @@ Public Sub Render
 	NativeLabel.TextSize = mSize
 	NativeLabel.TextColor = mTextColor
 	NativeLabel.Gravity = mGravityValue
+End Sub
+
+' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
+' Retorna el tamaño NATURAL del texto para que Column/Row/Center
+' puedan calcular layouts precisos.
+Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
+	Dim result As List
+	result.Initialize
+	
+	' Medir ancho usando Canvas.MeasureStringWidth (API estándar de B4A)
+	Dim bmp As Bitmap
+	bmp.InitializeMutable(1dip, 1dip)
+	Dim cvs As Canvas
+	cvs.Initialize2(bmp)
+	Dim textWidth As Float = cvs.MeasureStringWidth(mText, Typeface.DEFAULT, mSize)
+	
+	' Altura aproximada: fontSize * 1.5 para espacio entre líneas
+	Dim textHeight As Int = Max(mSize * 1.5, 20)
+	
+	' Acotar a los límites máximos disponibles
+	Dim safeMaxWidth As Int = MaxWidth
+	Dim safeMaxHeight As Int = MaxHeight
+	If safeMaxWidth <= 0 Then safeMaxWidth = 10000
+	If safeMaxHeight <= 0 Then safeMaxHeight = 10000
+	
+	result.Add(Min(textWidth, safeMaxWidth))
+	result.Add(Min(textHeight, safeMaxHeight))
+	Return result
 End Sub

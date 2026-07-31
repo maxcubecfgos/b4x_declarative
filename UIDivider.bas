@@ -39,3 +39,21 @@ Public Sub Render
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop + 8dip, mWidth, 1dip)
 	mBaseView.Color = mColor
 End Sub
+
+' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
+' UIDivider: ocupa todo el ancho disponible, 1dip de alto.
+Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
+	Dim result As List
+	result.Initialize
+	
+	Dim dividerHeight As Int = 1dip
+	
+	Dim safeMaxWidth As Int = MaxWidth
+	Dim safeMaxHeight As Int = MaxHeight
+	If safeMaxWidth <= 0 Then safeMaxWidth = 10000
+	If safeMaxHeight <= 0 Then safeMaxHeight = 10000
+	
+	result.Add(safeMaxWidth) ' ocupa todo el ancho
+	result.Add(Min(dividerHeight + 16dip, safeMaxHeight)) ' 1dip + espacio vertical
+	Return result
+End Sub

@@ -46,17 +46,37 @@ Public Sub Render
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     
 	If mChild <> Null Then
+		' --- SISTEMA DE MEDICIÓN: Centrado REAL usando GetContentSize ---
+		' 1. Preguntar al hijo su tamaño natural
+		Dim childSize As List = CallSub3(mChild, "GetContentSize", mWidth, mHeight)
+		
 		Dim childWidth As Int = mWidth
 		Dim childHeight As Int = mHeight
-        
-		If GetType(mChild).Contains("uirow") Then childHeight = Min(48dip, mHeight)
-        
-		Dim childLeft As Int = (mWidth - childWidth) / 2
-		Dim childTop As Int = (mHeight - childHeight) / 2
+		
+		If childSize <> Null Then
+			' El hijo tiene un tamaño natural definido -> centrarlo
+			childWidth = Min(childSize.Get(0), mWidth)
+			childHeight = Min(childSize.Get(1), mHeight)
+		End If
+		
+		' 2. Calcular posición centrada
+		' Fórmula: (contenedor - hijo) / 2
+		Dim childLeft As Int = Max(0, (mWidth - childWidth) / 2)
+		Dim childTop As Int = Max(0, (mHeight - childHeight) / 2)
         
 		CallSub2(mChild, "SetParent", mBaseView)
 		CallSub3(mChild, "SetPosition", childLeft, childTop)
 		CallSub3(mChild, "SetSize", childWidth, childHeight)
 		CallSub(mChild, "Render")
 	End If
+End Sub
+
+' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
+' UICenter: delega al hijo, el centro no afecta el tamaño natural.
+Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
+	If mChild <> Null Then
+		Dim result As Object = CallSub3(mChild, "GetContentSize", MaxWidth, MaxHeight)
+		If result <> Null Then Return result
+	End If
+	Return Null
 End Sub

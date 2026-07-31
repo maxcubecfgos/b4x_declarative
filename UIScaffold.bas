@@ -114,3 +114,9 @@ Public Sub Render
 		CallSub(mFabLeft, "Render")
 	End If
 End Sub
+
+' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
+' Scaffold ocupa todo el espacio disponible (es el layout raíz).
+Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
+	Return Null ' Ocupa todo el espacio disponible
+End Sub

@@ -47,22 +47,30 @@ Public Sub Render
     
 	If mChildren.Size = 0 Then Return
     
+	' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
+	' PRIMERA PASADA: clasificar y medir hijos
 	Dim expandedCount As Int = 0
-	Dim fixedWidthsTotal As Int = 0
-	Dim fixedSpaceWidth As Int = 12dip
-    
+	Dim totalNaturalWidth As Int = 0
+	
 	For Each child As Object In mChildren
 		If GetType(child).Contains("uiexpanded") Then
 			expandedCount = expandedCount + 1
-		Else If GetType(child).Contains("uispace") Then
-			fixedWidthsTotal = fixedWidthsTotal + fixedSpaceWidth
+		Else
+			Dim size As List = CallSub3(child, "GetContentSize", mWidth, mHeight)
+			If size <> Null Then
+				totalNaturalWidth = totalNaturalWidth + size.Get(0)
+			Else
+				' También quiere expandirse
+				expandedCount = expandedCount + 1
+			End If
 		End If
 	Next
     
-	Dim remainingWidth As Int = mWidth - fixedWidthsTotal
+	Dim remainingWidth As Int = Max(0, mWidth - totalNaturalWidth)
 	Dim expandedWidth As Int = 0
 	If expandedCount > 0 Then expandedWidth = remainingWidth / expandedCount
-    
+	
+	' SEGUNDA PASADA: posicionar cada hijo
 	Dim currentLeft As Int = 0
     
 	For Each child As Object In mChildren
@@ -73,11 +81,16 @@ Public Sub Render
 			currentWidth = expandedWidth
 			Dim exp As UIExpanded = child
 			targetObject = exp.GetChild
-		Else If GetType(child).Contains("uispace") Then
-			currentWidth = fixedSpaceWidth
 		Else
-			currentWidth = remainingWidth / Max(1, mChildren.Size)
+			Dim size As List = CallSub3(child, "GetContentSize", mWidth, mHeight)
+			If size <> Null Then
+				currentWidth = size.Get(0) ' Ancho natural
+			Else
+				currentWidth = expandedWidth ' También se expande
+			End If
 		End If
+        
+		If currentWidth < 0 Then currentWidth = 0
         
 		If targetObject <> Null Then
 			CallSub2(targetObject, "SetParent", mBaseView)
@@ -88,4 +101,45 @@ Public Sub Render
         
 		currentLeft = currentLeft + currentWidth
 	Next
+End Sub
+
+' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
+' Row: ancho = suma anchos hijos, alto = max alto hijo
+Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
+	Dim result As List
+	result.Initialize
+	
+	Dim safeMaxWidth As Int = MaxWidth
+	Dim safeMaxHeight As Int = MaxHeight
+	If safeMaxWidth <= 0 Then safeMaxWidth = 10000
+	If safeMaxHeight <= 0 Then safeMaxHeight = 10000
+	
+	Dim totalNaturalWidth As Int = 0
+	Dim maxChildHeight As Int = 0
+	Dim hasExpanded As Boolean = False
+	
+	For Each child As Object In mChildren
+		If GetType(child).Contains("uiexpanded") Then
+			hasExpanded = True
+		Else
+			Dim size As List = CallSub3(child, "GetContentSize", safeMaxWidth, safeMaxHeight)
+			If size <> Null Then
+				totalNaturalWidth = totalNaturalWidth + size.Get(0)
+				maxChildHeight = Max(maxChildHeight, size.Get(1))
+			Else
+				hasExpanded = True
+			End If
+		End If
+	Next
+	
+	' Si todos son expandidos, retornar Null (ocupar todo)
+	If hasExpanded And totalNaturalWidth = 0 Then
+		Return Null
+	End If
+	
+	' Si hay expandidos: el ancho natural es el mínimo necesario
+	' Si no hay expandidos: el ancho natural es la suma total
+	result.Add(Min(totalNaturalWidth, safeMaxWidth))
+	result.Add(Min(maxChildHeight, safeMaxHeight))
+	Return result
 End Sub

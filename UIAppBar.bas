@@ -10,6 +10,7 @@ Sub Class_Globals
 	Private mBaseView As B4XView
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
+	Private mTitleLabel As Label ' Referencia persistente al Label del título
 End Sub
 
 Public Sub Initialize As UIAppBar
@@ -49,15 +50,33 @@ Public Sub Render
 		mBaseView = pnl
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
         
-		' Lógica básica interna de UIAppBar
-		Dim lbl As Label
-		lbl.Initialize("")
-		Dim xLbl As B4XView = lbl
-		xLbl.Text = mTitle
+		' Crear el Label del título UNA SOLA VEZ
+		mTitleLabel.Initialize("")
+		Dim xLbl As B4XView = mTitleLabel
 		xLbl.TextColor = Colors.White
 		xLbl.TextSize = 18
 		mBaseView.AddView(xLbl, 16dip, 0, mWidth - 32dip, mHeight)
 	End If
+	
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
 	mBaseView.Color = mColor
+	
+	' ACTUALIZAR título en CADA render (no solo en el inicial)
+	mTitleLabel.Text = mTitle
+End Sub
+
+' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
+' AppBar: altura fija de 56dip (Material Design), ancho completo.
+Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
+	Dim result As List
+	result.Initialize
+	
+	Dim safeMaxWidth As Int = MaxWidth
+	Dim safeMaxHeight As Int = MaxHeight
+	If safeMaxWidth <= 0 Then safeMaxWidth = 10000
+	If safeMaxHeight <= 0 Then safeMaxHeight = 10000
+	
+	result.Add(safeMaxWidth) ' Ancho completo disponible
+	result.Add(Min(56dip, safeMaxHeight)) ' Altura fija Material Design
+	Return result
 End Sub

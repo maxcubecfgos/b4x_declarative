@@ -16,11 +16,6 @@ Public Sub Initialize As UINavigator
 	Return Me
 End Sub
 
-Public Sub AddScreen(Name As String, Component As Object) As UINavigator
-	mScreens.Put(Name, Component)
-	Return Me
-End Sub
-
 Public Sub NavigateTo(Name As String)
 	mCurrentScreen = Name
 End Sub
@@ -47,4 +42,10 @@ Public Sub Render
 		CallSub3(Screen, "SetSize", mWidth, mHeight)
 		CallSub(Screen, "Render")
 	End If
+End Sub
+
+' --- SISTEMA DE MEDICIÓN ---
+' Navigator ocupa todo el espacio disponible (como Scaffold).
+Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
+	Return Null
 End Sub

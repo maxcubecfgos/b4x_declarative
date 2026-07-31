@@ -23,12 +23,6 @@ Public Sub All(Value As Int) As UIPadding
 	Return Me
 End Sub
 
-Public Sub Symmetric(Horizontal As Int, Vertical As Int) As UIPadding
-	mLeftPad = Horizontal : mRightPad = Horizontal
-	mTop = Vertical : mBottom = Vertical
-	Return Me
-End Sub
-
 Public Sub Child(c As Object) As UIPadding
 	mChild = c
 	Return Me
@@ -69,4 +63,33 @@ Public Sub Render
 		CallSub3(mChild, "SetSize", Max(0, childWidth), Max(0, childHeight))
 		CallSub(mChild, "Render")
 	End If
+End Sub
+
+' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
+' Mide al hijo y suma el padding para obtener el tamaño total.
+Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
+	Dim result As List
+	result.Initialize
+	
+	Dim safeMaxWidth As Int = MaxWidth
+	Dim safeMaxHeight As Int = MaxHeight
+	If safeMaxWidth <= 0 Then safeMaxWidth = 10000
+	If safeMaxHeight <= 0 Then safeMaxHeight = 10000
+	
+	If mChild <> Null Then
+		Dim childMaxW As Int = Max(0, safeMaxWidth - mLeftPad - mRightPad)
+		Dim childMaxH As Int = Max(0, safeMaxHeight - mTop - mBottom)
+		
+		Dim childSize As List = CallSub3(mChild, "GetContentSize", childMaxW, childMaxH)
+		If childSize <> Null Then
+			result.Add(Min(childSize.Get(0) + mLeftPad + mRightPad, safeMaxWidth))
+			result.Add(Min(childSize.Get(1) + mTop + mBottom, safeMaxHeight))
+			Return result
+		End If
+	End If
+	
+	' Sin hijo: el padding define el tamaño (mínimo)
+	result.Add(Min(mLeftPad + mRightPad, safeMaxWidth))
+	result.Add(Min(mTop + mBottom, safeMaxHeight))
+	Return result
 End Sub

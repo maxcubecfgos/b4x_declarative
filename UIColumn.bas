@@ -45,13 +45,79 @@ Public Sub Render
 	End If
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     
-	' 2. Posicionar hijos
+	If mChildren.Size = 0 Then Return
+	
+	' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
+	' PRIMERA PASADA: medir todos los hijos con GetContentSize
+	Dim totalNaturalHeight As Int = 0
+	Dim expandedCount As Int = 0
+	
+	For Each child As Object In mChildren
+		Dim size As List = CallSub3(child, "GetContentSize", mWidth, 0)
+		If size <> Null Then
+			totalNaturalHeight = totalNaturalHeight + size.Get(1)
+		Else
+			' Retorna Null = hijo quiere espacio flexible (como Expanded)
+			expandedCount = expandedCount + 1
+		End If
+	Next
+	
+	' Espacio restante para hijos "expandidos"
+	Dim remainingHeight As Int = Max(0, mHeight - totalNaturalHeight)
+	Dim expandedHeight As Int = 0
+	If expandedCount > 0 Then expandedHeight = remainingHeight / expandedCount
+	
+	' SEGUNDA PASADA: posicionar cada hijo
 	Dim yOffset As Int = 0
 	For Each child As Object In mChildren
+		Dim childHeight As Int
+		
+		Dim size As List = CallSub3(child, "GetContentSize", mWidth, 0)
+		If size <> Null Then
+			childHeight = size.Get(1) ' Altura natural
+		Else
+			childHeight = expandedHeight ' Espacio flexible
+		End If
+		
+		If childHeight < 0 Then childHeight = 0
+		
 		CallSub2(child, "SetParent", mBaseView)
 		CallSub3(child, "SetPosition", 0, yOffset)
-		CallSub3(child, "SetSize", mWidth, 100dip) ' Damos una altura fija para probar
+		CallSub3(child, "SetSize", mWidth, childHeight)
 		CallSub(child, "Render")
-		yOffset = yOffset + 110dip ' Sumamos altura + margen
+		yOffset = yOffset + childHeight
 	Next
+End Sub
+
+' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
+' Column: ancho = max ancho hijo, alto = suma altos hijos
+Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
+	Dim result As List
+	result.Initialize
+	
+	Dim safeMaxWidth As Int = MaxWidth
+	Dim safeMaxHeight As Int = MaxHeight
+	If safeMaxWidth <= 0 Then safeMaxWidth = 10000
+	If safeMaxHeight <= 0 Then safeMaxHeight = 10000
+	
+	Dim maxChildWidth As Int = 0
+	Dim totalChildHeight As Int = 0
+	Dim allExpanded As Boolean = True
+	
+	For Each child As Object In mChildren
+		Dim size As List = CallSub3(child, "GetContentSize", safeMaxWidth, 0)
+		If size <> Null Then
+			allExpanded = False
+			maxChildWidth = Max(maxChildWidth, size.Get(0))
+			totalChildHeight = totalChildHeight + size.Get(1)
+		End If
+	Next
+	
+	If allExpanded Then
+		Return Null ' Todos se expanden -> ocupar todo el espacio
+	End If
+	
+	result.Add(Min(maxChildWidth, safeMaxWidth))
+	result.Add(Min(totalChildHeight, safeMaxHeight))
+	Return result
 End Sub
