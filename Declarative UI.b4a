@@ -39,12 +39,14 @@ Version=13.5
 
 Sub Process_Globals
 	Private Counter As Int = 0
-	Private CurrentRoute As String = "Dashboard"
 End Sub
 
 ' --- TODAS las vistas y componentes van aquí ---
 Sub Globals
 	Private Root As B4XView
+	Private Navigator As UINavigator
+	Private UiMounted As Boolean
+	Private LastWidth, LastHeight As Int
     
 	' Pantallas
 	Private DashboardScreen As UIScaffold
@@ -54,10 +56,10 @@ Sub Globals
 	Private AppAppBar As UIAppBar
 	Private FabDecrement As UIFloatingActionButton
 	Private FabIncrement As UIFloatingActionButton
-	Private FabNavLogin As UIFloatingActionButton
     
 	Private LblTitle As UILabel
 	Private LblValue As UILabel
+	Private BtnNavLogin As UIButton
 	Private MyDivider As UIDivider
 	Private ColumnCardBody As UIColumn
 	Private PaddingCard As UIPadding
@@ -65,6 +67,8 @@ Sub Globals
 	Private PaddingScreen As UIPadding
     
 	' Elementos Login
+	Private LblLogin As UILabel
+	Private BtnBack As UIButton
 	Private LoginBody As UIColumn
 End Sub
 
@@ -78,14 +82,12 @@ Sub Activity_Create(FirstTime As Boolean)
 	FabDecrement.Initialize.Text("-").BackgroundColor(0xFFFF5252).OnClick(Me, "Decrement_Click")
 	FabIncrement.Initialize.Text("+").BackgroundColor(0xFF448AFF).OnClick(Me, "Increment_Click")
     
-	' Este botón flota en la esquina superior o donde quieras, pero lo añadimos al Scaffold
-	FabNavLogin.Initialize.Text("Login").BackgroundColor(0xFF673AB7).OnClick(Me, "NavigateToLogin")
-    
 	LblTitle.Initialize.Text("SYSTEM STATUS").Size(14).Color(0xFF607D8B)
 	LblValue.Initialize.Size(96).Color(0xFF212121)
+	BtnNavLogin.Initialize.Text("Open login").BackgroundColor(0xFF673AB7).OnClick(Me, "NavigateToLogin")
 	MyDivider.Initialize
     
-	ColumnCardBody.Initialize.AddChild(LblTitle).AddChild(MyDivider).AddChild(LblValue)
+	ColumnCardBody.Initialize.AddChild(LblTitle).AddChild(MyDivider).AddChild(LblValue).AddChild(BtnNavLogin)
 	PaddingCard.Initialize.All(24dip).Child(ColumnCardBody)
 	MainCard.Initialize.BackgroundColor(Colors.White).CornerRadius(16dip).Child(PaddingCard)
 	PaddingScreen.Initialize.All(20dip).Child(MainCard)
@@ -97,44 +99,29 @@ Sub Activity_Create(FirstTime As Boolean)
         .FloatingActionButtonRight(FabIncrement)
         
 	' 2. Inicializar Login
-	Private LblLogin As UILabel
 	LblLogin.Initialize.Text("LOGIN SCREEN").Size(20)
-	LoginBody.Initialize.AddChild(LblLogin)
+	BtnBack.Initialize.Text("Back to dashboard").OnClick(Me, "NavigateToDashboard")
+	LoginBody.Initialize.AddChild(LblLogin).AddChild(BtnBack)
 	LoginScreen.Initialize.Body(LoginBody)
-    
+
+	Navigator.Initialize.AddScreen("Dashboard", DashboardScreen).AddScreen("Login", LoginScreen)
 	BuildUI
 End Sub
 
 Sub BuildUI
-	DashboardScreen.Unmount
-	LoginScreen.Unmount
-	FabNavLogin.Unmount
-	Root.RemoveAllViews
-    
-	If CurrentRoute = "Dashboard" Then
-		LblValue.Text("" & Counter)
-        
-		' --- NUEVO PARADIGMA DE RENDERIZADO ---
-		DashboardScreen.SetParent(Root)
-		DashboardScreen.SetPosition(0, 0)
-		DashboardScreen.SetSize(Root.Width, Root.Height)
-		DashboardScreen.Render
-        
-		' Renderizamos el botón de navegación manualmente si queremos que flote sobre todo
-		FabNavLogin.SetParent(Root)
-		FabNavLogin.SetPosition(Root.Width - 120dip, 80dip)
-		FabNavLogin.SetSize(100dip, 56dip)
-		FabNavLogin.Render
-        
-	Else
-        
-		' --- NUEVO PARADIGMA DE RENDERIZADO ---
-		LoginScreen.SetParent(Root)
-		LoginScreen.SetPosition(0, 0)
-		LoginScreen.SetSize(Root.Width, Root.Height)
-		LoginScreen.Render
-        
+	LblValue.Text("" & Counter)
+	If Root.Width <= 0 Or Root.Height <= 0 Then Return
+	If UiMounted And LastWidth = Root.Width And LastHeight = Root.Height Then
+		LblValue.Render
+		Return
 	End If
+	Navigator.SetParent(Root)
+	Navigator.SetPosition(0, 0)
+	Navigator.SetSize(Root.Width, Root.Height)
+	Navigator.Render
+	LastWidth = Root.Width
+	LastHeight = Root.Height
+	UiMounted = True
 End Sub
 
 Sub Increment_Click
@@ -148,6 +135,9 @@ Sub Decrement_Click
 End Sub
 
 Sub NavigateToLogin
-	CurrentRoute = "Login"
-	BuildUI
+	Navigator.NavigateTo("Login")
+End Sub
+
+Sub NavigateToDashboard
+	Navigator.NavigateTo("Dashboard")
 End Sub
