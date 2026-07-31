@@ -61,7 +61,13 @@ Public Sub Render
         
 	End If
 
+	Dim titleNeedsCreate As Boolean = needsCreate
 	If mTitleLabel = Null Then
+		titleNeedsCreate = True
+	Else If mTitleLabel.IsInitialized = False Then
+		titleNeedsCreate = True
+	End If
+	If titleNeedsCreate Then
 		Dim titleLabel As Label
 		titleLabel.Initialize("")
 		mTitleLabel = titleLabel
