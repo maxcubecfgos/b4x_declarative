@@ -44,14 +44,27 @@ Public Sub SetSize(Width As Int, Height As Int)
 End Sub
 
 Public Sub Render
-	If mBaseView.IsInitialized = False Then
+	If mParent = Null Then Return
+	If mParent.IsInitialized = False Then Return
+
+	Dim needsCreate As Boolean = False
+	If mBaseView = Null Then
+		needsCreate = True
+	Else If mBaseView.IsInitialized = False Then
+		needsCreate = True
+	End If
+	If needsCreate Then
 		Dim pnl As Panel
 		pnl.Initialize("")
 		mBaseView = pnl
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
         
-		' Crear el Label del título UNA SOLA VEZ
-		mTitleLabel.Initialize("")
+	End If
+
+	If mTitleLabel = Null Then
+		Dim titleLabel As Label
+		titleLabel.Initialize("")
+		mTitleLabel = titleLabel
 		Dim xLbl As B4XView = mTitleLabel
 		xLbl.TextColor = Colors.White
 		xLbl.TextSize = 18

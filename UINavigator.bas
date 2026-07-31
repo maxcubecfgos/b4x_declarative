@@ -27,7 +27,9 @@ Public Sub AddScreen(Name As String, Screen As Object) As UINavigator
 	If Name.Trim = "" Or Screen = Null Then Return Me
 	mScreens.Put(Name, Screen)
 	If mCurrentScreen = "" Then mCurrentScreen = Name
-	If mHost.IsInitialized And Name = mCurrentScreen Then Render
+	If mHost <> Null Then
+		If mHost.IsInitialized And Name = mCurrentScreen Then Render
+	End If
 	Return Me
 End Sub
 
@@ -35,11 +37,15 @@ Public Sub NavigateTo(Name As String)
 	If mScreens.ContainsKey(Name) = False Then Return
 	If mCurrentScreen = Name And mIsMounted Then Return
 	mCurrentScreen = Name
-	If mHost.IsInitialized Then Render
+	If mHost <> Null Then
+		If mHost.IsInitialized Then Render
+	End If
 End Sub
 
 Public Sub SetParent(Parent As B4XView)
-	If mHost.IsInitialized Then Unmount
+	If mHost <> Null Then
+		If mHost.IsInitialized Then Unmount
+	End If
 	mParent = Parent
 End Sub
 
@@ -54,8 +60,16 @@ Public Sub SetSize(Width As Int, Height As Int)
 End Sub
 
 Public Sub Render
+	If mParent = Null Then Return
 	If mParent.IsInitialized = False Then Return
-	If mHost.IsInitialized = False Then
+
+	Dim needsCreate As Boolean = False
+	If mHost = Null Then
+		needsCreate = True
+	Else If mHost.IsInitialized = False Then
+		needsCreate = True
+	End If
+	If needsCreate Then
 		Dim pnl As Panel
 		pnl.Initialize("")
 		mHost = pnl
@@ -66,8 +80,9 @@ Public Sub Render
 	End If
 
 	If mMountedScreen <> Null Then
-		If xui.SubExists(mMountedScreen, "Unmount", 0) = False Then Return
-		CallSub(mMountedScreen, "Unmount")
+		If xui.SubExists(mMountedScreen, "Unmount", 0) Then
+			CallSub(mMountedScreen, "Unmount")
+		End If
 	End If
 	mHost.RemoveAllViews
 	mMountedScreen = Null
@@ -87,9 +102,11 @@ Public Sub Unmount
 	If mMountedScreen <> Null Then
 		If xui.SubExists(mMountedScreen, "Unmount", 0) Then CallSub(mMountedScreen, "Unmount")
 	End If
-	If mHost.IsInitialized Then
-		mHost.RemoveAllViews
-		mHost.RemoveViewFromParent
+	If mHost <> Null Then
+		If mHost.IsInitialized Then
+			mHost.RemoveAllViews
+			mHost.RemoveViewFromParent
+		End If
 	End If
 	mHost = Null
 	mMountedScreen = Null

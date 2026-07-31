@@ -56,7 +56,16 @@ Public Sub SetSize(Width As Int, Height As Int)
 End Sub
 
 Public Sub Render
-	If mBaseView.IsInitialized = False Then
+	If mParent = Null Then Return
+	If mParent.IsInitialized = False Then Return
+
+	Dim needsCreate As Boolean = False
+	If mBaseView = Null Then
+		needsCreate = True
+	Else If mBaseView.IsInitialized = False Then
+		needsCreate = True
+	End If
+	If needsCreate Then
 		' REFACTOR: Mismo patrón que UIButton.
 		' mBaseView es el Button directamente (no un Panel conteniendo un Button).
 		' Usamos Tag = Me para recuperar la instancia en el evento Click.

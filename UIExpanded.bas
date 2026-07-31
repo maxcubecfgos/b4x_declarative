@@ -40,6 +40,9 @@ Public Sub SetSize(Width As Int, Height As Int)
 End Sub
 
 Public Sub Render
+	If mParent = Null Then Return
+	If mParent.IsInitialized = False Then Return
+
 	If mChild <> Null Then
 		CallSub2(mChild, "SetParent", mParent)
 		CallSub3(mChild, "SetPosition", mLeft, mTop)
