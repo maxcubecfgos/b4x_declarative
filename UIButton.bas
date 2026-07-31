@@ -67,6 +67,11 @@ Public Sub Render
 	If mBaseView.Color <> mColor Then mBaseView.Color = mColor
 End Sub
 
+Public Sub Unmount
+	mBaseView = Null
+	mParent = Null
+End Sub
+
 Private Sub NativeBtn_Click
 	Dim btn As Button = Sender
 	Dim instance As UIButton = btn.Tag

@@ -5,6 +5,7 @@ Type=Class
 Version=13.5
 @EndOfDesignText@
 Sub Class_Globals
+	Private xui As XUI
 	Private mScreens As Map
 	Private mCurrentScreen As String
 	Private mParent As B4XView
@@ -42,6 +43,13 @@ Public Sub Render
 		CallSub3(Screen, "SetSize", mWidth, mHeight)
 		CallSub(Screen, "Render")
 	End If
+End Sub
+
+Public Sub Unmount
+	For Each Screen As Object In mScreens.Values
+		If Screen <> Null And xui.SubExists(Screen, "Unmount", 0) Then CallSub(Screen, "Unmount")
+	Next
+	mParent = Null
 End Sub
 
 ' --- SISTEMA DE MEDICIÓN ---

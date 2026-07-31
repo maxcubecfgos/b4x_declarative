@@ -78,6 +78,11 @@ Public Sub Render
 	btn.Background = cd
 End Sub
 
+Public Sub Unmount
+	mBaseView = Null
+	mParent = Null
+End Sub
+
 Private Sub FabBtn_Click
 	Dim btn As Button = Sender
 	Dim instance As UIFloatingActionButton = btn.Tag

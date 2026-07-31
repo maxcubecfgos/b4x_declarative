@@ -50,6 +50,11 @@ Public Sub Render
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
 End Sub
 
+Public Sub Unmount
+	mBaseView = Null
+	mParent = Null
+End Sub
+
 ' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
 ' UISpace retorna su tamaño INTRÍNSECO (mFixedWidth/mFixedHeight).
 ' NO usa mWidth/mHeight porque SetSize aún no ha sido llamado

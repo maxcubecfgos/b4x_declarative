@@ -5,6 +5,7 @@ Type=Class
 Version=13.5
 @EndOfDesignText@
 Sub Class_Globals
+	Private xui As XUI
 	Private mChild As Object
 	Private mBaseView As B4XView
 	Private mTop, mBottom, mLeftPad, mRightPad As Int
@@ -63,6 +64,12 @@ Public Sub Render
 		CallSub3(mChild, "SetSize", Max(0, childWidth), Max(0, childHeight))
 		CallSub(mChild, "Render")
 	End If
+End Sub
+
+Public Sub Unmount
+	If mChild <> Null And xui.SubExists(mChild, "Unmount", 0) Then CallSub(mChild, "Unmount")
+	mBaseView = Null
+	mParent = Null
 End Sub
 
 ' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---

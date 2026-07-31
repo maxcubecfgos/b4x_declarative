@@ -67,6 +67,11 @@ Public Sub Render
 	NativeLabel.Gravity = mGravityValue
 End Sub
 
+Public Sub Unmount
+	mBaseView = Null
+	mParent = Null
+End Sub
+
 ' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
 ' Retorna el tamaño NATURAL del texto para que Column/Row/Center
 ' puedan calcular layouts precisos.

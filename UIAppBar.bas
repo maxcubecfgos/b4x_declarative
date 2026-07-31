@@ -65,6 +65,12 @@ Public Sub Render
 	mTitleLabel.Text = mTitle
 End Sub
 
+Public Sub Unmount
+	mTitleLabel = Null
+	mBaseView = Null
+	mParent = Null
+End Sub
+
 ' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
 ' AppBar: altura fija de 56dip (Material Design), ancho completo.
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List

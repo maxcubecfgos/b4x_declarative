@@ -5,6 +5,7 @@ Type=Class
 Version=13.5
 @EndOfDesignText@
 Sub Class_Globals
+	Private xui As XUI
 	Private mAppBar As Object
 	Private mBody As Object
 	Private mFabLeft As Object
@@ -113,6 +114,15 @@ Public Sub Render
 		CallSub3(mFabLeft, "SetSize", fabSize, fabSize)
 		CallSub(mFabLeft, "Render")
 	End If
+End Sub
+
+Public Sub Unmount
+	If mAppBar <> Null And xui.SubExists(mAppBar, "Unmount", 0) Then CallSub(mAppBar, "Unmount")
+	If mBody <> Null And xui.SubExists(mBody, "Unmount", 0) Then CallSub(mBody, "Unmount")
+	If mFabLeft <> Null And xui.SubExists(mFabLeft, "Unmount", 0) Then CallSub(mFabLeft, "Unmount")
+	If mFabRight <> Null And xui.SubExists(mFabRight, "Unmount", 0) Then CallSub(mFabRight, "Unmount")
+	mBaseView = Null
+	mParent = Null
 End Sub
 
 ' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---

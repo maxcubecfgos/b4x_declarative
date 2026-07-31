@@ -5,6 +5,7 @@ Type=Class
 Version=13.5
 @EndOfDesignText@
 Sub Class_Globals
+	Private xui As XUI
 	Private mChildren As List
 	Private mBaseView As B4XView
 	Private mParent As B4XView
@@ -101,6 +102,14 @@ Public Sub Render
         
 		currentLeft = currentLeft + currentWidth
 	Next
+End Sub
+
+Public Sub Unmount
+	For Each child As Object In mChildren
+		If child <> Null And xui.SubExists(child, "Unmount", 0) Then CallSub(child, "Unmount")
+	Next
+	mBaseView = Null
+	mParent = Null
 End Sub
 
 ' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---

@@ -40,6 +40,11 @@ Public Sub Render
 	mBaseView.Color = mColor
 End Sub
 
+Public Sub Unmount
+	mBaseView = Null
+	mParent = Null
+End Sub
+
 ' --- SISTEMA DE MEDICIÓN (MEASURE/LAYOUT) ---
 ' UIDivider: ocupa todo el ancho disponible, 1dip de alto.
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List

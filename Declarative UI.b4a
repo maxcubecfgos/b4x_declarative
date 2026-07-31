@@ -106,6 +106,9 @@ Sub Activity_Create(FirstTime As Boolean)
 End Sub
 
 Sub BuildUI
+	DashboardScreen.Unmount
+	LoginScreen.Unmount
+	FabNavLogin.Unmount
 	Root.RemoveAllViews
     
 	If CurrentRoute = "Dashboard" Then
