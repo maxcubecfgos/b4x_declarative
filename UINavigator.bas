@@ -13,10 +13,13 @@ Sub Class_Globals
 	Private mMountedScreen As Object
 	Private mIsMounted As Boolean
 	Private mLeft, mTop, mWidth, mHeight As Int
+	Private mInsetLeft, mInsetTop, mInsetRight, mInsetBottom As Int
+	Private mIme As IME
 End Sub
 
 Public Sub Initialize As UINavigator
 	mScreens.Initialize
+	mIme.Initialize("")
 	mCurrentScreen = ""
 	mMountedScreen = Null
 	mIsMounted = False
@@ -34,11 +37,25 @@ Public Sub AddScreen(Name As String, Screen As Object) As UINavigator
 End Sub
 
 Public Sub NavigateTo(Name As String)
-	If mScreens.ContainsKey(Name) = False Then Return
-	If mCurrentScreen = Name And mIsMounted Then Return
+	Log("[DBG_UI] UINavigator.NavigateTo requested=" & Name & " current=" & mCurrentScreen & " screenExists=" & mScreens.ContainsKey(Name) & " hostSet=" & (mHost <> Null))
+	If mScreens.ContainsKey(Name) = False Then
+		Log("[DBG_UI] UINavigator.NavigateTo stopped: screen not found")
+		Return
+	End If
+	If mCurrentScreen = Name And mIsMounted Then
+		Log("[DBG_UI] UINavigator.NavigateTo stopped: already mounted")
+		Return
+	End If
 	mCurrentScreen = Name
 	If mHost <> Null Then
-		If mHost.IsInitialized Then Render
+		If mHost.IsInitialized Then
+			Log("[DBG_UI] UINavigator.NavigateTo rendering screen=" & Name)
+			Render
+		Else
+			Log("[DBG_UI] UINavigator.NavigateTo stopped: host not initialized")
+		End If
+	Else
+		Log("[DBG_UI] UINavigator.NavigateTo stopped: host is Null")
 	End If
 End Sub
 
@@ -60,8 +77,21 @@ Public Sub SetSize(Width As Int, Height As Int)
 End Sub
 
 Public Sub Render
-	If mParent = Null Then Return
-	If mParent.IsInitialized = False Then Return
+	Log("[DBG_UI] UINavigator.Render current=" & mCurrentScreen & " bounds=" & mLeft & "," & mTop & "," & mWidth & "," & mHeight & " parentSet=" & (mParent <> Null) & " hostSet=" & (mHost <> Null))
+	If mParent = Null Then
+		Log("[DBG_UI] UINavigator.Render skipped: parent is Null")
+		Return
+	End If
+	If mParent.IsInitialized = False Then
+		Log("[DBG_UI] UINavigator.Render skipped: parent is not initialized")
+		Return
+	End If
+
+	Dim bounds As List = GetSafeBounds
+	Dim contentLeft As Int = bounds.Get(0)
+	Dim contentTop As Int = bounds.Get(1)
+	Dim contentWidth As Int = bounds.Get(2)
+	Dim contentHeight As Int = bounds.Get(3)
 
 	Dim needsCreate As Boolean = False
 	If mHost = Null Then
@@ -74,9 +104,9 @@ Public Sub Render
 		pnl.Initialize("")
 		mHost = pnl
 		mHost.Color = Colors.Transparent
-		mParent.AddView(mHost, mLeft, mTop, mWidth, mHeight)
+		mParent.AddView(mHost, contentLeft, contentTop, contentWidth, contentHeight)
 	Else
-		mHost.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
+		mHost.SetLayoutAnimated(0, contentLeft, contentTop, contentWidth, contentHeight)
 	End If
 
 	If mMountedScreen <> Null Then
@@ -89,13 +119,46 @@ Public Sub Render
 
 	Dim Screen As Object = mScreens.Get(mCurrentScreen)
 	If Screen <> Null Then
+		Log("[DBG_UI] UINavigator.Render mounting screen=" & mCurrentScreen & " contentBounds=" & contentLeft & "," & contentTop & "," & contentWidth & "," & contentHeight)
 		CallSub2(Screen, "SetParent", mHost)
 		CallSub3(Screen, "SetPosition", 0, 0)
-		CallSub3(Screen, "SetSize", mWidth, mHeight)
+		CallSub3(Screen, "SetSize", contentWidth, contentHeight)
 		CallSub(Screen, "Render")
 		mMountedScreen = Screen
+		Log("[DBG_UI] UINavigator.Render mounted screen=" & mCurrentScreen)
+	Else
+		Log("[DBG_UI] UINavigator.Render skipped: screen object is Null")
 	End If
 	mIsMounted = mHost.IsInitialized
+End Sub
+
+' Vuelve a medir el área segura y remonta solo si cambió.
+Public Sub RefreshInsets
+	If mParent = Null Or mHost = Null Then Return
+	If mParent.IsInitialized = False Or mHost.IsInitialized = False Then Return
+	Dim previousLeft As Int = mInsetLeft
+	Dim previousTop As Int = mInsetTop
+	Dim previousRight As Int = mInsetRight
+	Dim previousBottom As Int = mInsetBottom
+	GetSafeBounds
+	If previousLeft <> mInsetLeft Or previousTop <> mInsetTop Or previousRight <> mInsetRight Or previousBottom <> mInsetBottom Then
+		Render
+	End If
+End Sub
+
+Private Sub GetSafeBounds As List
+	Dim result As List
+	result.Initialize
+	Dim contentRect As Rect = mIme.GetContentRect
+	mInsetLeft = Max(0, contentRect.Left)
+	mInsetTop = Max(0, contentRect.Top)
+	mInsetRight = Max(0, mWidth - contentRect.Right)
+	mInsetBottom = Max(0, mHeight - contentRect.Bottom)
+	result.Add(mLeft + mInsetLeft)
+	result.Add(mTop + mInsetTop)
+	result.Add(Max(0, mWidth - mInsetLeft - mInsetRight))
+	result.Add(Max(0, mHeight - mInsetTop - mInsetBottom))
+	Return result
 End Sub
 
 Public Sub Unmount

@@ -80,6 +80,8 @@ Public Sub Render
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
 	mBaseView.Color = mColor
 	
+	' Mantener el título centrado verticalmente en toda la franja.
+	mTitleLabel.Gravity = Gravity.CENTER_VERTICAL
 	' ACTUALIZAR título en CADA render (no solo en el inicial)
 	mTitleLabel.Text = mTitle
 End Sub

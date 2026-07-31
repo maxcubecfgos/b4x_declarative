@@ -38,6 +38,7 @@ End Sub
 Public Sub OnClick(Target As Object, EventName As String) As UIFloatingActionButton
 	mTarget = Target
 	mEventName = EventName
+	Log("[DBG_UI] UIFloatingActionButton.OnClick text=" & mText & " event=" & mEventName & " targetSet=" & (mTarget <> Null))
 	Return Me
 End Sub
 
@@ -56,8 +57,15 @@ Public Sub SetSize(Width As Int, Height As Int)
 End Sub
 
 Public Sub Render
-	If mParent = Null Then Return
-	If mParent.IsInitialized = False Then Return
+	Log("[DBG_UI] UIFloatingActionButton.Render text=" & mText & " bounds=" & mLeft & "," & mTop & "," & mWidth & "," & mHeight & " targetSet=" & (mTarget <> Null) & " event=" & mEventName)
+	If mParent = Null Then
+		Log("[DBG_UI] UIFloatingActionButton.Render skipped: parent is Null")
+		Return
+	End If
+	If mParent.IsInitialized = False Then
+		Log("[DBG_UI] UIFloatingActionButton.Render skipped: parent is not initialized")
+		Return
+	End If
 
 	Dim needsCreate As Boolean = False
 	If mBaseView = Null Then
@@ -66,6 +74,7 @@ Public Sub Render
 		needsCreate = True
 	End If
 	If needsCreate Then
+		Log("[DBG_UI] UIFloatingActionButton.Render creating native Button eventPrefix=FabBtn")
 		' REFACTOR: Mismo patrón que UIButton.
 		' mBaseView es el Button directamente (no un Panel conteniendo un Button).
 		' Usamos Tag = Me para recuperar la instancia en el evento Click.
@@ -93,10 +102,20 @@ Public Sub Unmount
 End Sub
 
 Private Sub FabBtn_Click
+	Log("[DBG_UI] UIFloatingActionButton.FabBtn_Click entered")
 	Dim btn As Button = Sender
+	Log("[DBG_UI] UIFloatingActionButton.FabBtn_Click senderTagSet=" & (btn.Tag <> Null))
 	Dim instance As UIFloatingActionButton = btn.Tag
+	If instance = Null Then
+		Log("[DBG_UI] UIFloatingActionButton.FabBtn_Click stopped: Tag is Null")
+		Return
+	End If
+	Log("[DBG_UI] UIFloatingActionButton.FabBtn_Click instanceText=" & instance.mText & " targetSet=" & (instance.mTarget <> Null) & " event=" & instance.mEventName)
 	If instance.mTarget <> Null And instance.mEventName <> "" Then
+		Log("[DBG_UI] UIFloatingActionButton.FabBtn_Click dispatching CallSub event=" & instance.mEventName)
 		CallSub(instance.mTarget, instance.mEventName)
+	Else
+		Log("[DBG_UI] UIFloatingActionButton.FabBtn_Click stopped: target or event missing")
 	End If
 End Sub
 

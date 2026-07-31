@@ -43,6 +43,7 @@ End Sub
 Public Sub OnClick(Target As Object, EventName As String) As UIButton
 	mTarget = Target
 	mEventName = EventName
+	Log("[DBG_UI] UIButton.OnClick text=" & mText & " event=" & mEventName & " targetSet=" & (mTarget <> Null))
 	Return Me
 End Sub
 
@@ -61,8 +62,15 @@ Public Sub SetSize(Width As Int, Height As Int)
 End Sub
 
 Public Sub Render
-	If mParent = Null Then Return
-	If mParent.IsInitialized = False Then Return
+	Log("[DBG_UI] UIButton.Render text=" & mText & " bounds=" & mLeft & "," & mTop & "," & mWidth & "," & mHeight & " targetSet=" & (mTarget <> Null) & " event=" & mEventName)
+	If mParent = Null Then
+		Log("[DBG_UI] UIButton.Render skipped: parent is Null")
+		Return
+	End If
+	If mParent.IsInitialized = False Then
+		Log("[DBG_UI] UIButton.Render skipped: parent is not initialized")
+		Return
+	End If
 
 	Dim needsCreate As Boolean = False
 	If mBaseView = Null Then
@@ -71,6 +79,7 @@ Public Sub Render
 		needsCreate = True
 	End If
 	If needsCreate Then
+		Log("[DBG_UI] UIButton.Render creating native Button eventPrefix=NativeBtn")
 		Dim btn As Button
 		btn.Initialize("NativeBtn")
 		mBaseView = btn
@@ -79,6 +88,9 @@ Public Sub Render
 	End If
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
 	mBaseView.Tag = Me
+	' Los botones de contenido pueden quedar detrás de otro hijo durante un remount.
+	' Asegurar su orden Z mantiene también intacta su superficie táctil.
+	mBaseView.BringToFront
     
 	If mBaseView.Text <> mText Then mBaseView.Text = mText
 	If mBaseView.Color <> mColor Then mBaseView.Color = mColor
@@ -91,10 +103,22 @@ Public Sub Unmount
 End Sub
 
 Private Sub NativeBtn_Click
+	Log("[DBG_UI] UIButton.NativeBtn_Click entered")
 	Dim btn As Button = Sender
+	Log("[DBG_UI] UIButton.NativeBtn_Click senderTagSet=" & (btn.Tag <> Null))
 	Dim instance As UIButton = btn.Tag
-	If instance = Null Then Return
-	instance.TriggerClick
+	If instance = Null Then
+		Log("[DBG_UI] UIButton.NativeBtn_Click stopped: Tag is Null")
+		Return
+	End If
+	Log("[DBG_UI] UIButton.NativeBtn_Click instanceText=" & instance.mText & " targetSet=" & (instance.mTarget <> Null) & " event=" & instance.mEventName)
+	If instance.mTarget <> Null And instance.mEventName <> "" Then
+		Log("[DBG_UI] UIButton.NativeBtn_Click dispatching CallSub event=" & instance.mEventName)
+		' Usar el mismo dispatch síncrono que UIFloatingActionButton.
+		CallSub(instance.mTarget, instance.mEventName)
+	Else
+		Log("[DBG_UI] UIButton.NativeBtn_Click stopped: target or event missing")
+	End If
 End Sub
 
 Public Sub TriggerClick
