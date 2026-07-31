@@ -140,6 +140,7 @@ Sub Activity_Create(FirstTime As Boolean)
     InitializeDashboard
     InitializeActivity
     InitializeSettings
+    ApplyTheme
     Navigator.Initialize _
         .AddScreen("Dashboard", DashboardScreen) _
         .AddScreen("Activity", ActivityScreen) _
@@ -314,15 +315,125 @@ Sub RefreshActivity_Click
     BuildUI
 End Sub
 
+Private Sub ApplyTheme
+    Dim backgroundColor As Int
+    Dim surfaceColor As Int
+    Dim secondarySurfaceColor As Int
+    Dim primaryTextColor As Int
+    Dim secondaryTextColor As Int
+    Dim mutedTextColor As Int
+    Dim buttonTextColor As Int
+    Dim themeButtonColor As Int
+    Dim dividerColor As Int
+    Dim cardBorderColor As Int
+    Dim accentColor As Int = 0xFF00A896
+    Dim blueAccentColor As Int = 0xFF3D6FE8
+    Dim buttonSurfaceColor As Int
+    If ThemeDark Then
+        backgroundColor = 0xFF0F172A
+        surfaceColor = 0xFF1E293B
+        secondarySurfaceColor = 0xFF334155
+        primaryTextColor = 0xFFF8FAFC
+        secondaryTextColor = 0xFFCBD5E1
+        mutedTextColor = 0xFF94A3B8
+        buttonTextColor = Colors.White
+        themeButtonColor = 0xFF0F766E
+        dividerColor = 0xFF475569
+        cardBorderColor = 0xFF334155
+        buttonSurfaceColor = secondarySurfaceColor
+        Root.Color = backgroundColor
+        DashboardBar.BackgroundColor(0xFF0B1220)
+        ActivityBar.BackgroundColor(0xFF111827)
+        SettingsBar.BackgroundColor(0xFF111827)
+        DashboardHero.BackgroundColor(0xFF123C3C)
+        MetricCardActive.BackgroundColor(surfaceColor)
+        MetricCardUptime.BackgroundColor(surfaceColor)
+        ActivityCardOne.BackgroundColor(surfaceColor)
+        ActivityCardTwo.BackgroundColor(surfaceColor)
+        ActivityCardThree.BackgroundColor(surfaceColor)
+        SettingsCard.BackgroundColor(surfaceColor)
+    Else
+        backgroundColor = 0xFFF4F7FB
+        surfaceColor = Colors.White
+        secondarySurfaceColor = 0xFFDCE5F2
+        primaryTextColor = 0xFF132238
+        secondaryTextColor = 0xFF6B7B91
+        mutedTextColor = 0xFF7D8CA1
+        buttonTextColor = primaryTextColor
+        themeButtonColor = primaryTextColor
+        dividerColor = 0xFFE0E0E0
+        cardBorderColor = 0xFFE0E0E0
+        buttonSurfaceColor = secondarySurfaceColor
+        Root.Color = backgroundColor
+        DashboardBar.BackgroundColor(0xFF132238)
+        ActivityBar.BackgroundColor(0xFF253B5B)
+        SettingsBar.BackgroundColor(0xFF253B5B)
+        DashboardHero.BackgroundColor(0xFFE8F8F5)
+        MetricCardActive.BackgroundColor(surfaceColor)
+        MetricCardUptime.BackgroundColor(surfaceColor)
+        ActivityCardOne.BackgroundColor(surfaceColor)
+        ActivityCardTwo.BackgroundColor(surfaceColor)
+        ActivityCardThree.BackgroundColor(surfaceColor)
+        SettingsCard.BackgroundColor(surfaceColor)
+    End If
+    DashboardDivider.Color(dividerColor)
+    MetricCardActive.BorderColor(cardBorderColor)
+    MetricCardUptime.BorderColor(cardBorderColor)
+    ActivityCardOne.BorderColor(cardBorderColor)
+    ActivityCardTwo.BorderColor(cardBorderColor)
+    ActivityCardThree.BorderColor(cardBorderColor)
+    SettingsCard.BorderColor(cardBorderColor)
+
+    ' Dashboard labels
+    LblDashboardOverline.Color(mutedTextColor)
+    LblDashboardTitle.Color(primaryTextColor)
+    LblDashboardSubtitle.Color(secondaryTextColor)
+    LblHeroOverline.Color(accentColor)
+    LblValue.Color(primaryTextColor)
+    LblValueCaption.Color(secondaryTextColor)
+    LblHealth.Color(accentColor)
+    LblSync.Color(mutedTextColor)
+    LblActiveCaption.Color(secondaryTextColor)
+    LblActiveValue.Color(primaryTextColor)
+    LblActiveNote.Color(accentColor)
+    LblUptimeCaption.Color(secondaryTextColor)
+    LblUptimeValue.Color(primaryTextColor)
+    LblUptimeNote.Color(blueAccentColor)
+
+    ' Activity labels
+    LblActivityOverline.Color(mutedTextColor)
+    LblActivityTitle.Color(primaryTextColor)
+    LblActivitySummary.Color(secondaryTextColor)
+    LblActivityRefreshes.Color(blueAccentColor)
+    LblActivityOne.Color(primaryTextColor)
+    LblActivityOneMeta.Color(mutedTextColor)
+    LblActivityTwo.Color(primaryTextColor)
+    LblActivityTwoMeta.Color(mutedTextColor)
+    LblActivityThree.Color(primaryTextColor)
+    LblActivityThreeMeta.Color(mutedTextColor)
+
+    ' Settings labels
+    LblSettingsOverline.Color(mutedTextColor)
+    LblSettingsTitle.Color(primaryTextColor)
+    LblSettingsDescription.Color(secondaryTextColor)
+    LblThemeStatus.Color(primaryTextColor)
+    LblRuntimeStatus.Color(accentColor)
+
+    ' Keep button contrast readable on both surfaces.
+    BtnOpenActivity.BackgroundColor(accentColor).TextColor(Colors.White)
+    BtnOpenSettings.BackgroundColor(buttonSurfaceColor).TextColor(buttonTextColor)
+    BtnRefreshActivity.BackgroundColor(blueAccentColor).TextColor(Colors.White)
+    BtnActivityBack.BackgroundColor(buttonSurfaceColor).TextColor(buttonTextColor)
+    BtnTheme.BackgroundColor(themeButtonColor).TextColor(Colors.White)
+    BtnSettingsBack.BackgroundColor(buttonSurfaceColor).TextColor(buttonTextColor)
+End Sub
+
 Sub ToggleTheme_Click
     Log("[DBG_UI] Main.ToggleTheme_Click entered darkBefore=" & ThemeDark)
     ThemeDark = Not(ThemeDark)
-    If ThemeDark Then
-        Root.Color = 0xFFE8EDF5
-    Else
-        Root.Color = 0xFFF4F7FB
-    End If
-    BuildUI
+    ApplyTheme
+    If UiMounted Then Navigator.Render
+    UpdateActiveLabels
 End Sub
 
 Sub NavigateToActivity_Click

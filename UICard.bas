@@ -9,6 +9,7 @@ Sub Class_Globals
 	Private mChild As Object
 	Private mBaseView As B4XView
 	Private mBgColor As Int
+	Private mBorderColor As Int
 	Private mRadius As Int
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
@@ -16,6 +17,7 @@ End Sub
 
 Public Sub Initialize As UICard
 	mBgColor = Colors.White
+	mBorderColor = 0xFFE0E0E0
 	mRadius = 12dip
 	mChild = Null
 	Return Me
@@ -23,6 +25,11 @@ End Sub
 
 Public Sub BackgroundColor(c As Int) As UICard
 	mBgColor = c
+	Return Me
+End Sub
+
+Public Sub BorderColor(c As Int) As UICard
+	mBorderColor = c
 	Return Me
 End Sub
 
@@ -70,7 +77,7 @@ Public Sub Render
     
 	Dim NativePanel As Panel = mBaseView
 	Dim cd As ColorDrawable
-	cd.Initialize2(mBgColor, mRadius, 1dip, 0xFFE0E0E0)
+	cd.Initialize2(mBgColor, mRadius, 1dip, mBorderColor)
 	NativePanel.Background = cd
     
 	If mChild <> Null Then

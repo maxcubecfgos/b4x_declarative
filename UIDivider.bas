@@ -15,6 +15,11 @@ Public Sub Initialize As UIDivider
 	Return Me
 End Sub
 
+Public Sub Color(c As Int) As UIDivider
+	mColor = c
+	Return Me
+End Sub
+
 Public Sub SetParent(Parent As B4XView)
 	mParent = Parent
 End Sub
