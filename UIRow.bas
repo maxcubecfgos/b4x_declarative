@@ -7,6 +7,7 @@ Version=13.5
 Sub Class_Globals
 	Private xui As XUI
 	Private mChildren As List
+	Private mSpacing As Int
 	Private mBaseView As B4XView
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
@@ -14,11 +15,17 @@ End Sub
 
 Public Sub Initialize As UIRow
 	mChildren.Initialize
+	mSpacing = 0
 	Return Me
 End Sub
 
 Public Sub AddChild(Component As Object) As UIRow
 	mChildren.Add(Component)
+	Return Me
+End Sub
+
+Public Sub Spacing(Value As Int) As UIRow
+	mSpacing = Max(0, Value)
 	Return Me
 End Sub
 
@@ -62,13 +69,20 @@ Public Sub Render
 			expandedCount = expandedCount + 1
 		End If
 	Next
+	totalNaturalWidth = totalNaturalWidth + mSpacing * Max(0, mChildren.Size - 1)
     
+	' Fixed children keep their natural size; overflow is clipped by the parent.
 	Dim remainingWidth As Int = Max(0, mWidth - totalNaturalWidth)
 	Dim expandedWidth As Int = 0
-	If expandedCount > 0 Then expandedWidth = remainingWidth / expandedCount
+	Dim expandedRemainder As Int = 0
+	If expandedCount > 0 Then
+		expandedWidth = remainingWidth / expandedCount
+		expandedRemainder = remainingWidth Mod expandedCount
+	End If
 	
 	' SEGUNDA PASADA: posicionar cada hijo
 	Dim currentLeft As Int = 0
+	Dim childIndex As Int = 0
     
 	For Each child As Object In mChildren
 		Dim currentWidth As Int = 0
@@ -77,6 +91,10 @@ Public Sub Render
 			currentWidth = size.Get(0) ' Ancho natural
 		Else
 			currentWidth = expandedWidth ' También se expande
+			If expandedRemainder > 0 Then
+				currentWidth = currentWidth + 1
+				expandedRemainder = expandedRemainder - 1
+			End If
 		End If
         
 		If currentWidth < 0 Then currentWidth = 0
@@ -89,6 +107,8 @@ Public Sub Render
 		End If
         
 		currentLeft = currentLeft + currentWidth
+		childIndex = childIndex + 1
+		If childIndex < mChildren.Size Then currentLeft = currentLeft + mSpacing
 	Next
 End Sub
 
@@ -114,19 +134,22 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim totalNaturalWidth As Int = 0
 	Dim maxChildHeight As Int = 0
 	Dim hasExpanded As Boolean = False
+	Dim naturalChildCount As Int = 0
 	
 	For Each child As Object In mChildren
 		Dim size As List = CallSub3(child, "GetContentSize", safeMaxWidth, safeMaxHeight)
 		If size <> Null Then
 			totalNaturalWidth = totalNaturalWidth + size.Get(0)
 			maxChildHeight = Max(maxChildHeight, size.Get(1))
+			naturalChildCount = naturalChildCount + 1
 		Else
 			hasExpanded = True
 		End If
 	Next
+	totalNaturalWidth = totalNaturalWidth + mSpacing * Max(0, mChildren.Size - 1)
 	
 	' Si todos son expandidos, retornar Null (ocupar todo)
-	If hasExpanded And totalNaturalWidth = 0 Then
+	If hasExpanded And naturalChildCount = 0 Then
 		Return Null
 	End If
 	

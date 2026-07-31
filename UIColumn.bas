@@ -7,6 +7,7 @@ Version=13.5
 Sub Class_Globals
 	Private xui As XUI
 	Private mChildren As List
+	Private mSpacing As Int
 	Private mBaseView As B4XView
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
@@ -14,11 +15,17 @@ End Sub
 
 Public Sub Initialize As UIColumn
 	mChildren.Initialize
+	mSpacing = 0
 	Return Me
 End Sub
 
 Public Sub AddChild(child As Object) As UIColumn
 	mChildren.Add(child)
+	Return Me
+End Sub
+
+Public Sub Spacing(Value As Int) As UIColumn
+	mSpacing = Max(0, Value)
 	Return Me
 End Sub
 
@@ -62,14 +69,21 @@ Public Sub Render
 			expandedCount = expandedCount + 1
 		End If
 	Next
+	totalNaturalHeight = totalNaturalHeight + mSpacing * Max(0, mChildren.Size - 1)
 	
 	' Espacio restante para hijos "expandidos"
+	' Fixed children keep their natural size; overflow is clipped by the parent.
 	Dim remainingHeight As Int = Max(0, mHeight - totalNaturalHeight)
 	Dim expandedHeight As Int = 0
-	If expandedCount > 0 Then expandedHeight = remainingHeight / expandedCount
+	Dim expandedRemainder As Int = 0
+	If expandedCount > 0 Then
+		expandedHeight = remainingHeight / expandedCount
+		expandedRemainder = remainingHeight Mod expandedCount
+	End If
 	
 	' SEGUNDA PASADA: posicionar cada hijo
 	Dim yOffset As Int = 0
+	Dim childIndex As Int = 0
 	For Each child As Object In mChildren
 		Dim childHeight As Int
 		
@@ -78,6 +92,10 @@ Public Sub Render
 			childHeight = size.Get(1) ' Altura natural
 		Else
 			childHeight = expandedHeight ' Espacio flexible
+			If expandedRemainder > 0 Then
+				childHeight = childHeight + 1
+				expandedRemainder = expandedRemainder - 1
+			End If
 		End If
 		
 		If childHeight < 0 Then childHeight = 0
@@ -87,6 +105,8 @@ Public Sub Render
 		CallSub3(child, "SetSize", mWidth, childHeight)
 		CallSub(child, "Render")
 		yOffset = yOffset + childHeight
+		childIndex = childIndex + 1
+		If childIndex < mChildren.Size Then yOffset = yOffset + mSpacing
 	Next
 End Sub
 
@@ -121,9 +141,10 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 			totalChildHeight = totalChildHeight + size.Get(1)
 		End If
 	Next
+	totalChildHeight = totalChildHeight + mSpacing * Max(0, mChildren.Size - 1)
 	
-	If allExpanded Then
-		Return Null ' Todos se expanden -> ocupar todo el espacio
+	If mChildren.Size > 0 And allExpanded Then
+		Return Null ' Los hijos flexibles ocupan todo el espacio
 	End If
 	
 	result.Add(Min(maxChildWidth, safeMaxWidth))
