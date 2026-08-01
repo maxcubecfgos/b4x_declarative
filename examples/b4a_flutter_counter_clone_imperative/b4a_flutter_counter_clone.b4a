@@ -1,0 +1,95 @@
+﻿Build1=Default,b4a.example
+Group=Default Group
+Library1=core
+Library2=xui
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="35"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
+Module1=Appbar
+Module2=FloatingActionButton
+Module3=Starter
+NumberOfFiles=0
+NumberOfLibraries=2
+NumberOfModules=3
+Version=13.5
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: B4A Example
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: portrait
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: False
+	#IncludeTitle: False
+#End Region
+
+Sub Process_Globals
+	'These global variables will be declared once when the application starts.
+	'These variables can be accessed from all modules.
+	Private xui As XUI
+End Sub
+
+Sub Globals
+	Private counter As Int
+	Private lblCount As Label
+	Private appBarView As Appbar
+	Private fabView As FloatingActionButton
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Activity.LoadLayout("Layout")
+	Activity.Color = 0xFFFFFFFF
+	
+	Dim appBarPanel As Panel
+	appBarPanel.Initialize("")
+	appBarPanel.SetLayout(0, 0, 100%x, 56dip)
+	appBarView.Initialize(Me, "AppBar")
+	Dim props As Map
+	props.Initialize
+	appBarView.DesignerCreateView(appBarPanel, Null, props)
+	Activity.AddView(appBarPanel, 0, 0, 100%x, 56dip)
+	
+	Dim lblDesc As Label
+	lblDesc.Initialize("")
+	lblDesc.Gravity = Gravity.CENTER
+	lblDesc.TextSize = 16
+	lblDesc.TextColor = 0xFF444444
+	lblDesc.Text = "You have pushed the button this many times:"
+	Activity.AddView(lblDesc, 32dip, 100%y / 2 - 50dip, 100%x - 64dip, 30dip)
+	
+	lblCount.Initialize("")
+	lblCount.Gravity = Gravity.CENTER
+	lblCount.TextSize = 48
+	lblCount.TextColor = 0xFF1C1B1F
+	lblCount.Text = "0"
+	Activity.AddView(lblCount, 32dip, 100%y / 2 - 10dip, 100%x - 64dip, 60dip)
+	
+	Dim fabPanel As Panel
+	fabPanel.Initialize("")
+	fabPanel.SetLayout(0, 0, 56dip, 56dip)
+	fabView.Initialize(Me, "fab")
+	props.Initialize
+	fabView.DesignerCreateView(fabPanel, Null, props)
+	Dim fabLeft As Int = 100%x - 56dip - 16dip
+	Dim fabTop As Int = 100%y - 56dip - 16dip
+	Activity.AddView(fabPanel, fabLeft, fabTop, 56dip, 56dip)
+End Sub
+
+Sub Activity_Resume
+
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+
+End Sub
+
+Sub Button1_Click
+	xui.MsgboxAsync("Hello world!", "B4X")
+End Sub
+
+Sub fab_Click
+	counter = counter + 1
+	lblCount.Text = counter
+End Sub

@@ -1,0 +1,223 @@
+﻿Build1=Default,b4a.example
+Group=Default Group
+Library1=core
+Library2=ime
+Library3=xui
+Library4=declarativeui-0.1
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
+Module1=Starter
+NumberOfFiles=0
+NumberOfLibraries=4
+NumberOfModules=1
+Version=13.62
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: Flutter Counter
+	#VersionCode: 4
+	#VersionName: 1.0
+	#SupportedOrientations: portrait
+	#EdgeToEdgeOldDevices: True
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: False
+	#IncludeTitle: False
+#End Region
+
+Sub Process_Globals
+	Private Counter As Int
+End Sub
+
+Sub Globals
+	Private Root As B4XView
+	Private Navigator As UINavigator
+	Private HomeScreen As UIScaffold
+	Private AppBar As UIAppBar
+	Private Center As UICenter
+	Private Content As UIColumn
+	Private DescriptionLabel As UILabel
+	Private CounterLabel As UILabel
+	Private IncrementButton As UIFloatingActionButton
+	Private UiMounted As Boolean
+	Private LastWidth, LastHeight As Int
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	Root = Activity
+	If FirstTime Then Counter = 0
+
+	AppBar.Initialize _
+		.Title("Counter Demo Home Page") _
+		.BackgroundColor(0xFF2196F3)
+
+	DescriptionLabel.Initialize _
+		.Text("You have pushed the button this many times:") _
+		.Size(16) _
+		.Color(Colors.DarkGray)
+
+	CounterLabel.Initialize _
+		.Text("" & Counter) _
+		.Size(52) _
+		.Color(Colors.Black)
+
+	Content.Initialize _
+		.Spacing(8dip) _
+		.AddChild(DescriptionLabel) _
+		.AddChild(CounterLabel)
+
+	Center.Initialize.Child(Content)
+
+	IncrementButton.Initialize _
+		.Text("+") _
+		.BackgroundColor(0xFF2196F3) _
+		.OnClick(Me, "Increment_Click")
+
+	HomeScreen.Initialize _
+		.AppBar(AppBar) _
+		.Body(Center) _
+		.FloatingActionButtonRight(IncrementButton)
+
+	Navigator.Initialize.AddScreen("Home", HomeScreen)
+	BuildUI
+End Sub
+
+Private Sub BuildUI
+	If Root.Width <= 0 Or Root.Height <= 0 Then Return
+	If UiMounted = False Or LastWidth <> Root.Width Or LastHeight <> Root.Height Then
+		Navigator.SetParent(Root)
+		Navigator.SetPosition(0, 0)
+		Navigator.SetSize(Root.Width, Root.Height)
+		Navigator.Render
+		LastWidth = Root.Width
+		LastHeight = Root.Height
+		UiMounted = True
+	End If
+	Navigator.RefreshInsets
+End Sub
+
+Sub Increment_Click
+	Counter = Counter + 1
+	CounterLabel.Text("" & Counter)
+	If UiMounted Then CounterLabel.Render
+End Sub
+
+Sub Activity_Resume
+	BuildUI
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+End Sub
+
+' ==============================================================================
+' IMPERATIVE VERSION WITHOUT DECLARATIVE UI
+' ==============================================================================
+' The code below is intentionally commented out. It is an illustrative comparison
+' showing how this same counter could be built using only native B4A views.
+' It is not part of the running application.
+'
+' Without DeclarativeUI, the application must create every native view manually,
+' calculate each position, attach every view to its parent, and keep references to
+' all views that need to be updated later.
+'
+' The equivalent imperative state and view references would look like this:
+'
+' Sub Globals
+'     Private ImperativeRoot As Panel
+'     Private ImperativeAppBar As Panel
+'     Private ImperativeTitle As Label
+'     Private ImperativeContent As Panel
+'     Private ImperativeDescription As Label
+'     Private ImperativeCounter As Label
+'     Private ImperativeFab As Button
+' End Sub
+'
+' Sub Activity_Create(FirstTime As Boolean)
+'     If FirstTime Then Counter = 0
+'
+'     ' The content rectangle must be calculated manually to avoid the status bar.
+'     Dim contentRect As Rect = GetContentRectManually
+'
+'     ImperativeRoot.Initialize("")
+'     Activity.AddView(ImperativeRoot, contentRect.Left, contentRect.Top, _
+'         contentRect.Width, contentRect.Height)
+'
+'     ' Create the app bar and position it explicitly.
+'     ImperativeAppBar.Initialize("")
+'     ImperativeAppBar.Color = 0xFF2196F3
+'     ImperativeRoot.AddView(ImperativeAppBar, 0, 0, _
+'         ImperativeRoot.Width, 56dip)
+'
+'     ImperativeTitle.Initialize("")
+'     ImperativeTitle.Text = "Counter Demo Home Page"
+'     ImperativeTitle.TextColor = Colors.White
+'     ImperativeTitle.TextSize = 18
+'     ImperativeTitle.Gravity = Bit.Or(Gravity.CENTER_VERTICAL, Gravity.LEFT)
+'     ImperativeAppBar.AddView(ImperativeTitle, 16dip, 0, _
+'         ImperativeAppBar.Width - 32dip, ImperativeAppBar.Height)
+'
+'     ' Create a content panel and calculate the centered positions manually.
+'     ImperativeContent.Initialize("")
+'     ImperativeRoot.AddView(ImperativeContent, 0, 56dip, _
+'         ImperativeRoot.Width, ImperativeRoot.Height - 56dip - 80dip)
+'
+'     ImperativeDescription.Initialize("")
+'     ImperativeDescription.Text = "You have pushed the button this many times:"
+'     ImperativeDescription.TextSize = 16
+'     ImperativeDescription.TextColor = Colors.DarkGray
+'     ImperativeDescription.Gravity = Gravity.CENTER
+'
+'     ImperativeCounter.Initialize("")
+'     ImperativeCounter.Text = "" & Counter
+'     ImperativeCounter.TextSize = 52
+'     ImperativeCounter.TextColor = Colors.Black
+'     ImperativeCounter.Gravity = Gravity.CENTER
+'
+'     Dim descriptionTop As Int = ImperativeContent.Height / 2 - 42dip
+'     Dim counterTop As Int = ImperativeContent.Height / 2 + 4dip
+'     ImperativeContent.AddView(ImperativeDescription, 16dip, _
+'         descriptionTop, ImperativeContent.Width - 32dip, 40dip)
+'     ImperativeContent.AddView(ImperativeCounter, 16dip, _
+'         counterTop, ImperativeContent.Width - 32dip, 64dip)
+'
+'     ' Create a native button and place it manually above the bottom edge.
+'     ImperativeFab.Initialize("ImperativeFab")
+'     ImperativeFab.Text = "+"
+'     ImperativeFab.TextSize = 24
+'     ImperativeFab.TextColor = Colors.White
+'     ImperativeFab.Background = CreateRoundDrawable(0xFF2196F3, 28dip)
+'     ImperativeRoot.AddView(ImperativeFab, _
+'         ImperativeRoot.Width - 72dip, ImperativeRoot.Height - 72dip, 56dip, 56dip)
+' End Sub
+'
+' Private Sub ImperativeFab_Click
+'     Counter = Counter + 1
+'     ImperativeCounter.Text = "" & Counter
+' End Sub
+'
+' The imperative example also needs helper code for safe-area measurements and
+' drawable creation. Depending on the desired visual result, it may additionally
+' require custom AppBar and FloatingActionButton classes, extra event forwarding,
+' and repeated layout calculations after rotation or inset changes.
+'
+' In contrast, the declarative version above describes the UI as a composable tree:
+'
+'     Navigator -> UIScaffold -> UIAppBar
+'                              -> UICenter -> UIColumn -> UILabels
+'                              -> UIFloatingActionButton
+'
+' The library owns mounting, measurement, positioning, safe-area handling, native
+' view creation, and callback routing. Application code mainly expresses intent:
+'
+'     Content.Initialize _
+'         .Spacing(8dip) _
+'         .AddChild(DescriptionLabel) _
+'         .AddChild(CounterLabel)
+'
+'     IncrementButton.Initialize _
+'         .Text("+") _
+'         .OnClick(Me, "Increment_Click")
+'
+' This is the main advantage demonstrated by this small example: the application
+' code focuses on the UI structure and behavior instead of repeating native view
+' plumbing, coordinate calculations, and event-wiring infrastructure.
+' ==============================================================================
