@@ -9,6 +9,8 @@ Sub Class_Globals
 	Private mTextState As UIState
 	Public mSize As Int
 	Private mTextColor As Int
+	Private mTextColorOverridden As Boolean
+	Private mTheme As UITheme
 	Private mGravityValue As Int
 	Private mBaseView As B4XView
 	Private mParent As B4XView
@@ -18,7 +20,11 @@ End Sub
 Public Sub Initialize As UILabel
 	mText = ""
 	mSize = 14
-	mTextColor = Colors.Black
+	Dim defaultTheme As UITheme
+	defaultTheme.Initialize
+	mTheme = defaultTheme
+	mTextColor = mTheme.PrimaryText
+	mTextColorOverridden = False
 	mGravityValue = Bit.Or(Gravity.CENTER_HORIZONTAL, Gravity.CENTER_VERTICAL)
 	Return Me
 End Sub
@@ -69,6 +75,19 @@ End Sub
 
 Public Sub Color(c As Int) As UILabel
 	mTextColor = c
+	mTextColorOverridden = True
+	Return Me
+End Sub
+
+' Applies theme defaults without replacing an explicit Color override.
+Public Sub ApplyTheme(Theme As UITheme) As UILabel
+	If Theme = Null Then Return Me
+	If Theme.IsInitialized = False Then Return Me
+	mTheme = Theme
+	If mTextColorOverridden = False Then mTextColor = mTheme.PrimaryText
+	If mParent <> Null Then
+		If mParent.IsInitialized Then Render
+	End If
 	Return Me
 End Sub
 

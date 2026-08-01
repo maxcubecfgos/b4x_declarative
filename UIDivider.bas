@@ -6,17 +6,36 @@ Version=13.5
 @EndOfDesignText@
 Sub Class_Globals
 	Private mBaseView As B4XView
-	Private mColor As Int = 0xFFE0E0E0
+	Private mColor As Int
+	Private mColorOverridden As Boolean
+	Private mTheme As UITheme
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
 End Sub
 
 Public Sub Initialize As UIDivider
+	Dim defaultTheme As UITheme
+	defaultTheme.Initialize
+	mTheme = defaultTheme
+	mColor = mTheme.Divider
+	mColorOverridden = False
 	Return Me
 End Sub
 
 Public Sub Color(c As Int) As UIDivider
 	mColor = c
+	mColorOverridden = True
+	Return Me
+End Sub
+
+Public Sub ApplyTheme(Theme As UITheme) As UIDivider
+	If Theme = Null Then Return Me
+	If Theme.IsInitialized = False Then Return Me
+	mTheme = Theme
+	If mColorOverridden = False Then mColor = mTheme.Divider
+	If mParent <> Null Then
+		If mParent.IsInitialized Then Render
+	End If
 	Return Me
 End Sub
 

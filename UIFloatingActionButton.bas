@@ -10,6 +10,9 @@ Sub Class_Globals
     Private mTextState As UIState
 	Private mBgColor As Int
 	Private mTextColor As Int
+	Private mBgColorOverridden As Boolean
+	Private mTextColorOverridden As Boolean
+	Private mTheme As UITheme
 	Private mTarget As Object
 	Private mEventName As String
 	Private mBaseView As B4XView
@@ -19,8 +22,13 @@ End Sub
 
 Public Sub Initialize As UIFloatingActionButton
 	mText = "+"
-	mBgColor = 0xFF00C853
-	mTextColor = Colors.White
+	Dim defaultTheme As UITheme
+	defaultTheme.Initialize
+	mTheme = defaultTheme
+	mBgColor = mTheme.Accent
+	mTextColor = mTheme.AccentText
+	mBgColorOverridden = False
+	mTextColorOverridden = False
 	' Clear the callback target so a new instance starts in a predictable state.
 	mTarget = Null
 	mEventName = ""
@@ -73,6 +81,26 @@ End Sub
 
 Public Sub BackgroundColor(c As Int) As UIFloatingActionButton
 	mBgColor = c
+	mBgColorOverridden = True
+	Return Me
+End Sub
+
+Public Sub TextColor(c As Int) As UIFloatingActionButton
+	mTextColor = c
+	mTextColorOverridden = True
+	Return Me
+End Sub
+
+' Applies theme defaults without replacing explicit color overrides.
+Public Sub ApplyTheme(Theme As UITheme) As UIFloatingActionButton
+	If Theme = Null Then Return Me
+	If Theme.IsInitialized = False Then Return Me
+	mTheme = Theme
+	If mBgColorOverridden = False Then mBgColor = mTheme.Accent
+	If mTextColorOverridden = False Then mTextColor = mTheme.AccentText
+	If mParent <> Null Then
+		If mParent.IsInitialized Then Render
+	End If
 	Return Me
 End Sub
 

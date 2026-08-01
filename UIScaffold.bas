@@ -11,6 +11,9 @@ Sub Class_Globals
 	Private mFabLeft As Object
 	Private mFabRight As Object
 	Private mBottomNavigationBar As Object
+	Private mBackgroundColor As Int
+	Private mBackgroundColorOverridden As Boolean
+	Private mTheme As UITheme
 	Private mBaseView As B4XView
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
@@ -23,6 +26,11 @@ Public Sub Initialize As UIScaffold
 	mFabLeft = Null
 	mFabRight = Null
 	mBottomNavigationBar = Null
+	Dim defaultTheme As UITheme
+	defaultTheme.Initialize
+	mTheme = defaultTheme
+	mBackgroundColor = mTheme.Background
+	mBackgroundColorOverridden = False
 	Return Me
 End Sub
 
@@ -50,6 +58,36 @@ End Sub
 Public Sub BottomNavigationBar(bar As Object) As UIScaffold
 	mBottomNavigationBar = bar
 	Return Me
+End Sub
+
+' Sets the screen background. This is separate from the Activity root so each
+' virtual screen follows the active UITheme when it is remounted.
+Public Sub BackgroundColor(Color As Int) As UIScaffold
+	mBackgroundColor = Color
+	mBackgroundColorOverridden = True
+	Return Me
+End Sub
+
+' Applies the theme to the scaffold and all theme-aware slots.
+Public Sub ApplyTheme(Theme As UITheme) As UIScaffold
+	If Theme = Null Then Return Me
+	If Theme.IsInitialized = False Then Return Me
+	mTheme = Theme
+	If mBackgroundColorOverridden = False Then mBackgroundColor = mTheme.Background
+	ApplyThemeToChild(mAppBar, Theme)
+	ApplyThemeToChild(mBody, Theme)
+	ApplyThemeToChild(mFabLeft, Theme)
+	ApplyThemeToChild(mFabRight, Theme)
+	ApplyThemeToChild(mBottomNavigationBar, Theme)
+	If mParent <> Null Then
+		If mParent.IsInitialized Then Render
+	End If
+	Return Me
+End Sub
+
+Private Sub ApplyThemeToChild(Child As Object, Theme As UITheme)
+	If Child = Null Then Return
+	If xui.SubExists(Child, "ApplyTheme", 1) Then CallSub2(Child, "ApplyTheme", Theme)
 End Sub
 
 Public Sub SetParent(Parent As B4XView)
@@ -83,6 +121,7 @@ Public Sub Render
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
+	mBaseView.Color = mBackgroundColor
     
 	' Calculate offsets for the app bar, body, and floating action buttons.
 	Dim topOffset As Int = 0

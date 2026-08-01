@@ -10,9 +10,13 @@ Sub Class_Globals
 	Private mTextState As UIState
 	Private mColor As Int
 	Private mTextColor As Int
+	Private mBorderColor As Int
+	Private mColorOverridden As Boolean
+	Private mTextColorOverridden As Boolean
+	Private mBorderColorOverridden As Boolean
+	Private mTheme As UITheme
 	Private mCornerRadius As Int
 	Private mBorderWidth As Int
-	Private mBorderColor As Int
 	Private mCustomBackgroundApplied As Boolean
 	Private mTarget As Object
 	Private mEventName As String
@@ -23,11 +27,17 @@ End Sub
 
 Public Sub Initialize As UIButton
 	mText = ""
-	mColor = Colors.LightGray
-	mTextColor = Colors.Black
+	Dim defaultTheme As UITheme
+	defaultTheme.Initialize
+	mTheme = defaultTheme
+	mColor = mTheme.SurfaceVariant
+	mTextColor = mTheme.ButtonText
+	mColorOverridden = False
+	mTextColorOverridden = False
+	mBorderColorOverridden = False
 	mCornerRadius = 0
 	mBorderWidth = 0
-	mBorderColor = Colors.Transparent
+	mBorderColor = mTheme.Border
 	mCustomBackgroundApplied = False
 	' Clear the callback target so a new instance starts in a predictable state.
 	mTarget = Null
@@ -81,11 +91,27 @@ End Sub
 
 Public Sub BackgroundColor(c As Int) As UIButton
 	mColor = c
+	mColorOverridden = True
 	Return Me
 End Sub
 
 Public Sub TextColor(c As Int) As UIButton
 	mTextColor = c
+	mTextColorOverridden = True
+	Return Me
+End Sub
+
+' Applies theme defaults without replacing explicit color overrides.
+Public Sub ApplyTheme(Theme As UITheme) As UIButton
+	If Theme = Null Then Return Me
+	If Theme.IsInitialized = False Then Return Me
+	mTheme = Theme
+	If mColorOverridden = False Then mColor = mTheme.SurfaceVariant
+	If mTextColorOverridden = False Then mTextColor = mTheme.ButtonText
+	If mBorderColorOverridden = False Then mBorderColor = mTheme.Border
+	If mParent <> Null Then
+		If mParent.IsInitialized Then Render
+	End If
 	Return Me
 End Sub
 
@@ -99,6 +125,7 @@ End Sub
 Public Sub Border(Width As Int, Color As Int) As UIButton
 	mBorderWidth = Max(0, Width)
 	mBorderColor = Color
+	mBorderColorOverridden = True
 	Return Me
 End Sub
 

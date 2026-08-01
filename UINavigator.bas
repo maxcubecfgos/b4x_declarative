@@ -26,6 +26,18 @@ Public Sub Initialize As UINavigator
 	Return Me
 End Sub
 
+' Applies the active theme to all registered virtual screens.
+' Screens that do not expose ApplyTheme are left untouched.
+Public Sub ApplyTheme(Theme As UITheme) As UINavigator
+	If Theme = Null Then Return Me
+	If Theme.IsInitialized = False Then Return Me
+	For Each key As String In mScreens.Keys
+		Dim screen As Object = mScreens.Get(key)
+		If screen <> Null And xui.SubExists(screen, "ApplyTheme", 1) Then CallSub2(screen, "ApplyTheme", Theme)
+	Next
+	Return Me
+End Sub
+
 Public Sub AddScreen(Name As String, Screen As Object) As UINavigator
 	If Name.Trim = "" Or Screen = Null Then Return Me
 	mScreens.Put(Name, Screen)

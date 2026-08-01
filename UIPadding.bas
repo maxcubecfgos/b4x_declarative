@@ -52,6 +52,14 @@ Public Sub Child(c As Object) As UIPadding
 	Return Me
 End Sub
 
+' Propagates the active theme to the wrapped child.
+Public Sub ApplyTheme(Theme As UITheme) As UIPadding
+	If Theme = Null Then Return Me
+	If Theme.IsInitialized = False Then Return Me
+	If mChild <> Null And xui.SubExists(mChild, "ApplyTheme", 1) Then CallSub2(mChild, "ApplyTheme", Theme)
+	Return Me
+End Sub
+
 Public Sub SetParent(Parent As B4XView)
 	mParent = Parent
 End Sub

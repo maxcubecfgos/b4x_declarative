@@ -24,9 +24,11 @@ $expectedModules = @(
     'UIRow.bas'
     'UIScaffold.bas'
     'UIScrollView.bas'
+    'UISnackBar.bas'
     'UISpace.bas'
     'UIStack.bas'
     'UIState.bas'
+    'UIAsyncState.bas'
     'UITheme.bas'
     'UIVisibility.bas'
 )
@@ -34,7 +36,8 @@ $expectedModules = @(
 try {
     New-Item -ItemType Directory -Path $stage -Force | Out-Null
 
-    $modules = @(Get-ChildItem -LiteralPath $root -Filter 'UI*.bas' -File | Sort-Object Name)
+    $allSourceModules = @(Get-ChildItem -LiteralPath $root -Filter 'UI*.bas' -File | Sort-Object Name)
+    $modules = $allSourceModules
     $actualModuleNames = @($modules | ForEach-Object Name)
     $missing = @($expectedModules | Where-Object { $_ -notin $actualModuleNames })
     $unexpected = @($actualModuleNames | Where-Object { $_ -notin $expectedModules })
@@ -55,20 +58,6 @@ try {
     ) -join [Environment]::NewLine
     [IO.File]::WriteAllText((Join-Path $stage 'manifest.txt'), $manifest, $utf8NoBom)
 
-    $packageReadme = @(
-        'Declarative UI for B4A - preliminary 0.1'
-        ''
-        'This package contains the reusable B4A UI modules only. The NOVA demo Activity'
-        'and Starter service are not included.'
-        ''
-        'Dependencies: XUI and IME. This release is B4A-only.'
-        ''
-        'SYNTAX.md is the included syntax and API compatibility contract.'
-        'See the project GUIDE.md for the complete usage documentation and examples.'
-    ) -join [Environment]::NewLine
-    [IO.File]::WriteAllText((Join-Path $stage 'README.txt'), $packageReadme, $utf8NoBom)
-    Copy-Item -LiteralPath (Join-Path $root 'SYNTAX.md') -Destination (Join-Path $stage 'SYNTAX.md')
-
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     [IO.Compression.ZipFile]::CreateFromDirectory($stage, $tempZip, [IO.Compression.CompressionLevel]::Optimal, $false)
 
@@ -76,7 +65,7 @@ try {
     $zip = [IO.Compression.ZipFile]::OpenRead($tempZip)
     try {
         $entries = @($zip.Entries)
-        $expectedEntries = @('README.txt', 'SYNTAX.md', 'manifest.txt') + $expectedModules
+        $expectedEntries = @('manifest.txt') + $expectedModules
         $actualEntries = @($entries | ForEach-Object FullName)
         $missingEntries = @($expectedEntries | Where-Object { $_ -notin $actualEntries })
         $unexpectedEntries = @($actualEntries | Where-Object { $_ -notin $expectedEntries })
@@ -113,7 +102,7 @@ try {
     Write-Host ('File: ' + $output)
     Write-Host ('Size: ' + $fileInfo.Length + ' bytes')
     Write-Host ('SHA-256: ' + $hash)
-    Write-Host 'Contents: 23 UI modules + manifest.txt + README.txt + SYNTAX.md'
+    Write-Host 'Contents: 25 UI modules + manifest.txt'
 }
 catch {
     Write-Error ('The b4xlib could not be created or validated: ' + $_.Exception.Message)

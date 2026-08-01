@@ -37,7 +37,7 @@ It is inspired by declarative UI systems such as Flutter, but it is intentionall
    - `IME`
 5. Create or open a B4A Activity project and use the classes from the package.
 
-The package contains reusable UI classes and the `SYNTAX.md` contract only. It intentionally excludes the NOVA demo Activity and `Starter.bas`.
+The package contains only the reusable `.bas` UI classes and `manifest.txt`. Project documentation such as `README.md`, `GUIDE.md` and `SYNTAX.md` remains in the source repository and is not copied into the `.b4xlib`. The package intentionally excludes the NOVA demo Activity and `Starter.bas`.
 
 ### Using the source modules
 
@@ -112,6 +112,8 @@ The important idea is that `body` describes the child tree. The parent is respon
 | `UIFloatingActionButton` | Compact circular-style native button | `Text`, `BindText`, `UnbindText`, `BackgroundColor`, `OnClick` |
 | `UIInput` | Native text input | `Hint`, `Text`, `BindText`, `UnbindText`, `OnTextChanged`, `TextColor`, `BackgroundColor`, `CornerRadius`, `Border`, `GetText` |
 | `UIState` | Observable value holder with selective callbacks | `Initialize`, `GetState`, `SetState`, `Subscribe`, `Unsubscribe`, `UnsubscribeTarget`, `ClearListeners` |
+| `UIAsyncState` | Observable idle/loading/success/error operation state | `Initialize`, `SetIdle`, `SetLoading`, `SetSuccess`, `SetError`, `Reset`, `GetStatus`, `GetValue`, `GetErrorMessage`, `Subscribe` |
+| `UISnackBar` | Transient overlay notification with optional action | `Initialize`, `Message`, `Action`, `Duration`, `AnimationDuration`, `BackgroundColor`, `TextColor`, `ActionColor`, `CornerRadius`, `Margin`, `Show`, `Dismiss` |
 | `UIAnimation` | Native bounds animation utility | `TargetView`, `MoveTo`, `SizeTo`, `MoveAndResize`, `Duration`, `OnCompleted`, `Start`, `Cancel` |
 | `UIAppBar` | Top application bar | `Title`, `BindTitle`, `UnbindTitle`, `BackgroundColor` |
 | `UIDivider` | Horizontal divider | `Color` |
@@ -475,7 +477,31 @@ Use normal B4A event-style names such as `Save_Click`, `Increment_Click` or `Nav
 
 `UIButton.TriggerClick` is also available when an application needs to dispatch the configured action programmatically. It uses the same safe callback validation.
 
-## 11. UIAnimation
+## 11. UISnackBar
+
+`UISnackBar` is a transient overlay for short feedback messages. It attaches directly to a `B4XView` root, so it stays above the current declarative screen without becoming a permanent layout child.
+
+```basic
+Private Snack As UISnackBar
+
+Snack.Initialize _
+    .Message("Settings saved") _
+    .Action("UNDO", Me, "UndoSettings_Click") _
+    .Duration(3000) _
+    .Show(Activity)
+
+Sub UndoSettings_Click
+    ' Restore the previous settings.
+End Sub
+```
+
+`Show` replaces the snackbar's current run safely and starts an enter animation. The default duration is 3000 milliseconds; `Duration(0)` keeps it visible until `Dismiss` is called. `Dismiss` animates it out and removes its native view. `AnimationDuration(0)` disables the enter and exit animation. The action callback is a normal parameterless B4A sub and is checked with `xui.SubExists` before dispatch.
+
+The snackbar uses a generation token for delayed work. Calling `Show`, `Dismiss` or `Unmount` invalidates previous delayed callbacks, which prevents an old `Sleep` from removing a newer snackbar. Call `Unmount` when the root is being discarded.
+
+`UISnackBar` is an overlay API rather than a replacement for `UIColumn`, `UIRow` or `UIScaffold`; use the Activity/content root or another non-clipping host view when the notification must appear above the complete screen.
+
+## 12. UIAnimation
 
 `UIAnimation` adds a small, explicit animation layer without changing the composition syntax. It animates the bounds of an already-mounted `B4XView` using the native B4A layout animation:
 
@@ -499,7 +525,7 @@ Use `SizeTo(width, height)` for size-only changes and `MoveAndResize(...)` for b
 
 Keep animations opt-in and local. The declarative tree still owns layout; after a parent re-render, the next animation should target the resulting native view. `UIAnimation` currently animates bounds only and does not promise automatic interpolation of colors, text, opacity or arbitrary widget properties.
 
-## 12. State and UI updates
+## 13. State and UI updates
 
 `UIState` is an observable value holder for application state. It keeps the value outside widgets and notifies only the callbacks subscribed to that state instance.
 
@@ -579,9 +605,63 @@ The NOVA example demonstrates this with:
 
 Keep state explicit and keep rendering predictable.
 
-## 12. UITheme
+## 14. UIAsyncState
 
-`UITheme` is a reusable palette provider. It does not know which widgets your application owns and it does not repaint them automatically.
+`UIAsyncState` represents the lifecycle of an asynchronous operation without executing the operation itself. It is intentionally independent of `HttpJob`, `OkHttpUtils2`, databases and file APIs. The application still uses normal B4A resumable subs and `Wait For`; the state object exposes the result declaratively to the UI.
+
+The four stable statuses are `idle`, `loading`, `success` and `error`:
+
+```basic
+Private UsersState As UIAsyncState
+
+UsersState.Initialize
+UsersState.SetLoading
+UsersState.SetSuccess("response payload")
+UsersState.SetError("Network unavailable")
+```
+
+Read the current snapshot with `GetStatus`, `GetValue` and `GetErrorMessage`, or use the convenience predicates `IsIdle`, `IsLoading`, `IsSuccess` and `IsError`. Subscribe with the normal B4A callback convention:
+
+```basic
+UsersState.Subscribe(Me, "UsersState_Changed")
+
+Sub UsersState_Changed(State As UIAsyncState)
+    If State.IsLoading Then
+        ' Show a loading indicator.
+    Else If State.IsSuccess Then
+        ' Read State.GetValue and show the content.
+    Else If State.IsError Then
+        ' Read State.GetErrorMessage and show retry UI.
+    End If
+End Sub
+```
+
+A request remains ordinary B4A code. `Wait For` suspends the resumable sub without blocking the UI thread:
+
+```basic
+Sub LoadUsers
+    UsersState.SetLoading
+
+    Dim job As HttpJob
+    job.Initialize("", Me)
+    job.Download("https://example.com/api/users")
+
+    Wait For (job) JobDone(job As HttpJob)
+
+    If job.Success Then
+        UsersState.SetSuccess(job.GetString)
+    Else
+        UsersState.SetError(job.ErrorMessage)
+    End If
+    job.Release
+End Sub
+```
+
+This separation is deliberate: `UIAsyncState` is reusable for HTTP, database, file and authentication operations, while `HttpJob` and `Wait For` remain visible and testable in the application layer. `Reset` is an alias for `SetIdle`; repeated identical snapshots do not notify listeners. Call `Unsubscribe`, `UnsubscribeTarget` or `ClearListeners` when the owner no longer needs updates.
+
+## 15. UITheme
+
+`UITheme` is a reusable palette provider. It does not know which widgets your application owns, but every visual widget exposes `ApplyTheme` and declarative containers forward the theme to their descendants.
 
 ```basic
 Private AppTheme As UITheme
@@ -593,12 +673,15 @@ Dim primaryText As Int = AppTheme.PrimaryText
 Dim accentText As Int = AppTheme.AccentText
 ```
 
-Switch the palette and apply the returned colors in the host:
+Switch the palette and apply it to the declarative roots:
 
 ```basic
 AppTheme.Toggle
-ApplyTheme
+ActiveScreen.ApplyTheme(AppTheme)
+Navigator.ApplyTheme(AppTheme)
 ```
+
+Theme defaults are used until the programmer explicitly overrides a property. For example, `button.BackgroundColor(...)`, `label.Color(...)`, and `card.BorderColor(...)` opt out of that property only; other properties continue to follow the theme. `UICard` also themes its nested content. Containers such as `UIColumn`, `UIStack`, `UIPadding` and `UIScrollView` propagate `ApplyTheme` to their children.
 
 Choose a different brand seed without changing the rest of the application:
 
@@ -652,20 +735,19 @@ Available palette properties:
 
 The `*Text` properties are contrast-aware foregrounds for their matching semantic action colors. Prefer them over hard-coded `Colors.White` when a button background comes from the theme.
 
-A host-side theme application routine typically looks like this:
+A root-level theme application routine typically looks like this:
 
 ```basic
 Sub ApplyTheme
-    ' MainCard, Title, Description and Divider are initialized widgets.
     Root.Color = AppTheme.Background
-    MainCard.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border)
-    Title.Color(AppTheme.PrimaryText)
-    Description.Color(AppTheme.SecondaryText)
-    Divider.Color(AppTheme.Divider)
+    ActiveScreen.ApplyTheme(AppTheme)
+    Navigator.ApplyTheme(AppTheme)
 End Sub
 ```
 
-## 13. UINavigator and safe area
+This keeps palette policy in `UITheme` instead of repeating color literals in every widget builder.
+
+## 16. UINavigator and safe area
 
 `UINavigator` manages virtual screens inside one real B4A Activity:
 
@@ -745,7 +827,7 @@ screen.Initialize _
 
 The scaffold reserves space for its app bar and FAB area before rendering the body.
 
-## 14. Common problems
+## 17. Common problems
 
 ### A text input does not update my state
 
@@ -801,7 +883,7 @@ A virtual screen name must match the registered name exactly.
 
 `UITheme` only changes the values returned by its color properties. The host must assign those values to the widgets and call `Render` where needed.
 
-## 15. NOVA Control Center example
+## 18. NOVA Control Center example
 
 The included demo is organized into three virtual screens:
 
@@ -819,7 +901,7 @@ Suggested demonstration flow:
 6. Open Settings and toggle the theme.
 7. Navigate again to verify that state and mounting remain stable.
 
-## 16. Stable syntax and compatibility
+## 19. Stable syntax and compatibility
 
 The library's public syntax is defined in [SYNTAX.md](SYNTAX.md). Treat that file as the contract for examples, forum releases and future contributions.
 
@@ -834,7 +916,7 @@ The most important compatibility rules are:
 
 If an implementation idea cannot be explained by these rules, it should not be added to the public API yet.
 
-## 17. Design boundaries and roadmap
+## 20. Design boundaries and roadmap
 
 The project intentionally keeps its first release small:
 

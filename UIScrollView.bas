@@ -37,6 +37,14 @@ Public Sub GetChild As Object
     Return mChild
 End Sub
 
+' Propagates the active theme to the scrollable child.
+Public Sub ApplyTheme(Theme As UITheme) As UIScrollView
+    If Theme = Null Then Return Me
+    If Theme.IsInitialized = False Then Return Me
+    If mChild <> Null And xui.SubExists(mChild, "ApplyTheme", 1) Then CallSub2(mChild, "ApplyTheme", Theme)
+    Return Me
+End Sub
+
 ' Assigns the native parent container used during rendering.
 Public Sub SetParent(Parent As B4XView)
     mParent = Parent

@@ -13,9 +13,13 @@ Sub Class_Globals
 	Private mTextEventName As String
 	Private mTextColor As Int
 	Private mBackgroundColor As Int
+	Private mBorderColor As Int
+	Private mTextColorOverridden As Boolean
+	Private mBackgroundColorOverridden As Boolean
+	Private mBorderColorOverridden As Boolean
+	Private mTheme As UITheme
 	Private mCornerRadius As Int
 	Private mBorderWidth As Int
-	Private mBorderColor As Int
 	Private mCustomBackgroundApplied As Boolean
 	Private mEditText As EditText
 	Private mBaseView As B4XView
@@ -28,11 +32,17 @@ End Sub
 Public Sub Initialize As UIInput
 	mText = ""
 	mHint = ""
-	mTextColor = Colors.Black
-	mBackgroundColor = Colors.White
+	Dim defaultTheme As UITheme
+	defaultTheme.Initialize
+	mTheme = defaultTheme
+	mTextColor = mTheme.PrimaryText
+	mBackgroundColor = mTheme.Surface
+	mTextColorOverridden = False
+	mBackgroundColorOverridden = False
+	mBorderColorOverridden = False
 	mCornerRadius = 0
 	mBorderWidth = 0
-	mBorderColor = Colors.Transparent
+	mBorderColor = mTheme.Border
 	mCustomBackgroundApplied = False
 	mTextTarget = Null
 	mTextEventName = ""
@@ -92,11 +102,27 @@ End Sub
 
 Public Sub TextColor(Color As Int) As UIInput
 	mTextColor = Color
+	mTextColorOverridden = True
 	Return Me
 End Sub
 
 Public Sub BackgroundColor(Color As Int) As UIInput
 	mBackgroundColor = Color
+	mBackgroundColorOverridden = True
+	Return Me
+End Sub
+
+' Applies theme defaults without replacing explicit color overrides.
+Public Sub ApplyTheme(Theme As UITheme) As UIInput
+	If Theme = Null Then Return Me
+	If Theme.IsInitialized = False Then Return Me
+	mTheme = Theme
+	If mTextColorOverridden = False Then mTextColor = mTheme.PrimaryText
+	If mBackgroundColorOverridden = False Then mBackgroundColor = mTheme.Surface
+	If mBorderColorOverridden = False Then mBorderColor = mTheme.Border
+	If mParent <> Null Then
+		If mParent.IsInitialized Then Render
+	End If
 	Return Me
 End Sub
 
@@ -110,6 +136,7 @@ End Sub
 Public Sub Border(Width As Int, Color As Int) As UIInput
 	mBorderWidth = Max(0, Width)
 	mBorderColor = Color
+	mBorderColorOverridden = True
 	Return Me
 End Sub
 

@@ -4,7 +4,15 @@ Library1=core
 Library2=ime
 Library3=xui
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
-Module1=Starter
+Module1=UIAnimation
+Module2=UIAppBar
+Module3=UIAsyncState
+Module4=UIBottomNavigationBar
+Module5=UIBox
+Module6=UIButton
+Module7=UICard
+Module8=UICenter
+Module9=UIColumn
 Module10=UIDivider
 Module11=UIExpanded
 Module12=UIFloatingActionButton
@@ -15,22 +23,15 @@ Module16=UIPadding
 Module17=UIRow
 Module18=UIScaffold
 Module19=UIScrollView
-Module2=UIAnimation
-Module20=UISpace
-Module21=UIStack
-Module22=UIState
-Module23=UITheme
-Module24=UIVisibility
-Module3=UIAppBar
-Module4=UIBottomNavigationBar
-Module5=UIBox
-Module6=UIButton
-Module7=UICard
-Module8=UICenter
-Module9=UIColumn
+Module20=UISnackBar
+Module21=UISpace
+Module22=UIStack
+Module23=UIState
+Module24=UITheme
+Module25=UIVisibility
 NumberOfFiles=0
 NumberOfLibraries=3
-NumberOfModules=24
+NumberOfModules=25
 Version=13.62
 @EndOfDesignText@
 #Region  Project Attributes
@@ -47,448 +48,21 @@ Version=13.62
 #End Region
 
 Sub Process_Globals
-    Private CounterState As UIState
-    Private ActivityRefreshState As UIState
-    Private SelectedTabState As UIState
+
 End Sub
 
 Sub Globals
-    Private Root As B4XView
-    Private AppTheme As UITheme
-    Private Navigator As UINavigator
-    Private BottomNavigation As UIBottomNavigationBar
-    Private UiMounted As Boolean
-    Private LastWidth, LastHeight As Int
-    Private ActiveRoute As String
 
-    Private DashboardScreen As UIScaffold
-    Private ActivityScreen As UIScaffold
-    Private SettingsScreen As UIScaffold
-
-    Private DashboardBar As UIAppBar
-    Private FabDecrease As UIFloatingActionButton
-    Private FabIncrease As UIFloatingActionButton
-    Private DashboardBody As UIColumn
-    Private DashboardPadding As UIPadding
-    Private DashboardHero As UICard
-    Private HeroPadding As UIPadding
-    Private HeroContent As UIColumn
-    Private MetricsRow As UIRow
-    Private MetricCardActive As UICard
-    Private MetricCardUptime As UICard
-    Private MetricActivePadding As UIPadding
-    Private MetricUptimePadding As UIPadding
-    Private MetricActiveBody As UIColumn
-    Private MetricUptimeBody As UIColumn
-    Private MetricActiveExpanded As UIExpanded
-    Private MetricUptimeExpanded As UIExpanded
-    Private HeroActions As UIRow
-    Private BtnOpenActivity As UIButton
-    Private BtnOpenSettings As UIButton
-    Private DashboardDivider As UIDivider
-    Private LblDashboardOverline As UILabel
-    Private LblDashboardTitle As UILabel
-    Private LblDashboardSubtitle As UILabel
-    Private LblHeroOverline As UILabel
-    Private LblValue As UILabel
-    Private LblValueCaption As UILabel
-    Private LblHealth As UILabel
-    Private LblSync As UILabel
-    Private LblActiveCaption As UILabel
-    Private LblActiveValue As UILabel
-    Private LblActiveNote As UILabel
-    Private LblUptimeCaption As UILabel
-    Private LblUptimeValue As UILabel
-    Private LblUptimeNote As UILabel
-
-    Private ActivityBar As UIAppBar
-    Private ActivityBody As UIColumn
-    Private ActivityPadding As UIPadding
-    Private ActivityList As UIColumn
-    Private ActivityScroll As UIScrollView
-    Private ActivityScrollExpanded As UIExpanded
-    Private ActivityCardOne, ActivityCardTwo, ActivityCardThree As UICard
-    Private ActivityCardFour, ActivityCardFive, ActivityCardSix As UICard
-    Private ActivityOnePadding, ActivityTwoPadding, ActivityThreePadding As UIPadding
-    Private ActivityFourPadding, ActivityFivePadding, ActivitySixPadding As UIPadding
-    Private ActivityOneBody, ActivityTwoBody, ActivityThreeBody As UIColumn
-    Private ActivityFourBody, ActivityFiveBody, ActivitySixBody As UIColumn
-    Private LblActivityOverline As UILabel
-    Private LblActivityTitle As UILabel
-    Private LblActivitySummary As UILabel
-    Private LblActivityRefreshes As UILabel
-    Private LblActivityOne, LblActivityOneMeta As UILabel
-    Private LblActivityTwo, LblActivityTwoMeta As UILabel
-    Private LblActivityThree, LblActivityThreeMeta As UILabel
-    Private LblActivityFour, LblActivityFourMeta As UILabel
-    Private LblActivityFive, LblActivityFiveMeta As UILabel
-    Private LblActivitySix, LblActivitySixMeta As UILabel
-    Private BtnRefreshActivity As UIButton
-    Private BtnActivityBack As UIButton
-
-    Private SettingsBar As UIAppBar
-    Private SettingsBody As UIColumn
-    Private SettingsPadding As UIPadding
-    Private SettingsCard As UICard
-    Private SettingsCardPadding As UIPadding
-    Private SettingsCardBody As UIColumn
-    Private LblSettingsOverline As UILabel
-    Private LblSettingsTitle As UILabel
-    Private LblSettingsDescription As UILabel
-    Private LblThemeStatus As UILabel
-    Private LblRuntimeStatus As UILabel
-    Private BtnTheme As UIButton
-    Private BtnSettingsBack As UIButton
 End Sub
 
-' Creates the activity root and all declarative screens.
 Sub Activity_Create(FirstTime As Boolean)
-    Root = Activity
-    If CounterState.IsInitialized = False Then CounterState.Initialize(24)
-    If ActivityRefreshState.IsInitialized = False Then ActivityRefreshState.Initialize(0)
-    If SelectedTabState.IsInitialized = False Then SelectedTabState.Initialize(0)
-    ActivityRefreshState.Subscribe(Me, "ActivityRefreshState_Changed")
-    AppTheme.Initialize.Scheme(0xFF00A896)
-    BottomNavigation.Initialize _
-        .AddItem("dashboard", "⌂", "Home") _
-        .AddItem("activity", "◉", "Activity") _
-        .AddItem("settings", "⚙", "Settings") _
-        .ActiveColor(AppTheme.Accent) _
-        .InactiveColor(AppTheme.MutedText) _
-        .IndicatorColor(AppTheme.Accent) _
-        .BackgroundColor(AppTheme.Surface) _
-        .BindSelectedIndex(SelectedTabState) _
-        .OnSelected(Me, "BottomNavigation_Selected")
-    Root.Color = AppTheme.Background
-    ActiveRoute = "Dashboard"
-    InitializeDashboard
-    InitializeActivity
-    InitializeSettings
-    ApplyTheme
-    Navigator.Initialize _
-        .AddScreen("Dashboard", DashboardScreen) _
-        .AddScreen("Activity", ActivityScreen) _
-        .AddScreen("Settings", SettingsScreen)
-    BuildUI
+
 End Sub
 
-' Builds the dashboard screen and its live counter controls.
-Private Sub InitializeDashboard
-    DashboardBar.Initialize.Title("NOVA  /  CONTROL CENTER").BackgroundColor(AppTheme.DashboardBar)
-    FabDecrease.Initialize.Text("-").BackgroundColor(AppTheme.Negative).OnClick(Me, "Decrement_Click")
-    FabIncrease.Initialize.Text("+").BackgroundColor(AppTheme.Accent).OnClick(Me, "Increment_Click")
-
-    LblDashboardOverline.Initialize.Text("NOVA OPERATIONS").Size(12).Color(AppTheme.MutedText)
-    LblDashboardTitle.Initialize.Text("Good evening, operator").Size(26).Color(AppTheme.PrimaryText)
-    LblDashboardSubtitle.Initialize.Text("Your control center is healthy and ready.").Size(14).Color(AppTheme.SecondaryText)
-    LblHeroOverline.Initialize.Text("LIVE SIGNAL").Size(12).Color(AppTheme.Accent)
-    LblValue.Initialize.BindText(CounterState).Size(48).Color(AppTheme.PrimaryText)
-    LblValueCaption.Initialize.Text("active sessions").Size(14).Color(AppTheme.SecondaryText)
-    LblHealth.Initialize.Text("ALL SYSTEMS NOMINAL").Size(13).Color(AppTheme.Accent)
-    LblSync.Initialize.Text("Last sync  •  just now").Size(12).Color(AppTheme.MutedText)
-
-    HeroContent.Initialize.Spacing(6).AddChild(LblHeroOverline).AddChild(LblValue).AddChild(LblValueCaption).AddChild(LblHealth).AddChild(LblSync)
-    HeroPadding.Initialize.All(18dip).Child(HeroContent)
-    DashboardHero.Initialize.BackgroundColor(AppTheme.HeroSurface).CornerRadius(18dip).Child(HeroPadding)
-
-    LblActiveCaption.Initialize.Text("ACTIVE USERS").Size(11).Color(AppTheme.SecondaryText)
-    LblActiveValue.Initialize.Text("1,284").Size(25).Color(AppTheme.PrimaryText)
-    LblActiveNote.Initialize.Text("+12.8% this week").Size(12).Color(AppTheme.Accent)
-    MetricActiveBody.Initialize.Spacing(4).AddChild(LblActiveCaption).AddChild(LblActiveValue).AddChild(LblActiveNote)
-    MetricActivePadding.Initialize.All(14dip).Child(MetricActiveBody)
-    MetricCardActive.Initialize.BackgroundColor(AppTheme.Surface).CornerRadius(14dip).Child(MetricActivePadding)
-    MetricActiveExpanded.Initialize.Child(MetricCardActive)
-
-    LblUptimeCaption.Initialize.Text("UPTIME").Size(11).Color(AppTheme.SecondaryText)
-    LblUptimeValue.Initialize.Text("99.98%").Size(25).Color(AppTheme.PrimaryText)
-    LblUptimeNote.Initialize.Text("Excellent reliability").Size(12).Color(AppTheme.Info)
-    MetricUptimeBody.Initialize.Spacing(4).AddChild(LblUptimeCaption).AddChild(LblUptimeValue).AddChild(LblUptimeNote)
-    MetricUptimePadding.Initialize.All(14dip).Child(MetricUptimeBody)
-    MetricCardUptime.Initialize.BackgroundColor(AppTheme.Surface).CornerRadius(14dip).Child(MetricUptimePadding)
-    MetricUptimeExpanded.Initialize.Child(MetricCardUptime)
-    MetricsRow.Initialize.Spacing(10dip).AddChild(MetricActiveExpanded).AddChild(MetricUptimeExpanded)
-
-    BtnOpenActivity.Initialize.Text("VIEW ACTIVITY").BackgroundColor(AppTheme.Accent).TextColor(AppTheme.AccentText).CornerRadius(12dip).OnClick(Me, "NavigateToActivity_Click")
-    BtnOpenSettings.Initialize.Text("SETTINGS").BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText).CornerRadius(12dip).OnClick(Me, "NavigateToSettings_Click")
-    HeroActions.Initialize.Spacing(8dip).AddChild(BtnOpenActivity).AddChild(BtnOpenSettings)
-    DashboardDivider.Initialize.Color(AppTheme.Divider)
-    DashboardBody.Initialize.Spacing(10dip) _
-        .AddChild(LblDashboardOverline) _
-        .AddChild(LblDashboardTitle) _
-        .AddChild(LblDashboardSubtitle) _
-        .AddChild(DashboardHero) _
-        .AddChild(HeroActions) _
-        .AddChild(DashboardDivider) _
-        .AddChild(MetricsRow)
-    DashboardPadding.Initialize.All(16dip).Child(DashboardBody)
-    DashboardScreen.Initialize _
-        .AppBar(DashboardBar) _
-        .Body(DashboardPadding) _
-        .BottomNavigationBar(BottomNavigation) _
-        .FloatingActionButtonLeft(FabDecrease) _
-        .FloatingActionButtonRight(FabIncrease)
-End Sub
-
-' Builds a scrollable event stream with enough content to demonstrate natural measurement.
-Private Sub InitializeActivity
-    ActivityBar.Initialize.Title("ACTIVITY  /  EVENT STREAM").BackgroundColor(AppTheme.SecondaryBar)
-    LblActivityOverline.Initialize.Text("RECENT EVENTS").Size(12).Color(AppTheme.MutedText)
-    LblActivityTitle.Initialize.Text("Signal timeline").Size(26).Color(AppTheme.PrimaryText)
-    LblActivitySummary.Initialize.Text("A focused view of what is happening now.").Size(14).Color(AppTheme.SecondaryText)
-    LblActivityRefreshes.Initialize.Text("Refresh cycles: " & ActivityRefreshState.GetState).Size(12).Color(AppTheme.Info)
-
-    LblActivityOne.Initialize.Text("Deployment completed").Size(15).Color(AppTheme.PrimaryText)
-    LblActivityOneMeta.Initialize.Text("Production  •  2 minutes ago").Size(12).Color(AppTheme.MutedText)
-    ActivityOneBody.Initialize.Spacing(4).AddChild(LblActivityOne).AddChild(LblActivityOneMeta)
-    ActivityOnePadding.Initialize.All(14dip).Child(ActivityOneBody)
-    ActivityCardOne.Initialize.BackgroundColor(AppTheme.Surface).CornerRadius(14dip).Child(ActivityOnePadding)
-
-    LblActivityTwo.Initialize.Text("Workspace synchronized").Size(15).Color(AppTheme.PrimaryText)
-    LblActivityTwoMeta.Initialize.Text("Europe cluster  •  8 minutes ago").Size(12).Color(AppTheme.MutedText)
-    ActivityTwoBody.Initialize.Spacing(4).AddChild(LblActivityTwo).AddChild(LblActivityTwoMeta)
-    ActivityTwoPadding.Initialize.All(14dip).Child(ActivityTwoBody)
-    ActivityCardTwo.Initialize.BackgroundColor(AppTheme.Surface).CornerRadius(14dip).Child(ActivityTwoPadding)
-
-    LblActivityThree.Initialize.Text("Security policy verified").Size(15).Color(AppTheme.PrimaryText)
-    LblActivityThreeMeta.Initialize.Text("Automated check  •  21 minutes ago").Size(12).Color(AppTheme.MutedText)
-    ActivityThreeBody.Initialize.Spacing(4).AddChild(LblActivityThree).AddChild(LblActivityThreeMeta)
-    ActivityThreePadding.Initialize.All(14dip).Child(ActivityThreeBody)
-    ActivityCardThree.Initialize.BackgroundColor(AppTheme.Surface).CornerRadius(14dip).Child(ActivityThreePadding)
-
-    LblActivityFour.Initialize.Text("Database backup verified").Size(15).Color(AppTheme.PrimaryText)
-    LblActivityFourMeta.Initialize.Text("North America  •  34 minutes ago").Size(12).Color(AppTheme.MutedText)
-    ActivityFourBody.Initialize.Spacing(4).AddChild(LblActivityFour).AddChild(LblActivityFourMeta)
-    ActivityFourPadding.Initialize.All(14dip).Child(ActivityFourBody)
-    ActivityCardFour.Initialize.BackgroundColor(AppTheme.Surface).CornerRadius(14dip).Child(ActivityFourPadding)
-
-    LblActivityFive.Initialize.Text("API latency threshold changed").Size(15).Color(AppTheme.PrimaryText)
-    LblActivityFiveMeta.Initialize.Text("Observability  •  1 hour ago").Size(12).Color(AppTheme.MutedText)
-    ActivityFiveBody.Initialize.Spacing(4).AddChild(LblActivityFive).AddChild(LblActivityFiveMeta)
-    ActivityFivePadding.Initialize.All(14dip).Child(ActivityFiveBody)
-    ActivityCardFive.Initialize.BackgroundColor(AppTheme.Surface).CornerRadius(14dip).Child(ActivityFivePadding)
-
-    LblActivitySix.Initialize.Text("Operator session opened").Size(15).Color(AppTheme.PrimaryText)
-    LblActivitySixMeta.Initialize.Text("Control center  •  2 hours ago").Size(12).Color(AppTheme.MutedText)
-    ActivitySixBody.Initialize.Spacing(4).AddChild(LblActivitySix).AddChild(LblActivitySixMeta)
-    ActivitySixPadding.Initialize.All(14dip).Child(ActivitySixBody)
-    ActivityCardSix.Initialize.BackgroundColor(AppTheme.Surface).CornerRadius(14dip).Child(ActivitySixPadding)
-
-    ActivityList.Initialize.Spacing(8dip).AddChild(ActivityCardOne).AddChild(ActivityCardTwo).AddChild(ActivityCardThree).AddChild(ActivityCardFour).AddChild(ActivityCardFive).AddChild(ActivityCardSix)
-    ActivityScroll.Initialize.Child(ActivityList)
-    ActivityScrollExpanded.Initialize.Child(ActivityScroll)
-    BtnRefreshActivity.Initialize.Text("REFRESH STREAM").BackgroundColor(AppTheme.Info).TextColor(AppTheme.InfoText).CornerRadius(12dip).OnClick(Me, "RefreshActivity_Click")
-    BtnActivityBack.Initialize.Text("BACK TO DASHBOARD").BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText).CornerRadius(12dip).OnClick(Me, "NavigateToDashboard_Click")
-    ActivityBody.Initialize.Spacing(10dip) _
-        .AddChild(LblActivityOverline) _
-        .AddChild(LblActivityTitle) _
-        .AddChild(LblActivitySummary) _
-        .AddChild(LblActivityRefreshes) _
-        .AddChild(ActivityScrollExpanded) _
-        .AddChild(BtnRefreshActivity) _
-        .AddChild(BtnActivityBack)
-    ActivityPadding.Initialize.All(16dip).Child(ActivityBody)
-    ActivityScreen.Initialize.AppBar(ActivityBar).Body(ActivityPadding).BottomNavigationBar(BottomNavigation)
-End Sub
-
-' Builds the settings screen used to demonstrate runtime theme changes.
-Private Sub InitializeSettings
-    SettingsBar.Initialize.Title("SETTINGS  /  RUNTIME").BackgroundColor(AppTheme.SecondaryBar)
-    LblSettingsOverline.Initialize.Text("PREFERENCES").Size(12).Color(AppTheme.MutedText)
-    LblSettingsTitle.Initialize.Text("Tune your workspace").Size(26).Color(AppTheme.PrimaryText)
-    LblSettingsDescription.Initialize.Text("These controls are live and update the mounted screen.").Size(14).Color(AppTheme.SecondaryText)
-    LblThemeStatus.Initialize.Text("Theme: light workspace").Size(15).Color(AppTheme.PrimaryText)
-    LblRuntimeStatus.Initialize.Text("Runtime: connected  •  latency 42 ms").Size(13).Color(AppTheme.Accent)
-    BtnTheme.Initialize.Text("TOGGLE THEME STATUS").BackgroundColor(AppTheme.ThemeAction).TextColor(AppTheme.ThemeActionText).CornerRadius(12dip).OnClick(Me, "ToggleTheme_Click")
-    BtnSettingsBack.Initialize.Text("BACK TO DASHBOARD").BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText).CornerRadius(12dip).OnClick(Me, "NavigateToDashboard_Click")
-    SettingsCardBody.Initialize.Spacing(8).AddChild(LblSettingsTitle).AddChild(LblSettingsDescription).AddChild(LblThemeStatus).AddChild(LblRuntimeStatus).AddChild(BtnTheme)
-    SettingsCardPadding.Initialize.All(18dip).Child(SettingsCardBody)
-    SettingsCard.Initialize.BackgroundColor(AppTheme.Surface).CornerRadius(18dip).Child(SettingsCardPadding)
-    SettingsBody.Initialize.Spacing(10dip).AddChild(LblSettingsOverline).AddChild(SettingsCard).AddChild(BtnSettingsBack)
-    SettingsPadding.Initialize.All(16dip).Child(SettingsBody)
-    SettingsScreen.Initialize.AppBar(SettingsBar).Body(SettingsPadding).BottomNavigationBar(BottomNavigation)
-End Sub
-
-' Mounts the active virtual screen and refreshes safe-area insets.
-Private Sub BuildUI
-    If Root.Width <= 0 Or Root.Height <= 0 Then Return
-    If UiMounted = False Or LastWidth <> Root.Width Or LastHeight <> Root.Height Then
-        Navigator.SetParent(Root)
-        Navigator.SetPosition(0, 0)
-        Navigator.SetSize(Root.Width, Root.Height)
-        Navigator.Render
-        LastWidth = Root.Width
-        LastHeight = Root.Height
-        UiMounted = True
-    End If
-    Navigator.RefreshInsets
-    UpdateActiveLabels
-End Sub
-
-' Updates only the labels whose values are controlled by application state.
-Private Sub UpdateActiveLabels
-    If UiMounted = False Then Return
-    If ActiveRoute = "Dashboard" Then
-        ' LblValue is bound directly to CounterState.
-    Else If ActiveRoute = "Activity" Then
-        LblActivityRefreshes.Text("Refresh cycles: " & ActivityRefreshState.GetState)
-        LblActivityRefreshes.Render
-    Else If ActiveRoute = "Settings" Then
-        If AppTheme.IsDark Then
-            LblThemeStatus.Text("Theme: dark workspace")
-        Else
-            LblThemeStatus.Text("Theme: light workspace")
-        End If
-        LblThemeStatus.Render
-    End If
-End Sub
-
-' Applies the current UITheme palette to every mounted component.
-Private Sub ApplyTheme
-    Root.Color = AppTheme.Background
-    DashboardBar.BackgroundColor(AppTheme.DashboardBar)
-    ActivityBar.BackgroundColor(AppTheme.SecondaryBar)
-    SettingsBar.BackgroundColor(AppTheme.SecondaryBar)
-    DashboardHero.BackgroundColor(AppTheme.HeroSurface)
-
-    MetricCardActive.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border)
-    MetricCardUptime.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border)
-    ActivityCardOne.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border)
-    ActivityCardTwo.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border)
-    ActivityCardThree.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border)
-    ActivityCardFour.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border)
-    ActivityCardFive.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border)
-    ActivityCardSix.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border)
-    SettingsCard.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border)
-    DashboardDivider.Color(AppTheme.Divider)
-
-    LblDashboardOverline.Color(AppTheme.MutedText)
-    LblDashboardTitle.Color(AppTheme.PrimaryText)
-    LblDashboardSubtitle.Color(AppTheme.SecondaryText)
-    LblHeroOverline.Color(AppTheme.Accent)
-    LblValue.Color(AppTheme.PrimaryText)
-    LblValueCaption.Color(AppTheme.SecondaryText)
-    LblHealth.Color(AppTheme.Accent)
-    LblSync.Color(AppTheme.MutedText)
-    LblActiveCaption.Color(AppTheme.SecondaryText)
-    LblActiveValue.Color(AppTheme.PrimaryText)
-    LblActiveNote.Color(AppTheme.Accent)
-    LblUptimeCaption.Color(AppTheme.SecondaryText)
-    LblUptimeValue.Color(AppTheme.PrimaryText)
-    LblUptimeNote.Color(AppTheme.Info)
-
-    LblActivityOverline.Color(AppTheme.MutedText)
-    LblActivityTitle.Color(AppTheme.PrimaryText)
-    LblActivitySummary.Color(AppTheme.SecondaryText)
-    LblActivityRefreshes.Color(AppTheme.Info)
-    LblActivityOne.Color(AppTheme.PrimaryText)
-    LblActivityOneMeta.Color(AppTheme.MutedText)
-    LblActivityTwo.Color(AppTheme.PrimaryText)
-    LblActivityTwoMeta.Color(AppTheme.MutedText)
-    LblActivityThree.Color(AppTheme.PrimaryText)
-    LblActivityThreeMeta.Color(AppTheme.MutedText)
-    LblActivityFour.Color(AppTheme.PrimaryText)
-    LblActivityFourMeta.Color(AppTheme.MutedText)
-    LblActivityFive.Color(AppTheme.PrimaryText)
-    LblActivityFiveMeta.Color(AppTheme.MutedText)
-    LblActivitySix.Color(AppTheme.PrimaryText)
-    LblActivitySixMeta.Color(AppTheme.MutedText)
-
-    LblSettingsOverline.Color(AppTheme.MutedText)
-    LblSettingsTitle.Color(AppTheme.PrimaryText)
-    LblSettingsDescription.Color(AppTheme.SecondaryText)
-    LblThemeStatus.Color(AppTheme.PrimaryText)
-    LblRuntimeStatus.Color(AppTheme.Accent)
-
-    BtnOpenActivity.BackgroundColor(AppTheme.Accent).TextColor(AppTheme.AccentText)
-    BtnOpenSettings.BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText)
-    BtnRefreshActivity.BackgroundColor(AppTheme.Info).TextColor(AppTheme.InfoText)
-    BtnActivityBack.BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText)
-    BtnTheme.BackgroundColor(AppTheme.ThemeAction).TextColor(AppTheme.ThemeActionText)
-    BtnSettingsBack.BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText)
-    BottomNavigation.ActiveColor(AppTheme.Accent).InactiveColor(AppTheme.MutedText) _
-        .IndicatorColor(AppTheme.Accent).BackgroundColor(AppTheme.Surface)
-End Sub
-
-' Toggles the palette and remounts the active screen with the new colors.
-Sub ToggleTheme_Click
-    AppTheme.Toggle
-    ApplyTheme
-    If UiMounted Then Navigator.Render
-    UpdateActiveLabels
-End Sub
-
-' Navigates to the activity stream.
-Sub NavigateToActivity_Click
-    SelectTabState(1)
-    ActiveRoute = "Activity"
-    Navigator.NavigateTo("Activity")
-    UpdateActiveLabels
-End Sub
-
-' Navigates to the settings screen.
-Sub NavigateToSettings_Click
-    SelectTabState(2)
-    ActiveRoute = "Settings"
-    Navigator.NavigateTo("Settings")
-    UpdateActiveLabels
-End Sub
-
-' Navigates back to the dashboard.
-Sub NavigateToDashboard_Click
-    SelectTabState(0)
-    ActiveRoute = "Dashboard"
-    Navigator.NavigateTo("Dashboard")
-    UpdateActiveLabels
-End Sub
-
-' Keeps button navigation and bottom navigation on the same explicit state.
-Private Sub SelectTabState(Index As Int)
-    If SelectedTabState.IsInitialized Then SelectedTabState.SetState(Index)
-End Sub
-
-' Receives the declarative bottom-navigation selection.
-Sub BottomNavigation_Selected(Index As Int, Id As String)
-    Select Case Id
-        Case "dashboard"
-            NavigateToDashboard_Click
-        Case "activity"
-            NavigateToActivity_Click
-        Case "settings"
-            NavigateToSettings_Click
-    End Select
-End Sub
-
-' Updates state. UIState notifies the affected label without rebuilding the tree.
-Sub Increment_Click
-    Dim currentValue As Int = CounterState.GetState
-    CounterState.SetState(currentValue + 1)
-End Sub
-
-Sub Decrement_Click
-    Dim currentValue As Int = CounterState.GetState
-    If currentValue > 0 Then CounterState.SetState(currentValue - 1)
-End Sub
-
-' Updates the activity refresh counter through the same observable state API.
-Sub RefreshActivity_Click
-    Dim currentValue As Int = ActivityRefreshState.GetState
-    ActivityRefreshState.SetState(currentValue + 1)
-End Sub
-
-' UIState updates LblValue through UILabel.BindText.
-Sub ActivityRefreshState_Changed(State As UIState)
-    If UiMounted And ActiveRoute = "Activity" Then
-        LblActivityRefreshes.Text("Refresh cycles: " & State.GetState)
-        LblActivityRefreshes.Render
-    End If
-End Sub
-
-' Reapplies layout after the activity resumes.
 Sub Activity_Resume
-    ActivityRefreshState.Subscribe(Me, "ActivityRefreshState_Changed")
-    BuildUI
+
 End Sub
 
 Sub Activity_Pause (UserClosed As Boolean)
-    ActivityRefreshState.Unsubscribe(Me, "ActivityRefreshState_Changed")
+
 End Sub

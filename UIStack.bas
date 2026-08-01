@@ -20,6 +20,16 @@ Public Sub Initialize As UIStack
 	Return Me
 End Sub
 
+' Propagates the active theme to every child that supports it.
+Public Sub ApplyTheme(Theme As UITheme) As UIStack
+	If Theme = Null Then Return Me
+	If Theme.IsInitialized = False Then Return Me
+	For Each child As Object In mChildren
+		If child <> Null And xui.SubExists(child, "ApplyTheme", 1) Then CallSub2(child, "ApplyTheme", Theme)
+	Next
+	Return Me
+End Sub
+
 ' Adds one child. Later children are rendered above earlier children.
 Public Sub AddChild(Child As Object) As UIStack
 	If Child <> Null Then mChildren.Add(Child)

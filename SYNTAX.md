@@ -95,10 +95,12 @@ This is the API application code is expected to use:
 - `Initialize`;
 - widget configuration such as `Text`, `Color`, `Size`, `Child`, `AddChild`, `Spacing`, `CornerRadius` and `Border`;
 - state bindings such as `BindText` and `BindTitle`;
+- asynchronous operation state through `UIAsyncState`;
 - text input configuration through `Hint`, `Text`, `TextColor`, `BackgroundColor`, `CornerRadius`, `Border` and `GetText`;
 - event registration through `OnClick` and `OnTextChanged`;
 - navigation methods such as `AddScreen` and `NavigateTo`;
 - `ScrollTo` and other explicitly documented control methods;
+- transient feedback through `UISnackBar`;
 - opt-in bounds animation through `UIAnimation`.
 
 
@@ -351,6 +353,34 @@ Rules:
 - Ordinary selection changes update existing native children; changing item count or bar dimensions rebuilds the native item views.
 - `UIBottomNavigationBar` follows the same lifecycle protocol and preserves its state binding across temporary `Unmount` calls.
 
+### UISnackBar
+
+`UISnackBar` is the stable API for transient feedback over a supplied `B4XView` root:
+
+```basic
+Dim snack As UISnackBar
+snack.Initialize _
+    .Message("Settings saved") _
+    .Action("UNDO", Me, "Undo_Click") _
+    .Duration(3000) _
+    .Show(Activity)
+
+Sub Undo_Click
+    ' Restore the previous value.
+End Sub
+```
+
+Rules:
+
+- `Message(String)`, `Action(Text, Target, EventName)`, `Duration(milliseconds)`, `AnimationDuration(milliseconds)`, `BackgroundColor`, `TextColor`, `ActionColor`, `CornerRadius` and `Margin` return the same snackbar instance.
+- `Show(Parent)` mounts the overlay directly over the supplied root and brings it to the front.
+- `Duration(0)` keeps it visible until `Dismiss` is called.
+- `Dismiss` animates out and removes the native overlay.
+- `Unmount` removes the overlay and invalidates delayed work.
+- The action callback is a parameterless normal B4A sub and is dispatched only when it exists.
+- `Show`, `Dismiss` and `Unmount` invalidate older delayed work; an old `Sleep` must not remove a newer snackbar.
+- The snackbar is an overlay, not a permanent `UIColumn`/`UIRow` child. Use a non-clipping screen or Activity root when it must appear above the whole screen.
+
 ### UIAnimation
 
 `UIAnimation` is the stable opt-in API for animating an existing native view's bounds:
@@ -466,7 +496,58 @@ End Sub
 
 `Text(String)` cancels `BindText(UIState)`. `GetText` returns the current text. The native field is preserved during ordinary `Render` calls so focus and keyboard state are not discarded. `GetContentSize` reports a natural 48dip height and a width based on the current text or hint.
 
-## 12. Themes
+## 12. Async operation state
+
+`UIAsyncState` is the stable state model for operations that complete later. It does not make HTTP requests and does not replace B4A `Wait For` or `ResumableSub`.
+
+```basic
+Dim requestState As UIAsyncState
+requestState.Initialize
+requestState.SetLoading
+
+Sub RequestState_Changed(State As UIAsyncState)
+    If State.IsSuccess Then
+        Log(State.GetValue)
+    Else If State.IsError Then
+        Log(State.GetErrorMessage)
+    End If
+End Sub
+
+requestState.Subscribe(Me, "RequestState_Changed")
+```
+
+The public statuses are fixed strings: `idle`, `loading`, `success` and `error`. Use `SetIdle`, `SetLoading`, `SetSuccess(Value)`, `SetError(Message)` and `Reset` to transition the state. `GetStatus`, `GetValue`, `GetErrorMessage`, `IsIdle`, `IsLoading`, `IsSuccess` and `IsError` expose the current snapshot.
+
+A request implementation remains in normal B4A code and may use `HttpJob` from `OkHttpUtils2`:
+
+```basic
+Sub LoadData
+    requestState.SetLoading
+
+    Dim job As HttpJob
+    job.Initialize("", Me)
+    job.Download(URL)
+    Wait For (job) JobDone(job As HttpJob)
+
+    If job.Success Then
+        requestState.SetSuccess(job.GetString)
+    Else
+        requestState.SetError(job.ErrorMessage)
+    End If
+    job.Release
+End Sub
+```
+
+Rules:
+
+- `UIAsyncState` is independent of HTTP, `OkHttpUtils2`, databases and file APIs.
+- `Wait For` remains a B4A language feature and is not hidden behind a new DSL.
+- Subscribers receive `Sub EventName(State As UIAsyncState)` through the same safe callback pattern as `UIState`.
+- Replacing the snapshot with identical status, value and error does not notify listeners.
+- A callback may request one follow-up transition; notification passes are bounded like `UIState`.
+- `Reset` is an alias for `SetIdle`.
+
+## 13. Themes
 
 `UITheme` is a palette value provider, not a global renderer:
 
@@ -491,7 +572,7 @@ Rules:
 - Theme changes must not silently change application state or navigation.
 - New palette values may be added; existing property meanings must remain stable.
 
-## 13. Navigation and safe area
+## 14. Navigation and safe area
 
 `UINavigator` manages virtual screens inside one real B4A Activity:
 
@@ -514,7 +595,7 @@ Rules:
 
 A future native multi-Activity integration must be additive and must not redefine virtual screens as Activities.
 
-## 14. Compatibility and versioning
+## 15. Compatibility and versioning
 
 The syntax contract is more important than internal implementation details.
 
@@ -566,7 +647,7 @@ New widgets and optional methods may be added without changing existing syntax. 
 4. does not require a global state manager or hidden lifecycle;
 5. can be documented with a stable compatibility rule.
 
-## 15. Rules for future contributors
+## 16. Rules for future contributors
 
 Before merging a library change:
 
@@ -581,7 +662,7 @@ Before merging a library change:
 9. Test runtime changes through **IDE focus → F5 → Ctrl+R → bundle inspection**.
 10. Do not publish a new syntax convention only in an example or in a private implementation comment.
 
-## 16. Current deliberate boundaries
+## 17. Current deliberate boundaries
 
 The following are intentionally outside the contract for now:
 

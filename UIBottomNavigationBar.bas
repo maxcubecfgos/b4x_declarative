@@ -20,8 +20,15 @@ Sub Class_Globals
     Private mInactiveColor As Int
     Private mIndicatorColor As Int
     Private mDividerColor As Int
+    Private mBackgroundColorOverridden As Boolean
+    Private mActiveColorOverridden As Boolean
+    Private mInactiveColorOverridden As Boolean
+    Private mIndicatorColorOverridden As Boolean
+    Private mDividerColorOverridden As Boolean
+    Private mTheme As UITheme
     Private mIconSize As Int
     Private mTextSize As Int
+    Private mUseFontAwesome As Boolean
     Private mShowInactiveLabels As Boolean
     Private mSelectedIndex As Int
     Private mBuiltItemCount As Int
@@ -44,13 +51,22 @@ Public Sub Initialize As UIBottomNavigationBar
     mSelectedState = Null
     mTarget = Null
     mEventName = ""
-    mBackgroundColor = Colors.White
-    mActiveColor = 0xFF00A896
-    mInactiveColor = 0xFF7D8CA1
-    mIndicatorColor = mActiveColor
-    mDividerColor = 0xFFE0E0E0
+    Dim defaultTheme As UITheme
+    defaultTheme.Initialize
+    mTheme = defaultTheme
+    mBackgroundColor = mTheme.Surface
+    mActiveColor = mTheme.Accent
+    mInactiveColor = mTheme.MutedText
+    mIndicatorColor = mTheme.Accent
+    mDividerColor = mTheme.Divider
+    mBackgroundColorOverridden = False
+    mActiveColorOverridden = False
+    mInactiveColorOverridden = False
+    mIndicatorColorOverridden = False
+    mDividerColorOverridden = False
     mIconSize = 24
     mTextSize = 11
+    mUseFontAwesome = False
     mShowInactiveLabels = False
     mSelectedIndex = 0
     mBuiltItemCount = -1
@@ -120,30 +136,52 @@ End Sub
 
 Public Sub BackgroundColor(Color As Int) As UIBottomNavigationBar
     mBackgroundColor = Color
+    mBackgroundColorOverridden = True
     RefreshIfMounted
     Return Me
 End Sub
 
 Public Sub ActiveColor(Color As Int) As UIBottomNavigationBar
     mActiveColor = Color
+    mActiveColorOverridden = True
     RefreshIfMounted
     Return Me
 End Sub
 
 Public Sub InactiveColor(Color As Int) As UIBottomNavigationBar
     mInactiveColor = Color
+    mInactiveColorOverridden = True
     RefreshIfMounted
     Return Me
 End Sub
 
 Public Sub IndicatorColor(Color As Int) As UIBottomNavigationBar
     mIndicatorColor = Color
+    mIndicatorColorOverridden = True
     RefreshIfMounted
     Return Me
 End Sub
 
 Public Sub DividerColor(Color As Int) As UIBottomNavigationBar
     mDividerColor = Color
+    mDividerColorOverridden = True
+    mBuilt = False
+    RefreshIfMounted
+    Return Me
+End Sub
+
+' Applies theme defaults without replacing explicit color overrides.
+Public Sub ApplyTheme(Theme As UITheme) As UIBottomNavigationBar
+    If Theme = Null Then Return Me
+    If Theme.IsInitialized = False Then Return Me
+    mTheme = Theme
+    If mBackgroundColorOverridden = False Then mBackgroundColor = mTheme.Surface
+    If mActiveColorOverridden = False Then mActiveColor = mTheme.Accent
+    If mInactiveColorOverridden = False Then mInactiveColor = mTheme.MutedText
+    If mIndicatorColorOverridden = False Then mIndicatorColor = mTheme.Accent
+    If mDividerColorOverridden = False Then mDividerColor = mTheme.Divider
+    ' The divider is created during BuildNativeItems, so invalidate the native
+    ' item tree to ensure a runtime theme change reaches it as well.
     mBuilt = False
     RefreshIfMounted
     Return Me
@@ -158,6 +196,15 @@ End Sub
 
 Public Sub TextSize(Size As Int) As UIBottomNavigationBar
     mTextSize = Max(1, Size)
+    mBuilt = False
+    RefreshIfMounted
+    Return Me
+End Sub
+
+' Uses the bundled FontAwesome typeface for icon strings such as Chr(61461).
+' The default remains the platform typeface for backwards compatibility.
+Public Sub UseFontAwesome(Value As Boolean) As UIBottomNavigationBar
+    mUseFontAwesome = Value
     mBuilt = False
     RefreshIfMounted
     Return Me
@@ -265,6 +312,7 @@ Private Sub BuildNativeItems
         icon.Gravity = Gravity.CENTER
         icon.TextSize = mIconSize
         icon.TextColor = mInactiveColor
+        If mUseFontAwesome Then icon.Typeface = Typeface.FONTAWESOME
         tabView.AddView(icon, 4dip, 4dip, Max(0, currentWidth - 8dip), 30dip)
         mIconLabels.Add(icon)
 
@@ -307,7 +355,11 @@ Private Sub ApplySelection
             icon.TextColor = mActiveColor
             caption.TextColor = mActiveColor
             caption.Visible = True
-            icon.Typeface = Typeface.DEFAULT_BOLD
+            If mUseFontAwesome Then
+                icon.Typeface = Typeface.FONTAWESOME
+            Else
+                icon.Typeface = Typeface.DEFAULT_BOLD
+            End If
             caption.Typeface = Typeface.DEFAULT_BOLD
             indicator.Color = mIndicatorColor
             indicator.Visible = True
@@ -315,7 +367,11 @@ Private Sub ApplySelection
             icon.TextColor = mInactiveColor
             caption.TextColor = mInactiveColor
             caption.Visible = mShowInactiveLabels
-            icon.Typeface = Typeface.DEFAULT
+            If mUseFontAwesome Then
+                icon.Typeface = Typeface.FONTAWESOME
+            Else
+                icon.Typeface = Typeface.DEFAULT
+            End If
             caption.Typeface = Typeface.DEFAULT
             indicator.Visible = False
         End If

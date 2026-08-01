@@ -10,14 +10,22 @@ Sub Class_Globals
 	Private mBaseView As B4XView
 	Private mBgColor As Int
 	Private mBorderColor As Int
+	Private mBgColorOverridden As Boolean
+	Private mBorderColorOverridden As Boolean
+	Private mTheme As UITheme
 	Private mRadius As Int
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
 End Sub
 
 Public Sub Initialize As UICard
-	mBgColor = Colors.White
-	mBorderColor = 0xFFE0E0E0
+	Dim defaultTheme As UITheme
+	defaultTheme.Initialize
+	mTheme = defaultTheme
+	mBgColor = mTheme.Surface
+	mBorderColor = mTheme.Border
+	mBgColorOverridden = False
+	mBorderColorOverridden = False
 	mRadius = 12dip
 	mChild = Null
 	Return Me
@@ -25,11 +33,28 @@ End Sub
 
 Public Sub BackgroundColor(c As Int) As UICard
 	mBgColor = c
+	mBgColorOverridden = True
 	Return Me
 End Sub
 
 Public Sub BorderColor(c As Int) As UICard
 	mBorderColor = c
+	mBorderColorOverridden = True
+	Return Me
+End Sub
+
+' Applies theme defaults without replacing explicit color overrides.
+Public Sub ApplyTheme(Theme As UITheme) As UICard
+	If Theme = Null Then Return Me
+	If Theme.IsInitialized = False Then Return Me
+	mTheme = Theme
+	If mBgColorOverridden = False Then mBgColor = mTheme.Surface
+	If mBorderColorOverridden = False Then mBorderColor = mTheme.Border
+	' A card is a composition boundary: theme its nested content as well.
+	If mChild <> Null And xui.SubExists(mChild, "ApplyTheme", 1) Then CallSub2(mChild, "ApplyTheme", Theme)
+	If mParent <> Null Then
+		If mParent.IsInitialized Then Render
+	End If
 	Return Me
 End Sub
 

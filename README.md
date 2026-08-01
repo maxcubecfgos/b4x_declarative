@@ -28,6 +28,8 @@ The included **NOVA Control Center** is a demonstration application designed to 
 | `Declarative UI.b4a` | NOVA demo Activity and screen composition |
 | `UITheme.bas` | Reusable light/dark seed-color scheme and semantic palette |
 | `UIState.bas` | Observable state holder with selective callbacks |
+| `UIAsyncState.bas` | Observable idle/loading/success/error state for asynchronous operations |
+| `UISnackBar.bas` | Transient overlay notification with optional action callback |
 | `UIAnimation.bas` | Small opt-in native bounds animation utility with cancellation and completion callbacks |
 | `UIScrollView.bas` | Declarative wrapper around the native B4A `ScrollView` |
 | `UINavigator.bas` | Virtual screen registration, navigation, and safe-area host |
@@ -185,6 +187,25 @@ ActivityBody.Initialize.Spacing(10dip) _
     .AddChild(refreshButton)
 ```
 
+## UISnackBar
+
+`UISnackBar` provides short-lived feedback without becoming a permanent child of the declarative layout tree:
+
+```basic
+Dim snack As UISnackBar
+snack.Initialize _
+    .Message("Settings saved") _
+    .Action("UNDO", Me, "Undo_Click") _
+    .Duration(3000) _
+    .Show(Activity)
+
+Sub Undo_Click
+    ' Restore the previous value.
+End Sub
+```
+
+`Show` mounts the overlay over the supplied `B4XView`, `Dismiss` removes it, and `Duration(0)` keeps it visible until dismissed. `AnimationDuration(0)` disables the entrance and exit animation. Calling `Show`, `Dismiss` or `Unmount` invalidates older delayed work so an earlier snackbar cannot remove a newer one.
+
 ## UIAnimation
 
 `UIAnimation` is an opt-in utility for animating the bounds of an existing native `B4XView`. It does not replace the layout protocol, rebuild widgets or introduce a second language:
@@ -301,7 +322,7 @@ emailInput.Initialize _
 
 ## UITheme
 
-`UITheme` centralizes palette decisions without coupling the framework widgets to one application:
+`UITheme` centralizes palette decisions without coupling the framework widgets to one application. Visual widgets read these semantic defaults through `ApplyTheme`; container widgets forward the same theme to their descendants:
 
 ```basic
 Private AppTheme As UITheme
@@ -318,8 +339,11 @@ Switch palettes at runtime:
 
 ```basic
 AppTheme.Toggle
-ApplyTheme
+Screen.ApplyTheme(AppTheme)
+Navigator.ApplyTheme(AppTheme)
 ```
+
+`ApplyTheme` updates only values that still use theme defaults. An explicit call such as `button.BackgroundColor(...)`, `label.Color(...)` or `card.BorderColor(...)` remains a deliberate per-widget override. `UICard`, `UIColumn`, `UIRow`, `UIStack`, `UIPadding`, `UIBox`, `UICenter`, `UIExpanded`, `UIScrollView` and `UIVisibility` forward the theme to nested children, so a root scaffold can theme a complete declarative tree.
 
 Available palette groups include:
 
@@ -346,7 +370,7 @@ Available palette groups include:
 
 `Scheme(seedColor)` changes the seed while keeping the same semantic property names. `InitializeWithScheme(seedColor)` is the one-call alternative. Foreground properties such as `AccentText` and `ThemeActionText` choose a readable light or dark text color for their corresponding background.
 
-The demo's `ApplyTheme` method injects these colors into the existing widget instances and then remounts the active virtual screen. The palette remains reusable because `UITheme` only provides values; it does not know about NOVA screens or controls.
+The demo applies the theme to the scaffold and navigator. The palette remains reusable because `UITheme` only provides values; it does not know about screens or controls. Widgets use semantic defaults until the host intentionally overrides one of them.
 
 ## Navigation and safe area
 

@@ -25,6 +25,16 @@ Public Sub Initialize As UIColumn
 	Return Me
 End Sub
 
+' Propagates the active theme to every child that supports it.
+Public Sub ApplyTheme(Theme As UITheme) As UIColumn
+	If Theme = Null Then Return Me
+	If Theme.IsInitialized = False Then Return Me
+	For Each child As Object In mChildren
+		If child <> Null And xui.SubExists(child, "ApplyTheme", 1) Then CallSub2(child, "ApplyTheme", Theme)
+	Next
+	Return Me
+End Sub
+
 Public Sub AddChild(child As Object) As UIColumn
 	If child <> Null Then mChildren.Add(child)
 	Return Me

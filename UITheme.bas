@@ -95,10 +95,32 @@ Public Sub DashboardBar As Int
     Return MixColors(mSeedColor, Colors.Black, 0.76)
 End Sub
 
+' Returns a readable foreground for the dashboard app bar.
+Public Sub DashboardBarText As Int
+    Return OnColor(DashboardBar)
+End Sub
+
 ' Returns the secondary app bar color.
 Public Sub SecondaryBar As Int
     If mDark Then Return MixColors(mSeedColor, Colors.Black, 0.82)
     Return MixColors(mSeedColor, Colors.Black, 0.64)
+End Sub
+
+' Returns the default snackbar background.
+Public Sub SnackbarBackground As Int
+    If mDark Then Return MixColors(mSeedColor, Colors.Black, 0.94)
+    Return MixColors(mSeedColor, Colors.Black, 0.82)
+End Sub
+
+' Returns a readable snackbar message color.
+Public Sub SnackbarText As Int
+    Return OnColor(SnackbarBackground)
+End Sub
+
+' Returns a readable snackbar action color.
+Public Sub SnackbarAction As Int
+    If SnackbarText = Colors.White Then Return MixColors(mSeedColor, Colors.White, 0.20)
+    Return MixColors(mSeedColor, Colors.Black, 0.20)
 End Sub
 
 ' Returns the highlighted dashboard hero surface.

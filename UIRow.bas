@@ -25,6 +25,16 @@ Public Sub Initialize As UIRow
 	Return Me
 End Sub
 
+' Propagates the active theme to every child that supports it.
+Public Sub ApplyTheme(Theme As UITheme) As UIRow
+	If Theme = Null Then Return Me
+	If Theme.IsInitialized = False Then Return Me
+	For Each child As Object In mChildren
+		If child <> Null And xui.SubExists(child, "ApplyTheme", 1) Then CallSub2(child, "ApplyTheme", Theme)
+	Next
+	Return Me
+End Sub
+
 Public Sub AddChild(Component As Object) As UIRow
 	If Component <> Null Then mChildren.Add(Component)
 	Return Me

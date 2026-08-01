@@ -8,6 +8,10 @@ Sub Class_Globals
 	Private mTitle As String
 	Private mTitleState As UIState
 	Private mColor As Int
+	Private mTitleColor As Int
+	Private mColorOverridden As Boolean
+	Private mTitleColorOverridden As Boolean
+	Private mTheme As UITheme
 	Private mBaseView As B4XView
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
@@ -16,7 +20,13 @@ End Sub
 
 Public Sub Initialize As UIAppBar
 	mTitle = ""
-	mColor = 0xFF1976D2
+	Dim defaultTheme As UITheme
+	defaultTheme.Initialize
+	mTheme = defaultTheme
+	mColor = mTheme.DashboardBar
+	mTitleColor = mTheme.DashboardBarText
+	mColorOverridden = False
+	mTitleColorOverridden = False
 	Return Me
 End Sub
 
@@ -67,6 +77,27 @@ End Sub
 
 Public Sub BackgroundColor(c As Int) As UIAppBar
 	mColor = c
+	mColorOverridden = True
+	Return Me
+End Sub
+
+' Applies theme defaults without replacing explicit component overrides.
+Public Sub ApplyTheme(Theme As UITheme) As UIAppBar
+	If Theme = Null Then Return Me
+	If Theme.IsInitialized = False Then Return Me
+	mTheme = Theme
+	If mColorOverridden = False Then mColor = mTheme.DashboardBar
+	If mTitleColorOverridden = False Then mTitleColor = mTheme.DashboardBarText
+	If mParent <> Null Then
+		If mParent.IsInitialized Then Render
+	End If
+	Return Me
+End Sub
+
+' Sets the app bar title color explicitly.
+Public Sub TitleColor(c As Int) As UIAppBar
+	mTitleColor = c
+	mTitleColorOverridden = True
 	Return Me
 End Sub
 
@@ -119,7 +150,7 @@ Public Sub Render
 		titleLabel.Initialize("")
 		mTitleLabel = titleLabel
 		Dim xLbl As B4XView = mTitleLabel
-		xLbl.TextColor = Colors.White
+		xLbl.TextColor = mTitleColor
 		xLbl.TextSize = 18
 		mBaseView.AddView(xLbl, 16dip, 0, mWidth - 32dip, mHeight)
 	End If
@@ -129,7 +160,8 @@ Public Sub Render
 	
 	' Keep the title vertically centered across the whole bar.
 	mTitleLabel.Gravity = Gravity.CENTER_VERTICAL
-	' Refresh the title on every render, not only during the first mount.
+	' Refresh themeable title properties on every render.
+	mTitleLabel.TextColor = mTitleColor
 	mTitleLabel.Text = mTitle
 End Sub
 
