@@ -13,7 +13,8 @@ Module14=UIRow
 Module15=UIScaffold
 Module16=UIScrollView
 Module17=UISpace
-Module18=UITheme
+Module18=UIState
+Module19=UITheme
 Module2=UIAppBar
 Module3=UIBox
 Module4=UIButton
@@ -24,12 +25,12 @@ Module8=UIDivider
 Module9=UIExpanded
 NumberOfFiles=0
 NumberOfLibraries=3
-NumberOfModules=18
+NumberOfModules=19
 Version=13.62
 @EndOfDesignText@
 #Region  Project Attributes
     #ApplicationLabel: NOVA Control Center
-    #VersionCode: 3
+    #VersionCode: 4
     #VersionName: 1.1
     #SupportedOrientations: unspecified
     #CanInstallToExternalStorage: False
@@ -41,8 +42,8 @@ Version=13.62
 #End Region
 
 Sub Process_Globals
-    Private Counter As Int = 24
-    Private ActivityRefreshes As Int = 0
+    Private CounterState As UIState
+    Private ActivityRefreshState As UIState
 End Sub
 
 Sub Globals
@@ -136,6 +137,10 @@ End Sub
 ' Creates the activity root and all declarative screens.
 Sub Activity_Create(FirstTime As Boolean)
     Root = Activity
+    If CounterState.IsInitialized = False Then CounterState.Initialize(24)
+    CounterState.Subscribe(Me, "CounterState_Changed")
+    If ActivityRefreshState.IsInitialized = False Then ActivityRefreshState.Initialize(0)
+    ActivityRefreshState.Subscribe(Me, "ActivityRefreshState_Changed")
     AppTheme.Initialize
     Root.Color = AppTheme.Background
     ActiveRoute = "Dashboard"
@@ -160,7 +165,7 @@ Private Sub InitializeDashboard
     LblDashboardTitle.Initialize.Text("Good evening, operator").Size(26).Color(AppTheme.PrimaryText)
     LblDashboardSubtitle.Initialize.Text("Your control center is healthy and ready.").Size(14).Color(AppTheme.SecondaryText)
     LblHeroOverline.Initialize.Text("LIVE SIGNAL").Size(12).Color(AppTheme.Accent)
-    LblValue.Initialize.Text("" & Counter).Size(48).Color(AppTheme.PrimaryText)
+    LblValue.Initialize.Text("" & CounterState.GetState).Size(48).Color(AppTheme.PrimaryText)
     LblValueCaption.Initialize.Text("active sessions").Size(14).Color(AppTheme.SecondaryText)
     LblHealth.Initialize.Text("ALL SYSTEMS NOMINAL").Size(13).Color(AppTheme.Accent)
     LblSync.Initialize.Text("Last sync  •  just now").Size(12).Color(AppTheme.MutedText)
@@ -212,7 +217,7 @@ Private Sub InitializeActivity
     LblActivityOverline.Initialize.Text("RECENT EVENTS").Size(12).Color(AppTheme.MutedText)
     LblActivityTitle.Initialize.Text("Signal timeline").Size(26).Color(AppTheme.PrimaryText)
     LblActivitySummary.Initialize.Text("A focused view of what is happening now.").Size(14).Color(AppTheme.SecondaryText)
-    LblActivityRefreshes.Initialize.Text("Refresh cycles: 0").Size(12).Color(AppTheme.Info)
+    LblActivityRefreshes.Initialize.Text("Refresh cycles: " & ActivityRefreshState.GetState).Size(12).Color(AppTheme.Info)
 
     LblActivityOne.Initialize.Text("Deployment completed").Size(15).Color(AppTheme.PrimaryText)
     LblActivityOneMeta.Initialize.Text("Production  •  2 minutes ago").Size(12).Color(AppTheme.MutedText)
@@ -305,10 +310,10 @@ End Sub
 Private Sub UpdateActiveLabels
     If UiMounted = False Then Return
     If ActiveRoute = "Dashboard" Then
-        LblValue.Text("" & Counter)
+        LblValue.Text("" & CounterState.GetState)
         LblValue.Render
     Else If ActiveRoute = "Activity" Then
-        LblActivityRefreshes.Text("Refresh cycles: " & ActivityRefreshes)
+        LblActivityRefreshes.Text("Refresh cycles: " & ActivityRefreshState.GetState)
         LblActivityRefreshes.Render
     Else If ActiveRoute = "Settings" Then
         If AppTheme.IsDark Then
@@ -414,24 +419,46 @@ Sub NavigateToDashboard_Click
     UpdateActiveLabels
 End Sub
 
-' Updates the dashboard counter from the floating action buttons.
+' Updates state. UIState notifies the affected label without rebuilding the tree.
 Sub Increment_Click
-    Counter = Counter + 1
-    BuildUI
+    Dim currentValue As Int = CounterState.GetState
+    CounterState.SetState(currentValue + 1)
 End Sub
 
 Sub Decrement_Click
-    If Counter > 0 Then Counter = Counter - 1
-    BuildUI
+    Dim currentValue As Int = CounterState.GetState
+    If currentValue > 0 Then CounterState.SetState(currentValue - 1)
 End Sub
 
-' Updates the activity refresh counter from the activity screen.
+' Updates the activity refresh counter through the same observable state API.
 Sub RefreshActivity_Click
-    ActivityRefreshes = ActivityRefreshes + 1
-    BuildUI
+    Dim currentValue As Int = ActivityRefreshState.GetState
+    ActivityRefreshState.SetState(currentValue + 1)
+End Sub
+
+' UIState callbacks update only the widget that depends on the changed value.
+Sub CounterState_Changed(State As UIState)
+    If UiMounted And ActiveRoute = "Dashboard" Then
+        LblValue.Text("" & State.GetState)
+        LblValue.Render
+    End If
+End Sub
+
+Sub ActivityRefreshState_Changed(State As UIState)
+    If UiMounted And ActiveRoute = "Activity" Then
+        LblActivityRefreshes.Text("Refresh cycles: " & State.GetState)
+        LblActivityRefreshes.Render
+    End If
 End Sub
 
 ' Reapplies layout after the activity resumes.
 Sub Activity_Resume
+    CounterState.Subscribe(Me, "CounterState_Changed")
+    ActivityRefreshState.Subscribe(Me, "ActivityRefreshState_Changed")
     BuildUI
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+    CounterState.Unsubscribe(Me, "CounterState_Changed")
+    ActivityRefreshState.Unsubscribe(Me, "ActivityRefreshState_Changed")
 End Sub

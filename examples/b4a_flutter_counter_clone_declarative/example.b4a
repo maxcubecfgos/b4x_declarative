@@ -25,7 +25,7 @@ Version=13.62
 #End Region
 
 Sub Process_Globals
-	Private Counter As Int
+	Private CounterState As UIState
 End Sub
 
 Sub Globals
@@ -44,7 +44,8 @@ End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
 	Root = Activity
-	If FirstTime Then Counter = 0
+	If CounterState.IsInitialized = False Then CounterState.Initialize(0)
+	CounterState.Subscribe(Me, "CounterState_Changed")
 
 	AppBar.Initialize _
 		.Title("Counter Demo Home Page") _
@@ -56,7 +57,7 @@ Sub Activity_Create(FirstTime As Boolean)
 		.Color(Colors.DarkGray)
 
 	CounterLabel.Initialize _
-		.Text("" & Counter) _
+		.Text("" & CounterState.GetState) _
 		.Size(52) _
 		.Color(Colors.Black)
 
@@ -96,16 +97,24 @@ Private Sub BuildUI
 End Sub
 
 Sub Increment_Click
-	Counter = Counter + 1
-	CounterLabel.Text("" & Counter)
-	If UiMounted Then CounterLabel.Render
+	Dim value As Int = CounterState.GetState
+	CounterState.SetState(value + 1)
+End Sub
+
+Sub CounterState_Changed(State As UIState)
+	If UiMounted Then
+		CounterLabel.Text("" & State.GetState)
+		CounterLabel.Render
+	End If
 End Sub
 
 Sub Activity_Resume
+	CounterState.Subscribe(Me, "CounterState_Changed")
 	BuildUI
 End Sub
 
 Sub Activity_Pause (UserClosed As Boolean)
+	CounterState.Unsubscribe(Me, "CounterState_Changed")
 End Sub
 
 ' ==============================================================================

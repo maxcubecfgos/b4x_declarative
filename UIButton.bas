@@ -5,6 +5,7 @@ Type=Class
 Version=13.5
 @EndOfDesignText@
 Sub Class_Globals
+	Private xui As XUI
 	Private mText As String
 	Private mColor As Int
 	Private mTextColor As Int
@@ -99,19 +100,18 @@ End Sub
 Private Sub NativeBtn_Click
 	Dim btn As Button = Sender
 	Dim instance As UIButton = btn.Tag
-	If instance = Null Then
-		Return
-	End If
-	If instance.mTarget <> Null And instance.mEventName <> "" Then
-		' Use the same synchronous dispatch path as the floating action button.
-		CallSub(instance.mTarget, instance.mEventName)
-	Else
-	End If
+	If instance = Null Then Return
+	instance.DispatchClick
+End Sub
+
+' Dispatches the configured callback only when the target exposes it.
+Private Sub DispatchClick
+	If mTarget = Null Or mEventName.Trim = "" Then Return
+	If xui.SubExists(mTarget, mEventName, 0) Then CallSub(mTarget, mEventName)
 End Sub
 
 Public Sub TriggerClick
-	If mTarget = Null Or mEventName = "" Then Return
-	CallSub(mTarget, mEventName)
+	DispatchClick
 End Sub
 
 ' Natural measurement used by parent layout containers.

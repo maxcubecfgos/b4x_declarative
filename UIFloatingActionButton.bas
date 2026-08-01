@@ -5,7 +5,8 @@ Type=Class
 Version=13.5
 @EndOfDesignText@
 Sub Class_Globals
-	Private mText As String
+    Private xui As XUI
+    Private mText As String
 	Private mBgColor As Int
 	Private mTextColor As Int
 	Private mTarget As Object
@@ -97,13 +98,14 @@ End Sub
 Private Sub FabBtn_Click
 	Dim btn As Button = Sender
 	Dim instance As UIFloatingActionButton = btn.Tag
-	If instance = Null Then
-		Return
-	End If
-	If instance.mTarget <> Null And instance.mEventName <> "" Then
-		CallSub(instance.mTarget, instance.mEventName)
-	Else
-	End If
+	If instance = Null Then Return
+	instance.DispatchClick
+End Sub
+
+' Dispatches the configured callback only when the target exposes it.
+Private Sub DispatchClick
+	If mTarget = Null Or mEventName.Trim = "" Then Return
+	If xui.SubExists(mTarget, mEventName, 0) Then CallSub(mTarget, mEventName)
 End Sub
 
 ' Natural measurement used by parent layout containers.

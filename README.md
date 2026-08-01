@@ -15,8 +15,8 @@ The included **NOVA Control Center** is a demonstration application designed to 
 - A native `ScrollView` wrapped as `UIScrollView`
 - Virtual navigation inside one real B4A Activity
 - Automatic safe-area handling below the Android status area
+- Observable runtime state updates for counters and activity refreshes
 - Reusable light and dark palettes through `UITheme`
-- Runtime state updates for counters, activity refreshes, and theme changes
 - Native B4A buttons and floating action buttons with declarative callbacks
 
 ## Project structure
@@ -25,19 +25,20 @@ The included **NOVA Control Center** is a demonstration application designed to 
 | --- | --- |
 | `Declarative UI.b4a` | NOVA demo Activity and screen composition |
 | `UITheme.bas` | Reusable light/dark color palette |
+| `UIState.bas` | Observable state holder with selective callbacks |
 | `UIScrollView.bas` | Declarative wrapper around the native B4A `ScrollView` |
 | `UINavigator.bas` | Virtual screen registration, navigation, and safe-area host |
 | `UIScaffold.bas` | App bar, body, and optional floating action button layout |
-| `UIColumn.bas` | Vertical child layout with natural measurement |
-| `UIRow.bas` | Horizontal child layout with natural measurement |
+| `UIColumn.bas` | Vertical child layout with natural measurement and axis alignment |
+| `UIRow.bas` | Horizontal child layout with natural measurement and axis alignment |
 | `UIExpanded.bas` | Flexible space marker for Column and Row |
-| `UIPadding.bas` | Padding around a child |
+| `UIPadding.bas` | Flutter-inspired padding around a child (`All`, `Horizontal`, `Vertical`, `Only`) |
 | `UICard.bas` | Rounded surface with background and border colors |
 | `UIBox.bas` | Lightweight padded child container |
 | `UICenter.bas` | Centers a child using its measured natural size |
 | `UILabel.bas` | Native label wrapper |
-| `UIButton.bas` | Native button wrapper and callback dispatch |
-| `UIFloatingActionButton.bas` | Compact native floating action button wrapper |
+| `UIButton.bas` | Native button wrapper with safe callback dispatch |
+| `UIFloatingActionButton.bas` | Compact native floating action button with safe callback dispatch |
 | `UIAppBar.bas` | App bar with a persistent, vertically centered title |
 | `UIDivider.bas` | Themed horizontal divider |
 | `UISpace.bas` | Fixed-size layout spacer |
@@ -55,7 +56,7 @@ content.Initialize _
     .AddChild(actions)
 
 Dim padded As UIPadding
-padded.Initialize.All(16dip).Child(content)
+padded.Initialize.Horizontal(16dip).Vertical(10dip).Child(content)
 
 Dim screen As UIScaffold
 screen.Initialize _
@@ -90,7 +91,7 @@ result.Add(naturalHeight)
 Return result
 ```
 
-An empty list represents a flexible child. `UIColumn` and `UIRow` first measure natural children, then distribute the remaining space among flexible children such as `UIExpanded`.
+An empty list represents a flexible child. `UIColumn` and `UIRow` first measure natural children, then distribute the remaining space among flexible children such as `UIExpanded`. When all children have natural sizes, `MainAxisAlignment` can place them at the start, center, end, or distribute the free space evenly. `CrossAxisAlignment` controls the perpendicular axis and supports `stretch`, `start`, `center`, and `end`. The default remains `stretch`.
 
 This avoids hard-coding every label height and prevents common clipping problems caused by positioning text using arbitrary constants.
 
@@ -126,6 +127,28 @@ ActivityBody.Initialize.Spacing(10dip) _
     .AddChild(UIExpanded.Initialize.Child(scroll)) _
     .AddChild(refreshButton)
 ```
+
+## UIState
+
+`UIState` is a small observable value holder for application state. It keeps state outside widgets and notifies only the callbacks subscribed to that value.
+
+```basic
+Private CounterState As UIState
+
+CounterState.Initialize(0).Subscribe(Me, "CounterState_Changed")
+
+Sub Increment_Click
+    Dim value As Int = CounterState.GetState
+    CounterState.SetState(value + 1)
+End Sub
+
+Sub CounterState_Changed(State As UIState)
+    CounterLabel.Text("" & State.GetState)
+    CounterLabel.Render
+End Sub
+```
+
+This is selective notification, not a full virtual-DOM diff engine. The host still decides which widget belongs to the state callback, while `UIState` removes the need to manually call a root rebuild for simple value changes.
 
 ## UITheme
 

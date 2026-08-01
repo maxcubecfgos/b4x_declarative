@@ -8,6 +8,8 @@ Sub Class_Globals
 	Private xui As XUI
 	Private mChildren As List
 	Private mSpacing As Int
+	Private mMainAxisAlignment As String
+	Private mCrossAxisAlignment As String
 	Private mBaseView As B4XView
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
@@ -16,6 +18,8 @@ End Sub
 Public Sub Initialize As UIColumn
 	mChildren.Initialize
 	mSpacing = 0
+	mMainAxisAlignment = "start"
+	mCrossAxisAlignment = "stretch"
 	Return Me
 End Sub
 
@@ -26,6 +30,30 @@ End Sub
 
 Public Sub Spacing(Value As Int) As UIColumn
 	mSpacing = Max(0, Value)
+	Return Me
+End Sub
+
+' Controls how children are distributed along the vertical axis.
+' Accepted values: start, center, end, spaceBetween, spaceAround, spaceEvenly.
+Public Sub MainAxisAlignment(Value As String) As UIColumn
+	Dim normalized As String = Value.Trim.ToLowerCase
+	If normalized = "center" Or normalized = "end" Or normalized = "spacebetween" Or normalized = "spacearound" Or normalized = "spaceevenly" Then
+		mMainAxisAlignment = normalized
+	Else
+		mMainAxisAlignment = "start"
+	End If
+	Return Me
+End Sub
+
+' Controls how children are aligned across the horizontal axis.
+' Accepted values: stretch, start, center, end.
+Public Sub CrossAxisAlignment(Value As String) As UIColumn
+	Dim normalized As String = Value.Trim.ToLowerCase
+	If normalized = "start" Or normalized = "center" Or normalized = "end" Or normalized = "stretch" Then
+		mCrossAxisAlignment = normalized
+	Else
+		mCrossAxisAlignment = "stretch"
+	End If
 	Return Me
 End Sub
 
@@ -97,10 +125,32 @@ Public Sub Render
 	End If
 	
 	' Second pass: position and render each child.
-	Dim yOffset As Int = 0
+	Dim initialOffset As Int = 0
+	Dim layoutSpacing As Int = mSpacing
+	If expandedCount = 0 Then
+		Dim freeSpace As Int = Max(0, mHeight - totalNaturalHeight)
+		Select Case mMainAxisAlignment
+			Case "center"
+				initialOffset = freeSpace / 2
+			Case "end"
+				initialOffset = freeSpace
+			Case "spacebetween"
+				If mChildren.Size > 1 Then layoutSpacing = mSpacing + freeSpace / (mChildren.Size - 1)
+			Case "spacearound"
+				layoutSpacing = mSpacing + freeSpace / mChildren.Size
+				initialOffset = (layoutSpacing - mSpacing) / 2
+			Case "spaceevenly"
+				layoutSpacing = mSpacing + freeSpace / (mChildren.Size + 1)
+				initialOffset = layoutSpacing - mSpacing
+		End Select
+	End If
+	Dim yOffset As Int = initialOffset
 	Dim childIndex As Int = 0
 	For Each child As Object In mChildren
 		Dim childHeight As Int
+		Dim childWidth As Int
+		Dim childLeft As Int
+
 		
 		Dim size As List = CallSub3(child, "GetContentSize", mWidth, 0)
 		Dim hasNaturalSize As Boolean = False
@@ -120,14 +170,24 @@ Public Sub Render
 		End If
 		
 		If childHeight < 0 Then childHeight = 0
+		childWidth = mWidth
+		childLeft = 0
+		If mCrossAxisAlignment <> "stretch" And hasNaturalSize Then
+			childWidth = Min(size.Get(0), mWidth)
+			If mCrossAxisAlignment = "center" Then
+				childLeft = (mWidth - childWidth) / 2
+			Else If mCrossAxisAlignment = "end" Then
+				childLeft = mWidth - childWidth
+			End If
+		End If
 		
 		CallSub2(child, "SetParent", mBaseView)
-		CallSub3(child, "SetPosition", 0, yOffset)
-		CallSub3(child, "SetSize", mWidth, childHeight)
+		CallSub3(child, "SetPosition", childLeft, yOffset)
+		CallSub3(child, "SetSize", childWidth, childHeight)
 		CallSub(child, "Render")
 		yOffset = yOffset + childHeight
 		childIndex = childIndex + 1
-		If childIndex < mChildren.Size Then yOffset = yOffset + mSpacing
+		If childIndex < mChildren.Size Then yOffset = yOffset + layoutSpacing
 	Next
 End Sub
 

@@ -24,6 +24,29 @@ Public Sub All(Value As Int) As UIPadding
 	Return Me
 End Sub
 
+' Sets equal horizontal insets, similar to Flutter EdgeInsets.symmetric.
+Public Sub Horizontal(Value As Int) As UIPadding
+	mLeftPad = Value
+	mRightPad = Value
+	Return Me
+End Sub
+
+' Sets equal vertical insets, similar to Flutter EdgeInsets.symmetric.
+Public Sub Vertical(Value As Int) As UIPadding
+	mTop = Value
+	mBottom = Value
+	Return Me
+End Sub
+
+' Sets each inset independently, similar to Flutter EdgeInsets.only.
+Public Sub Only(Left As Int, Top As Int, Right As Int, Bottom As Int) As UIPadding
+	mLeftPad = Left
+	mTop = Top
+	mRightPad = Right
+	mBottom = Bottom
+	Return Me
+End Sub
+
 Public Sub Child(c As Object) As UIPadding
 	mChild = c
 	Return Me
@@ -68,9 +91,13 @@ Public Sub Render
 		Dim childWidth As Int = mWidth - mLeftPad - mRightPad
 		Dim childHeight As Int = mHeight - mTop - mBottom
         
+		Dim safeChildLeft As Int = Max(0, childLeft)
+		Dim safeChildTop As Int = Max(0, childTop)
+		Dim safeChildWidth As Int = Max(0, childWidth)
+		Dim safeChildHeight As Int = Max(0, childHeight)
 		CallSub2(mChild, "SetParent", mBaseView)
-		CallSub3(mChild, "SetPosition", Max(0, childLeft), Max(0, childTop))
-		CallSub3(mChild, "SetSize", Max(0, childWidth), Max(0, childHeight))
+		CallSub3(mChild, "SetPosition", safeChildLeft, safeChildTop)
+		CallSub3(mChild, "SetSize", safeChildWidth, safeChildHeight)
 		CallSub(mChild, "Render")
 	End If
 End Sub

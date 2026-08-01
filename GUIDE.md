@@ -108,6 +108,7 @@ The important idea is that `body` describes the child tree. The parent is respon
 | `UILabel` | Native label | `Text`, `Size`, `Color` |
 | `UIButton` | Native clickable button | `Text`, `BackgroundColor`, `TextColor`, `OnClick` |
 | `UIFloatingActionButton` | Compact circular-style native button | `Text`, `BackgroundColor`, `OnClick` |
+| `UIState` | Observable value holder with selective callbacks | `Initialize`, `GetState`, `SetState`, `Subscribe`, `Unsubscribe`, `ClearListeners` |
 | `UIAppBar` | Top application bar | `Title`, `BackgroundColor` |
 | `UIDivider` | Horizontal divider | `Color` |
 | `UISpace` | Fixed-size spacer | `Size` |
@@ -116,9 +117,9 @@ The important idea is that `body` describes the child tree. The parent is respon
 
 | Widget | Main purpose | Main configuration methods |
 | --- | --- | --- |
-| `UIColumn` | Vertical layout | `Spacing`, `AddChild` |
-| `UIRow` | Horizontal layout | `Spacing`, `AddChild` |
-| `UIPadding` | Adds equal padding around one child | `All`, `Child` |
+| `UIColumn` | Vertical layout | `Spacing`, `MainAxisAlignment`, `CrossAxisAlignment`, `AddChild` |
+| `UIRow` | Horizontal layout | `Spacing`, `MainAxisAlignment`, `CrossAxisAlignment`, `AddChild` |
+| `UIPadding` | Adds configurable padding around one child | `All`, `Horizontal`, `Vertical`, `Only`, `Child` |
 | `UIBox` | Padded child container | `Initialize(child, padding)` |
 | `UICenter` | Centers one child using natural size | `Child` |
 | `UICard` | Rounded surface with border | `BackgroundColor`, `BorderColor`, `CornerRadius`, `Child` |
@@ -152,7 +153,18 @@ column.Initialize _
     .AddChild(actionButton)
 ```
 
-`UIColumn` places children vertically and adds the configured spacing between them.
+`UIColumn` places children vertically and adds the configured spacing between them. Use `MainAxisAlignment` to distribute free space when the children have natural sizes:
+
+```basic
+Dim column As UIColumn
+column.Initialize _
+    .Spacing(8dip) _
+    .MainAxisAlignment("center") _
+    .AddChild(title) _
+    .AddChild(subtitle)
+```
+
+Supported values are `start`, `center`, `end`, `spaceBetween`, `spaceAround` and `spaceEvenly`. The default is `start`. If the column contains `UIExpanded`, the flexible-child allocation takes precedence.
 
 ### UIRow
 
@@ -164,7 +176,35 @@ row.Initialize _
     .AddChild(rightButton)
 ```
 
-`UIRow` lays out children horizontally and distributes flexible children across the available width.
+`UIRow` lays out children horizontally and distributes flexible children across the available width. For naturally sized children, `MainAxisAlignment` supports the same values as `UIColumn`:
+
+```basic
+Dim row As UIRow
+row.Initialize _
+    .MainAxisAlignment("spaceEvenly") _
+    .AddChild(firstButton) _
+    .AddChild(secondButton)
+```
+
+The default is `start`, preserving the original layout behavior.
+
+Both containers also expose `CrossAxisAlignment`. A column aligns children horizontally and a row aligns children vertically:
+
+```basic
+Dim column As UIColumn
+column.Initialize _
+    .CrossAxisAlignment("center") _
+    .AddChild(title) _
+    .AddChild(subtitle)
+
+Dim row As UIRow
+row.Initialize _
+    .CrossAxisAlignment("end") _
+    .AddChild(firstButton) _
+    .AddChild(secondButton)
+```
+
+Supported values are `stretch`, `start`, `center` and `end`, and matching is case-insensitive. `stretch` is the default and preserves the previous behavior. Cross-axis alignment affects naturally measured children; flexible children continue to consume their assigned space.
 
 ### UIExpanded
 
@@ -198,12 +238,27 @@ centered.Initialize.Child(title)
 
 ### UIPadding and UICard
 
+`UIPadding` follows the same mental model as Flutter's `EdgeInsets` while remaining a normal fluent B4A widget:
+
+```basic
+padding.Initialize.All(16dip)
+padding.Horizontal(20dip)
+padding.Vertical(12dip)
+padding.Only(20dip, 12dip, 20dip, 16dip)
+```
+
+`All` sets every side, `Horizontal` sets left and right, `Vertical` sets top and bottom, and `Only` sets left, top, right and bottom independently. Each method returns the same `UIPadding` instance, so calls can be chained. Later calls override the sides they address.
+
 ```basic
 Dim cardBody As UIColumn
 cardBody.Initialize.Spacing(6dip).AddChild(title).AddChild(subtitle)
 
 Dim cardPadding As UIPadding
-cardPadding.Initialize.All(16dip).Child(cardBody)
+cardPadding.Initialize.Horizontal(16dip).Vertical(12dip).Child(cardBody)
+
+' Use Only when each side needs a different inset.
+Dim asymmetricPadding As UIPadding
+asymmetricPadding.Initialize.Only(20dip, 12dip, 20dip, 16dip).Child(cardBody)
 
 Dim card As UICard
 card.Initialize _
@@ -307,33 +362,49 @@ Sub Save_Click
 End Sub
 ```
 
-Use normal B4A event-style names such as `Save_Click`, `Increment_Click` or `NavigateToSettings_Click`. The callback name must match exactly.
+Use normal B4A event-style names such as `Save_Click`, `Increment_Click` or `NavigateToSettings_Click`. The callback name must match exactly and must be a parameterless sub. Before dispatching, `UIButton` and `UIFloatingActionButton` verify that the target exposes the callback; an empty or invalid callback is ignored safely instead of causing a reflection error.
 
-`UIButton.TriggerClick` is also available when an application needs to dispatch the configured action programmatically.
+`UIButton.TriggerClick` is also available when an application needs to dispatch the configured action programmatically. It uses the same safe callback validation.
 
 ## 10. State and UI updates
 
-The current library keeps state in the host application. A widget does not own application state automatically.
+`UIState` is an observable value holder for application state. It keeps the value outside widgets and notifies only the callbacks subscribed to that state instance.
 
 ```basic
-Private Counter As Int
+Private CounterState As UIState
+
+CounterState.Initialize(0).Subscribe(Me, "CounterState_Changed")
 
 Sub Increment_Click
-    Counter = Counter + 1
-    LblCounter.Text("" & Counter)
-    LblCounter.Render
+    Dim value As Int = CounterState.GetState
+    CounterState.SetState(value + 1)
+End Sub
+
+Sub CounterState_Changed(State As UIState)
+    CounterLabel.Text("" & State.GetState)
+    CounterLabel.Render
 End Sub
 ```
 
-For a structural change, update the declarative tree and render the root again. For a simple property change, render only the affected widget when possible.
+The callback receives the changed `UIState` instance. Use `Unsubscribe` when a long-lived state outlives its screen, or `ClearListeners` when the owner is being destroyed:
+
+```basic
+CounterState.Unsubscribe(Me, "CounterState_Changed")
+' Or, when the state is no longer needed:
+CounterState.ClearListeners
+```
+
+This milestone provides selective observable updates; it is not yet a complete Flutter-style virtual-DOM diff engine. The host still decides which widgets depend on a state instance, while `UIState` removes the need to rebuild the root tree for simple value changes. Structural changes still require updating the tree and rendering its root.
+
+`SetState` is a replacement operation. It compares the assigned value using B4A's normal equality semantics, which is appropriate for simple values such as numbers and strings. It does not observe mutations made inside an existing `Map` or `List`; assign a new value when you want to notify listeners. A callback may perform one follow-up state change, but callbacks should not continuously mutate the same state or create an update cycle.
 
 The NOVA example demonstrates this with:
 
-- `Counter` and the two floating action buttons;
-- `ActivityRefreshes` and `REFRESH STREAM`;
-- `ThemeDark` state represented by `UITheme`.
+- `CounterState` and the two floating action buttons;
+- `ActivityRefreshState` and `REFRESH STREAM`;
+- `UITheme` for palette state.
 
-This version does not provide a separate `UIState` class or a complete virtual-DOM diff engine. Keep state explicit and keep rendering predictable.
+Keep state explicit and keep rendering predictable.
 
 ## 11. UITheme
 
@@ -508,7 +579,8 @@ The project intentionally keeps its first release small:
 
 - B4A-only native rendering;
 - virtual navigation inside one Activity;
-- explicit application state;
+- explicit application state through `UIState` or host variables;
+- selective observable callbacks, not automatic tree diffing;
 - a small widget set;
 - natural measurement instead of a complete constraint solver;
 - no automatic bidirectional data binding;
