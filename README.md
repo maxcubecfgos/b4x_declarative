@@ -2,6 +2,8 @@
 
 A small, code-first declarative UI layer for native B4A applications.
 
+> **Documentation:** See [GUIDE.md](GUIDE.md) for installation, examples, widget APIs, lifecycle, layout, events, themes, navigation and troubleshooting.
+
 This project explores a Flutter-inspired way to compose Android interfaces in B4A while keeping the result native, lightweight, and understandable. It does not try to recreate Flutter internally. Instead, it provides a focused set of composable widgets with a predictable mount, measure, layout, render, and unmount lifecycle.
 
 The included **NOVA Control Center** is a demonstration application designed to show the framework's capabilities in a practical interface:
