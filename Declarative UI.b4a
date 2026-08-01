@@ -414,6 +414,23 @@ Sub NavigateToDashboard_Click
     UpdateActiveLabels
 End Sub
 
+' Updates the dashboard counter from the floating action buttons.
+Sub Increment_Click
+    Counter = Counter + 1
+    BuildUI
+End Sub
+
+Sub Decrement_Click
+    If Counter > 0 Then Counter = Counter - 1
+    BuildUI
+End Sub
+
+' Updates the activity refresh counter from the activity screen.
+Sub RefreshActivity_Click
+    ActivityRefreshes = ActivityRefreshes + 1
+    BuildUI
+End Sub
+
 ' Reapplies layout after the activity resumes.
 Sub Activity_Resume
     BuildUI
