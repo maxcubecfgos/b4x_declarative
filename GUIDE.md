@@ -108,10 +108,11 @@ The important idea is that `body` describes the child tree. The parent is respon
 | Widget | Main purpose | Main configuration methods |
 | --- | --- | --- |
 | `UILabel` | Native label | `Text`, `BindText`, `UnbindText`, `Size`, `Color` |
-| `UIButton` | Native clickable button | `Text`, `BindText`, `UnbindText`, `BackgroundColor`, `TextColor`, `OnClick` |
+| `UIButton` | Native clickable button | `Text`, `BindText`, `UnbindText`, `BackgroundColor`, `TextColor`, `CornerRadius`, `Border`, `OnClick` |
 | `UIFloatingActionButton` | Compact circular-style native button | `Text`, `BindText`, `UnbindText`, `BackgroundColor`, `OnClick` |
-| `UIInput` | Native text input | `Hint`, `Text`, `BindText`, `UnbindText`, `OnTextChanged`, `TextColor`, `BackgroundColor`, `GetText` |
+| `UIInput` | Native text input | `Hint`, `Text`, `BindText`, `UnbindText`, `OnTextChanged`, `TextColor`, `BackgroundColor`, `CornerRadius`, `Border`, `GetText` |
 | `UIState` | Observable value holder with selective callbacks | `Initialize`, `GetState`, `SetState`, `Subscribe`, `Unsubscribe`, `UnsubscribeTarget`, `ClearListeners` |
+| `UIAnimation` | Native bounds animation utility | `TargetView`, `MoveTo`, `SizeTo`, `MoveAndResize`, `Duration`, `OnCompleted`, `Start`, `Cancel` |
 | `UIAppBar` | Top application bar | `Title`, `BindTitle`, `UnbindTitle`, `BackgroundColor` |
 | `UIDivider` | Horizontal divider | `Color` |
 | `UISpace` | Fixed-size spacer | `Size` |
@@ -127,15 +128,38 @@ The important idea is that `body` describes the child tree. The parent is respon
 | `UICenter` | Centers one child using natural size | `Child` |
 | `UICard` | Rounded surface with border | `BackgroundColor`, `BorderColor`, `CornerRadius`, `Child` |
 | `UIExpanded` | Flexible child marker | `Child` |
-| `UIVisibility` | Conditionally includes one child in layout | `Visible`, `Child` |
+| `UIVisibility` | Conditionally includes one child in layout | `Visible`, `BindVisible`, `UnbindVisible`, `OnVisibilityChanged`, `Child` |
 | `UIStack` | Overlapping children on the Z axis | `AddChild`, `Alignment` |
 | `UIScrollView` | Native vertical scroll container | `Child`, `ScrollTo` |
-| `UIScaffold` | App bar, body and optional FABs | `AppBar`, `Body`, `FloatingActionButtonLeft`, `FloatingActionButtonRight` |
+| `UIScaffold` | App bar, body, bottom navigation and optional FABs | `AppBar`, `Body`, `BottomNavigationBar`, `FloatingActionButtonLeft`, `FloatingActionButtonRight` |
+| `UIBottomNavigationBar` | Declarative bottom navigation | `AddItem`, `BindSelectedIndex`, `OnSelected`, `ActiveColor`, `InactiveColor`, `IndicatorColor` |
 | `UINavigator` | Virtual screens and safe-area host | `AddScreen`, `NavigateTo` |
 
-All widget classes expose the internal layout lifecycle methods described in [Lifecycle and rendering](#8-lifecycle-and-rendering). Application code normally configures the tree and calls `Render` only on its root.
+All widget classes expose the internal layout lifecycle methods described in [Lifecycle and rendering](#9-lifecycle-and-rendering). Application code normally configures the tree and calls `Render` only on its root.
 
-## 6. Layout and natural measurement
+## 6. Rounded controls
+
+`UIButton` and `UIInput` preserve the native Android background unless a custom shape is requested. Use `CornerRadius` for rounded corners and `Border` for an optional outline:
+
+```basic
+Dim button As UIButton
+button.Initialize _
+    .Text("CONTINUE") _
+    .BackgroundColor(0xFF6750A4) _
+    .TextColor(Colors.White) _
+    .CornerRadius(12dip) _
+    .Border(1dip, 0xFF4F378B)
+
+Dim input As UIInput
+input.Initialize _
+    .Hint("Operator name") _
+    .CornerRadius(10dip) _
+    .Border(1dip, 0xFFD0D7E2)
+```
+
+Both methods return the same widget for fluent chaining. `CornerRadius(0)` and `Border(0, color)` leave the control in its default unshaped mode. A custom `UIInput` background receives library-managed internal padding so its text does not touch the border.
+
+## 7. Layout and natural measurement
 
 The layout engine uses a small measurement protocol:
 
@@ -267,7 +291,6 @@ detailsVisibility.Initialize _
     .Visible(True) _
     .Child(detailsCard)
 
-' Structural visibility changes require rendering the parent container.
 detailsVisibility.Visible(False)
 dashBoardBody.Render
 
@@ -275,9 +298,25 @@ detailsVisibility.Visible(True)
 dashBoardBody.Render
 ```
 
-`Visible(True)` is the default. When hidden, `UIVisibility` reports a natural size of `0, 0`, removes the child's native views and lets `UIColumn` or `UIRow` reflow the remaining children without a gap. The wrapper preserves the declarative child, so it can be mounted again when visibility returns.
+For a reactive Boolean state, use `BindVisible` and an explicit callback:
 
-`UIVisibility` does not yet bind directly to `UIState`; changing visibility is an explicit structural update and the parent must be rendered afterward.
+```basic
+Dim detailsState As UIState
+detailsState.Initialize(True)
+
+detailsVisibility.Initialize _
+    .BindVisible(detailsState) _
+    .OnVisibilityChanged(Me, "DetailsVisibilityChanged") _
+    .Child(detailsCard)
+
+Sub DetailsVisibilityChanged(Visibility As UIVisibility)
+    dashBoardBody.Render
+End Sub
+```
+
+`Visible(True)` is the default. `BindVisible` reads the current Boolean state and observes later replacements. Calling `Visible(...)` or `UnbindVisible` removes the binding. `OnVisibilityChanged` receives the changed wrapper and lets the host choose whether to render a `UIColumn`, `UIRow`, `UIScrollView` or another affected parent. When hidden, `UIVisibility` reports a natural size of `0, 0`, removes the child's native views and lets containers reflow the remaining children without a gap. The wrapper preserves the declarative child, so it can be mounted again when visibility returns.
+
+The compact examples project uses this pattern to hide and show the gallery details card without rebuilding or navigating the entire screen.
 
 ### UIStack
 
@@ -338,7 +377,7 @@ card.Initialize _
     .Child(cardPadding)
 ```
 
-## 7. UIScrollView
+## 8. UIScrollView
 
 `UIScrollView` wraps the native B4A `ScrollView` and accepts one declarative child, usually a `UIColumn` containing the complete scrollable content.
 
@@ -377,9 +416,9 @@ scroll.ScrollTo(200dip)
 Dim position As Int = scroll.GetScrollPosition
 ```
 
-The child content is measured and mounted into the native `ScrollView.Panel`. Do not pass the native panel directly to custom code expecting a `B4XView`; the library handles that conversion internally.
+The child content is measured and mounted into the native `ScrollView.Panel`. Re-rendering the same child updates its existing tree and preserves scroll position/native state; replacing the child performs structural cleanup. Do not pass the native panel directly to custom code expecting a `B4XView`; the library handles that conversion internally.
 
-## 8. Lifecycle and rendering
+## 9. Lifecycle and rendering
 
 Every layout-aware widget follows this lifecycle:
 
@@ -411,7 +450,7 @@ rootWidget.Render
 
 When a property changes after mounting, call `Render` on the affected widget or rebuild the root tree when the structure itself changes. The current project uses targeted label renders for simple state changes and a controlled remount for navigation and theme changes.
 
-## 9. Events and callbacks
+## 10. Events and callbacks
 
 `UIButton` and `UIFloatingActionButton` use a target object and a callback name:
 
@@ -436,7 +475,31 @@ Use normal B4A event-style names such as `Save_Click`, `Increment_Click` or `Nav
 
 `UIButton.TriggerClick` is also available when an application needs to dispatch the configured action programmatically. It uses the same safe callback validation.
 
-## 10. State and UI updates
+## 11. UIAnimation
+
+`UIAnimation` adds a small, explicit animation layer without changing the composition syntax. It animates the bounds of an already-mounted `B4XView` using the native B4A layout animation:
+
+```basic
+Dim animation As UIAnimation
+animation.Initialize _
+    .TargetView(cardView) _
+    .MoveTo(16dip, 96dip) _
+    .Duration(240) _
+    .OnCompleted(Me, "CardMoved_Completed") _
+    .Start
+
+Sub CardMoved_Completed
+    ' Optional completion work.
+End Sub
+```
+
+Use `SizeTo(width, height)` for size-only changes and `MoveAndResize(...)` for both position and size. The current view bounds are used as the starting point, so the host does not need to duplicate the current layout values. `Duration` is expressed in milliseconds and clamps negative values to zero.
+
+`Start` is restartable. Starting a descriptor again invalidates the completion callback from the previous run. `Cancel` stops the native transition at its current position and suppresses the completion callback. Completion callbacks are parameterless normal B4A subs and are ignored safely when the target or callback name is invalid.
+
+Keep animations opt-in and local. The declarative tree still owns layout; after a parent re-render, the next animation should target the resulting native view. `UIAnimation` currently animates bounds only and does not promise automatic interpolation of colors, text, opacity or arbitrary widget properties.
+
+## 12. State and UI updates
 
 `UIState` is an observable value holder for application state. It keeps the value outside widgets and notifies only the callbacks subscribed to that state instance.
 
@@ -516,7 +579,7 @@ The NOVA example demonstrates this with:
 
 Keep state explicit and keep rendering predictable.
 
-## 11. UITheme
+## 12. UITheme
 
 `UITheme` is a reusable palette provider. It does not know which widgets your application owns and it does not repaint them automatically.
 
@@ -602,7 +665,7 @@ Sub ApplyTheme
 End Sub
 ```
 
-## 12. UINavigator and safe area
+## 13. UINavigator and safe area
 
 `UINavigator` manages virtual screens inside one real B4A Activity:
 
@@ -628,6 +691,46 @@ The navigator uses the B4A `IME.GetContentRect` information to place the root be
 
 Screens registered with `UINavigator` are virtual widget trees. They are not physical B4A Activities and do not require separate `.bal` layouts.
 
+### UIBottomNavigationBar
+
+Use `UIBottomNavigationBar` when several virtual screens share a persistent navigation surface. Items are data, selection is explicit, and the callback uses a normal B4A signature:
+
+```basic
+Private SelectedTabState As UIState
+Private Navigation As UIBottomNavigationBar
+
+SelectedTabState.Initialize(0)
+Navigation.Initialize _
+    .AddItem("home", "⌂", "Home") _
+    .AddItem("activity", "◉", "Activity") _
+    .AddItem("settings", "⚙", "Settings") _
+    .BindSelectedIndex(SelectedTabState) _
+    .OnSelected(Me, "Navigation_Selected")
+
+Sub Navigation_Selected(Index As Int, Id As String)
+    Select Case Id
+        Case "home"
+            Navigator.NavigateTo("Home")
+        Case "activity"
+            Navigator.NavigateTo("Activity")
+        Case "settings"
+            Navigator.NavigateTo("Settings")
+    End Select
+End Sub
+```
+
+Attach it to the scaffold rather than placing it inside the body:
+
+```basic
+Dim screen As UIScaffold
+screen.Initialize _
+    .AppBar(appBar) _
+    .Body(body) _
+    .BottomNavigationBar(Navigation)
+```
+
+The scaffold reserves `64dip` for the bar, so the body and FABs do not overlap it. `AddItem(Id, Icon, Text)` uses a Unicode string for the icon and keeps the component independent from icon-font dependencies. `ShowInactiveLabels(True)` displays all captions; by default only the selected caption is visible. Ordinary selection changes update existing native children and preserve the bar's declarative configuration.
+
 ### UIScaffold
 
 A scaffold combines an app bar, body and optional floating action buttons:
@@ -642,7 +745,7 @@ screen.Initialize _
 
 The scaffold reserves space for its app bar and FAB area before rendering the body.
 
-## 13. Common problems
+## 14. Common problems
 
 ### A text input does not update my state
 
@@ -698,7 +801,7 @@ A virtual screen name must match the registered name exactly.
 
 `UITheme` only changes the values returned by its color properties. The host must assign those values to the widgets and call `Render` where needed.
 
-## 14. NOVA Control Center example
+## 15. NOVA Control Center example
 
 The included demo is organized into three virtual screens:
 
@@ -716,7 +819,7 @@ Suggested demonstration flow:
 6. Open Settings and toggle the theme.
 7. Navigate again to verify that state and mounting remain stable.
 
-## 15. Stable syntax and compatibility
+## 16. Stable syntax and compatibility
 
 The library's public syntax is defined in [SYNTAX.md](SYNTAX.md). Treat that file as the contract for examples, forum releases and future contributions.
 
@@ -731,7 +834,7 @@ The most important compatibility rules are:
 
 If an implementation idea cannot be explained by these rules, it should not be added to the public API yet.
 
-## 16. Design boundaries and roadmap
+## 17. Design boundaries and roadmap
 
 The project intentionally keeps its first release small:
 

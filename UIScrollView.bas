@@ -10,6 +10,7 @@ Sub Class_Globals
     Private mScrollView As ScrollView
     Private mBaseView As B4XView
     Private mParent As B4XView
+    Private mMountedChild As Object
     Private mLeft, mTop, mWidth, mHeight As Int
     Private mContentHeight As Int
 End Sub
@@ -20,6 +21,7 @@ Public Sub Initialize As UIScrollView
     mScrollView = Null
     mBaseView = Null
     mParent = Null
+    mMountedChild = Null
     mContentHeight = 0
     Return Me
 End Sub
@@ -53,6 +55,7 @@ Public Sub SetSize(Width As Int, Height As Int)
 End Sub
 
 ' Mounts the native ScrollView and lays out its declarative child.
+' Re-rendering updates the existing content tree instead of rebuilding it.
 Public Sub Render
     If mParent = Null Then Return
     If mParent.IsInitialized = False Then Return
@@ -72,10 +75,14 @@ Public Sub Render
     End If
 
     mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
-    If mChild <> Null And needsCreate = False Then
-        If xui.SubExists(mChild, "Unmount", 0) Then CallSub(mChild, "Unmount")
+    ' Keep the native ScrollView and the same declarative child mounted during
+    ' ordinary updates. This preserves scroll position, focus and native state.
+    ' A replaced child is structural, so remove only the previous content tree.
+    If mMountedChild <> Null And mMountedChild <> mChild Then
+        If xui.SubExists(mMountedChild, "Unmount", 0) Then CallSub(mMountedChild, "Unmount")
+        mScrollView.Panel.RemoveAllViews
+        mMountedChild = Null
     End If
-    mScrollView.Panel.RemoveAllViews
     mScrollView.Panel.Width = Max(0, mWidth)
 
     Dim viewportWidth As Int = Max(0, mWidth)
@@ -95,7 +102,13 @@ Public Sub Render
         CallSub3(mChild, "SetPosition", 0, 0)
         CallSub3(mChild, "SetSize", viewportWidth, contentHeight)
         CallSub(mChild, "Render")
+        mMountedChild = mChild
     Else
+        If mMountedChild <> Null Then
+            If xui.SubExists(mMountedChild, "Unmount", 0) Then CallSub(mMountedChild, "Unmount")
+            mScrollView.Panel.RemoveAllViews
+            mMountedChild = Null
+        End If
         mContentHeight = viewportHeight
         mScrollView.Panel.Width = viewportWidth
         mScrollView.Panel.Height = viewportHeight
@@ -125,6 +138,7 @@ Public Sub Unmount
     mScrollView = Null
     mBaseView = Null
     mParent = Null
+    mMountedChild = Null
     mContentHeight = 0
 End Sub
 

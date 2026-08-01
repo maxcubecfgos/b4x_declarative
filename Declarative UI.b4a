@@ -5,30 +5,32 @@ Library2=ime
 Library3=xui
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
 Module1=Starter
-Module10=UIFloatingActionButton
-Module11=UIInput
-Module12=UILabel
-Module13=UINavigator
-Module14=UIPadding
-Module15=UIRow
-Module16=UIScaffold
-Module17=UIScrollView
-Module18=UISpace
-Module19=UIStack
-Module2=UIAppBar
-Module20=UIState
-Module21=UITheme
-Module22=UIVisibility
-Module3=UIBox
-Module4=UIButton
-Module5=UICard
-Module6=UICenter
-Module7=UIColumn
-Module8=UIDivider
-Module9=UIExpanded
+Module10=UIDivider
+Module11=UIExpanded
+Module12=UIFloatingActionButton
+Module13=UIInput
+Module14=UILabel
+Module15=UINavigator
+Module16=UIPadding
+Module17=UIRow
+Module18=UIScaffold
+Module19=UIScrollView
+Module2=UIAnimation
+Module20=UISpace
+Module21=UIStack
+Module22=UIState
+Module23=UITheme
+Module24=UIVisibility
+Module3=UIAppBar
+Module4=UIBottomNavigationBar
+Module5=UIBox
+Module6=UIButton
+Module7=UICard
+Module8=UICenter
+Module9=UIColumn
 NumberOfFiles=0
 NumberOfLibraries=3
-NumberOfModules=22
+NumberOfModules=24
 Version=13.62
 @EndOfDesignText@
 #Region  Project Attributes
@@ -47,12 +49,14 @@ Version=13.62
 Sub Process_Globals
     Private CounterState As UIState
     Private ActivityRefreshState As UIState
+    Private SelectedTabState As UIState
 End Sub
 
 Sub Globals
     Private Root As B4XView
     Private AppTheme As UITheme
     Private Navigator As UINavigator
+    Private BottomNavigation As UIBottomNavigationBar
     Private UiMounted As Boolean
     Private LastWidth, LastHeight As Int
     Private ActiveRoute As String
@@ -142,8 +146,19 @@ Sub Activity_Create(FirstTime As Boolean)
     Root = Activity
     If CounterState.IsInitialized = False Then CounterState.Initialize(24)
     If ActivityRefreshState.IsInitialized = False Then ActivityRefreshState.Initialize(0)
+    If SelectedTabState.IsInitialized = False Then SelectedTabState.Initialize(0)
     ActivityRefreshState.Subscribe(Me, "ActivityRefreshState_Changed")
     AppTheme.Initialize.Scheme(0xFF00A896)
+    BottomNavigation.Initialize _
+        .AddItem("dashboard", "⌂", "Home") _
+        .AddItem("activity", "◉", "Activity") _
+        .AddItem("settings", "⚙", "Settings") _
+        .ActiveColor(AppTheme.Accent) _
+        .InactiveColor(AppTheme.MutedText) _
+        .IndicatorColor(AppTheme.Accent) _
+        .BackgroundColor(AppTheme.Surface) _
+        .BindSelectedIndex(SelectedTabState) _
+        .OnSelected(Me, "BottomNavigation_Selected")
     Root.Color = AppTheme.Background
     ActiveRoute = "Dashboard"
     InitializeDashboard
@@ -193,8 +208,8 @@ Private Sub InitializeDashboard
     MetricUptimeExpanded.Initialize.Child(MetricCardUptime)
     MetricsRow.Initialize.Spacing(10dip).AddChild(MetricActiveExpanded).AddChild(MetricUptimeExpanded)
 
-    BtnOpenActivity.Initialize.Text("VIEW ACTIVITY").BackgroundColor(AppTheme.Accent).TextColor(AppTheme.AccentText).OnClick(Me, "NavigateToActivity_Click")
-    BtnOpenSettings.Initialize.Text("SETTINGS").BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText).OnClick(Me, "NavigateToSettings_Click")
+    BtnOpenActivity.Initialize.Text("VIEW ACTIVITY").BackgroundColor(AppTheme.Accent).TextColor(AppTheme.AccentText).CornerRadius(12dip).OnClick(Me, "NavigateToActivity_Click")
+    BtnOpenSettings.Initialize.Text("SETTINGS").BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText).CornerRadius(12dip).OnClick(Me, "NavigateToSettings_Click")
     HeroActions.Initialize.Spacing(8dip).AddChild(BtnOpenActivity).AddChild(BtnOpenSettings)
     DashboardDivider.Initialize.Color(AppTheme.Divider)
     DashboardBody.Initialize.Spacing(10dip) _
@@ -209,6 +224,7 @@ Private Sub InitializeDashboard
     DashboardScreen.Initialize _
         .AppBar(DashboardBar) _
         .Body(DashboardPadding) _
+        .BottomNavigationBar(BottomNavigation) _
         .FloatingActionButtonLeft(FabDecrease) _
         .FloatingActionButtonRight(FabIncrease)
 End Sub
@@ -260,8 +276,8 @@ Private Sub InitializeActivity
     ActivityList.Initialize.Spacing(8dip).AddChild(ActivityCardOne).AddChild(ActivityCardTwo).AddChild(ActivityCardThree).AddChild(ActivityCardFour).AddChild(ActivityCardFive).AddChild(ActivityCardSix)
     ActivityScroll.Initialize.Child(ActivityList)
     ActivityScrollExpanded.Initialize.Child(ActivityScroll)
-    BtnRefreshActivity.Initialize.Text("REFRESH STREAM").BackgroundColor(AppTheme.Info).TextColor(AppTheme.InfoText).OnClick(Me, "RefreshActivity_Click")
-    BtnActivityBack.Initialize.Text("BACK TO DASHBOARD").BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText).OnClick(Me, "NavigateToDashboard_Click")
+    BtnRefreshActivity.Initialize.Text("REFRESH STREAM").BackgroundColor(AppTheme.Info).TextColor(AppTheme.InfoText).CornerRadius(12dip).OnClick(Me, "RefreshActivity_Click")
+    BtnActivityBack.Initialize.Text("BACK TO DASHBOARD").BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText).CornerRadius(12dip).OnClick(Me, "NavigateToDashboard_Click")
     ActivityBody.Initialize.Spacing(10dip) _
         .AddChild(LblActivityOverline) _
         .AddChild(LblActivityTitle) _
@@ -271,7 +287,7 @@ Private Sub InitializeActivity
         .AddChild(BtnRefreshActivity) _
         .AddChild(BtnActivityBack)
     ActivityPadding.Initialize.All(16dip).Child(ActivityBody)
-    ActivityScreen.Initialize.AppBar(ActivityBar).Body(ActivityPadding)
+    ActivityScreen.Initialize.AppBar(ActivityBar).Body(ActivityPadding).BottomNavigationBar(BottomNavigation)
 End Sub
 
 ' Builds the settings screen used to demonstrate runtime theme changes.
@@ -282,14 +298,14 @@ Private Sub InitializeSettings
     LblSettingsDescription.Initialize.Text("These controls are live and update the mounted screen.").Size(14).Color(AppTheme.SecondaryText)
     LblThemeStatus.Initialize.Text("Theme: light workspace").Size(15).Color(AppTheme.PrimaryText)
     LblRuntimeStatus.Initialize.Text("Runtime: connected  •  latency 42 ms").Size(13).Color(AppTheme.Accent)
-    BtnTheme.Initialize.Text("TOGGLE THEME STATUS").BackgroundColor(AppTheme.ThemeAction).TextColor(AppTheme.ThemeActionText).OnClick(Me, "ToggleTheme_Click")
-    BtnSettingsBack.Initialize.Text("BACK TO DASHBOARD").BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText).OnClick(Me, "NavigateToDashboard_Click")
+    BtnTheme.Initialize.Text("TOGGLE THEME STATUS").BackgroundColor(AppTheme.ThemeAction).TextColor(AppTheme.ThemeActionText).CornerRadius(12dip).OnClick(Me, "ToggleTheme_Click")
+    BtnSettingsBack.Initialize.Text("BACK TO DASHBOARD").BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText).CornerRadius(12dip).OnClick(Me, "NavigateToDashboard_Click")
     SettingsCardBody.Initialize.Spacing(8).AddChild(LblSettingsTitle).AddChild(LblSettingsDescription).AddChild(LblThemeStatus).AddChild(LblRuntimeStatus).AddChild(BtnTheme)
     SettingsCardPadding.Initialize.All(18dip).Child(SettingsCardBody)
     SettingsCard.Initialize.BackgroundColor(AppTheme.Surface).CornerRadius(18dip).Child(SettingsCardPadding)
     SettingsBody.Initialize.Spacing(10dip).AddChild(LblSettingsOverline).AddChild(SettingsCard).AddChild(BtnSettingsBack)
     SettingsPadding.Initialize.All(16dip).Child(SettingsBody)
-    SettingsScreen.Initialize.AppBar(SettingsBar).Body(SettingsPadding)
+    SettingsScreen.Initialize.AppBar(SettingsBar).Body(SettingsPadding).BottomNavigationBar(BottomNavigation)
 End Sub
 
 ' Mounts the active virtual screen and refreshes safe-area insets.
@@ -389,6 +405,8 @@ Private Sub ApplyTheme
     BtnActivityBack.BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText)
     BtnTheme.BackgroundColor(AppTheme.ThemeAction).TextColor(AppTheme.ThemeActionText)
     BtnSettingsBack.BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText)
+    BottomNavigation.ActiveColor(AppTheme.Accent).InactiveColor(AppTheme.MutedText) _
+        .IndicatorColor(AppTheme.Accent).BackgroundColor(AppTheme.Surface)
 End Sub
 
 ' Toggles the palette and remounts the active screen with the new colors.
@@ -401,6 +419,7 @@ End Sub
 
 ' Navigates to the activity stream.
 Sub NavigateToActivity_Click
+    SelectTabState(1)
     ActiveRoute = "Activity"
     Navigator.NavigateTo("Activity")
     UpdateActiveLabels
@@ -408,6 +427,7 @@ End Sub
 
 ' Navigates to the settings screen.
 Sub NavigateToSettings_Click
+    SelectTabState(2)
     ActiveRoute = "Settings"
     Navigator.NavigateTo("Settings")
     UpdateActiveLabels
@@ -415,9 +435,27 @@ End Sub
 
 ' Navigates back to the dashboard.
 Sub NavigateToDashboard_Click
+    SelectTabState(0)
     ActiveRoute = "Dashboard"
     Navigator.NavigateTo("Dashboard")
     UpdateActiveLabels
+End Sub
+
+' Keeps button navigation and bottom navigation on the same explicit state.
+Private Sub SelectTabState(Index As Int)
+    If SelectedTabState.IsInitialized Then SelectedTabState.SetState(Index)
+End Sub
+
+' Receives the declarative bottom-navigation selection.
+Sub BottomNavigation_Selected(Index As Int, Id As String)
+    Select Case Id
+        Case "dashboard"
+            NavigateToDashboard_Click
+        Case "activity"
+            NavigateToActivity_Click
+        Case "settings"
+            NavigateToSettings_Click
+    End Select
 End Sub
 
 ' Updates state. UIState notifies the affected label without rebuilding the tree.

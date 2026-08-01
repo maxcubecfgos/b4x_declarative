@@ -10,6 +10,7 @@ Sub Class_Globals
 	Private mBody As Object
 	Private mFabLeft As Object
 	Private mFabRight As Object
+	Private mBottomNavigationBar As Object
 	Private mBaseView As B4XView
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
@@ -21,6 +22,7 @@ Public Sub Initialize As UIScaffold
 	mBody = Null
 	mFabLeft = Null
 	mFabRight = Null
+	mBottomNavigationBar = Null
 	Return Me
 End Sub
 
@@ -41,6 +43,12 @@ End Sub
 
 Public Sub FloatingActionButtonRight(fab As Object) As UIScaffold
 	mFabRight = fab
+	Return Me
+End Sub
+
+' Adds an optional persistent bottom navigation slot.
+Public Sub BottomNavigationBar(bar As Object) As UIScaffold
+	mBottomNavigationBar = bar
 	Return Me
 End Sub
 
@@ -80,7 +88,9 @@ Public Sub Render
 	Dim topOffset As Int = 0
 	Dim bottomOffset As Int = 0
 	Dim appBarHeight As Int = 56dip
+	Dim bottomNavigationHeight As Int = 64dip
 	Dim fabSpace As Int = 80dip ' Espacio total reservado para la zona de FABs
+	If mBottomNavigationBar <> Null Then bottomOffset = bottomNavigationHeight
     
 	' Render the app bar first.
 	If mAppBar <> Null Then
@@ -94,7 +104,7 @@ Public Sub Render
 	' Reserve bottom space when one or more floating action buttons are present.
 	Dim hasFab As Boolean = (mFabLeft <> Null Or mFabRight <> Null)
 	If hasFab Then
-		bottomOffset = fabSpace
+		bottomOffset = bottomOffset + fabSpace
 	End If
     
 	' Render the body using the remaining height.
@@ -112,17 +122,29 @@ Public Sub Render
 	Dim fabSize As Int = 56dip
 	If mFabRight <> Null Then
 		CallSub2(mFabRight, "SetParent", mBaseView)
-		CallSub3(mFabRight, "SetPosition", mWidth - fabSize - 16dip, mHeight - fabSize - 16dip)
+		CallSub3(mFabRight, "SetPosition", mWidth - fabSize - 16dip, mHeight - fabSize - 16dip - IfBottomBarOffset(mBottomNavigationBar, bottomNavigationHeight))
 		CallSub3(mFabRight, "SetSize", fabSize, fabSize)
 		CallSub(mFabRight, "Render")
 	End If
     
 	If mFabLeft <> Null Then
 		CallSub2(mFabLeft, "SetParent", mBaseView)
-		CallSub3(mFabLeft, "SetPosition", 16dip, mHeight - fabSize - 16dip)
+		CallSub3(mFabLeft, "SetPosition", 16dip, mHeight - fabSize - 16dip - IfBottomBarOffset(mBottomNavigationBar, bottomNavigationHeight))
 		CallSub3(mFabLeft, "SetSize", fabSize, fabSize)
 		CallSub(mFabLeft, "Render")
 	End If
+
+	If mBottomNavigationBar <> Null Then
+		CallSub2(mBottomNavigationBar, "SetParent", mBaseView)
+		CallSub3(mBottomNavigationBar, "SetPosition", 0, mHeight - bottomNavigationHeight)
+		CallSub3(mBottomNavigationBar, "SetSize", mWidth, bottomNavigationHeight)
+		CallSub(mBottomNavigationBar, "Render")
+	End If
+End Sub
+
+Private Sub IfBottomBarOffset(Bar As Object, Height As Int) As Int
+	If Bar <> Null Then Return Height
+	Return 0
 End Sub
 
 Public Sub Unmount
@@ -130,6 +152,7 @@ Public Sub Unmount
 	If mBody <> Null And xui.SubExists(mBody, "Unmount", 0) Then CallSub(mBody, "Unmount")
 	If mFabLeft <> Null And xui.SubExists(mFabLeft, "Unmount", 0) Then CallSub(mFabLeft, "Unmount")
 	If mFabRight <> Null And xui.SubExists(mFabRight, "Unmount", 0) Then CallSub(mFabRight, "Unmount")
+	If mBottomNavigationBar <> Null And xui.SubExists(mBottomNavigationBar, "Unmount", 0) Then CallSub(mBottomNavigationBar, "Unmount")
 	mBaseView = Null
 	mParent = Null
 End Sub

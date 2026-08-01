@@ -13,6 +13,10 @@ Sub Class_Globals
 	Private mTextEventName As String
 	Private mTextColor As Int
 	Private mBackgroundColor As Int
+	Private mCornerRadius As Int
+	Private mBorderWidth As Int
+	Private mBorderColor As Int
+	Private mCustomBackgroundApplied As Boolean
 	Private mEditText As EditText
 	Private mBaseView As B4XView
 	Private mParent As B4XView
@@ -26,6 +30,10 @@ Public Sub Initialize As UIInput
 	mHint = ""
 	mTextColor = Colors.Black
 	mBackgroundColor = Colors.White
+	mCornerRadius = 0
+	mBorderWidth = 0
+	mBorderColor = Colors.Transparent
+	mCustomBackgroundApplied = False
 	mTextTarget = Null
 	mTextEventName = ""
 	mApplyingState = False
@@ -92,6 +100,19 @@ Public Sub BackgroundColor(Color As Int) As UIInput
 	Return Me
 End Sub
 
+' Sets the corner radius in pixels. Zero preserves the native EditText background.
+Public Sub CornerRadius(Radius As Int) As UIInput
+	mCornerRadius = Max(0, Radius)
+	Return Me
+End Sub
+
+' Sets an optional border for a custom rounded input background.
+Public Sub Border(Width As Int, Color As Int) As UIInput
+	mBorderWidth = Max(0, Width)
+	mBorderColor = Color
+	Return Me
+End Sub
+
 ' Returns the currently displayed text.
 Public Sub GetText As String
 	If mEditText <> Null Then
@@ -117,11 +138,27 @@ End Sub
 Public Sub Render
 	If mParent = Null Then Return
 	If mParent.IsInitialized = False Then Return
+	If mTextState <> Null Then
+		If mTextState.IsInitialized Then
+			mText = "" & mTextState.GetState
+			mTextState.Subscribe(Me, "TextState_Changed")
+		End If
+	End If
 
 	Dim needsCreate As Boolean = False
 	If mEditText = Null Then
 		needsCreate = True
 	Else If mEditText.IsInitialized = False Then
+		needsCreate = True
+	End If
+	If mCustomBackgroundApplied And mCornerRadius = 0 And mBorderWidth = 0 Then
+		' Recreate the native control to restore its original drawable, focus state and padding.
+		If mBaseView <> Null Then
+			If mBaseView.IsInitialized Then mBaseView.RemoveViewFromParent
+		End If
+		mEditText = Null
+		mBaseView = Null
+		mCustomBackgroundApplied = False
 		needsCreate = True
 	End If
 	If needsCreate Then
@@ -134,7 +171,16 @@ Public Sub Render
 
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
 	mEditText.TextColor = mTextColor
-	mEditText.Color = mBackgroundColor
+	If mCornerRadius > 0 Or mBorderWidth > 0 Then
+		Dim inputBackground As ColorDrawable
+		inputBackground.Initialize2(mBackgroundColor, mCornerRadius, mBorderWidth, mBorderColor)
+		mEditText.Background = inputBackground
+		mCustomBackgroundApplied = True
+		' A custom background can replace the native EditText inset.
+		mEditText.Padding = Array As Int(12dip, 8dip, 12dip, 8dip)
+	Else
+		mEditText.Color = mBackgroundColor
+	End If
 	mEditText.Hint = mHint
 	mEditText.Gravity = Gravity.CENTER_VERTICAL
 	ApplyTextToNative
@@ -166,6 +212,9 @@ Private Sub NativeInput_TextChanged(Old As String, New As String)
 End Sub
 
 Public Sub Unmount
+	If mTextState <> Null Then
+		If mTextState.IsInitialized Then mTextState.Unsubscribe(Me, "TextState_Changed")
+	End If
 	If mBaseView <> Null Then
 		If mBaseView.IsInitialized Then mBaseView.RemoveViewFromParent
 	End If

@@ -19,7 +19,7 @@ The included **NOVA Control Center** is a demonstration application designed to 
 - Automatic safe-area handling below the Android status area
 - Observable runtime state updates for counters and activity refreshes
 - Reusable light and dark palettes through `UITheme`
-- Native B4A buttons, floating action buttons, and text inputs with declarative callbacks
+- Native B4A buttons, floating action buttons, bottom navigation, and text inputs with declarative callbacks and optional rounded shapes
 
 ## Project structure
 
@@ -28,9 +28,11 @@ The included **NOVA Control Center** is a demonstration application designed to 
 | `Declarative UI.b4a` | NOVA demo Activity and screen composition |
 | `UITheme.bas` | Reusable light/dark seed-color scheme and semantic palette |
 | `UIState.bas` | Observable state holder with selective callbacks |
+| `UIAnimation.bas` | Small opt-in native bounds animation utility with cancellation and completion callbacks |
 | `UIScrollView.bas` | Declarative wrapper around the native B4A `ScrollView` |
 | `UINavigator.bas` | Virtual screen registration, navigation, and safe-area host |
-| `UIScaffold.bas` | App bar, body, and optional floating action button layout |
+| `UIScaffold.bas` | App bar, body, bottom navigation, and optional floating action button layout |
+| `UIBottomNavigationBar.bas` | Declarative bottom navigation with items, selection state, indicator and callbacks |
 | `UIColumn.bas` | Vertical child layout with natural measurement, axis sizing and alignment |
 | `UIRow.bas` | Horizontal child layout with natural measurement, axis sizing and alignment |
 | `UIExpanded.bas` | Flexible space marker for Column and Row |
@@ -41,9 +43,9 @@ The included **NOVA Control Center** is a demonstration application designed to 
 | `UIBox.bas` | Lightweight padded child container |
 | `UICenter.bas` | Centers a child using its measured natural size |
 | `UILabel.bas` | Native label wrapper with optional `UIState` text binding |
-| `UIButton.bas` | Native button wrapper with safe callbacks and optional `UIState` text binding |
+| `UIButton.bas` | Native button wrapper with safe callbacks, optional state binding and configurable corners/borders |
 | `UIFloatingActionButton.bas` | Compact native floating action button with safe callbacks and optional `UIState` text binding |
-| `UIInput.bas` | Native text input with natural measurement, optional state binding, and safe text-change callbacks |
+| `UIInput.bas` | Native text input with natural measurement, optional state binding, safe callbacks and configurable corners/borders |
 | `UIAppBar.bas` | App bar with a persistent title and optional `UIState` binding |
 | `UIDivider.bas` | Themed horizontal divider |
 | `UISpace.bas` | Fixed-size layout spacer |
@@ -63,10 +65,17 @@ content.Initialize _
 Dim padded As UIPadding
 padded.Initialize.Horizontal(16dip).Vertical(10dip).Child(content)
 
+Dim navigation As UIBottomNavigationBar
+navigation.Initialize _
+    .AddItem("home", "⌂", "Home") _
+    .AddItem("settings", "⚙", "Settings") _
+    .OnSelected(Me, "Navigation_Selected")
+
 Dim screen As UIScaffold
 screen.Initialize _
     .AppBar(appBar) _
-    .Body(padded)
+    .Body(padded) _
+    .BottomNavigationBar(navigation)
 ```
 
 The application describes the tree. The framework handles native view creation and positioning during `Render`.
@@ -113,7 +122,23 @@ detailsVisibility.Visible(False)
 dashBoardBody.Render
 ```
 
-When hidden, the wrapper reports a natural size of `0, 0`, unmounts the child's native views and allows `UIColumn` or `UIRow` to place the remaining children without a gap.
+For reactive visibility, bind a Boolean `UIState` and explicitly render the affected parent:
+
+```basic
+Dim detailsState As UIState
+detailsState.Initialize(True)
+
+detailsVisibility.Initialize _
+    .BindVisible(detailsState) _
+    .OnVisibilityChanged(Me, "DetailsVisibilityChanged") _
+    .Child(detailsCard)
+
+Sub DetailsVisibilityChanged(Visibility As UIVisibility)
+    dashBoardBody.Render
+End Sub
+```
+
+`BindVisible` updates the wrapper immediately and notifies the callback when the state changes. The explicit callback keeps ownership clear: the library does not guess which parent should be remeasured. When hidden, the wrapper reports a natural size of `0, 0`, unmounts the child's native views and allows `UIColumn` or `UIRow` to place the remaining children without a gap.
 
 `UIStack` provides Flutter-like Z-axis composition:
 
@@ -148,7 +173,7 @@ The wrapper:
 - Uses the native `ScrollView.Panel` as the content parent.
 - Measures the child with a large content-height limit.
 - Sets the panel height to the child's natural height or the viewport height, whichever is larger.
-- Remounts the child safely after navigation, layout changes, or theme changes.
+- Keeps the same child mounted during ordinary layout/state updates, preserving scroll position and native state; structural child replacement is cleaned up safely.
 - Exposes `ScrollTo` and `GetScrollPosition` for programmatic control.
 
 A scroll view is normally placed inside `UIExpanded` when it shares a `UIColumn` with a fixed header or footer:
@@ -159,6 +184,28 @@ ActivityBody.Initialize.Spacing(10dip) _
     .AddChild(UIExpanded.Initialize.Child(scroll)) _
     .AddChild(refreshButton)
 ```
+
+## UIAnimation
+
+`UIAnimation` is an opt-in utility for animating the bounds of an existing native `B4XView`. It does not replace the layout protocol, rebuild widgets or introduce a second language:
+
+```basic
+Dim entrance As UIAnimation
+entrance.Initialize _
+    .TargetView(cardView) _
+    .MoveAndResize(16dip, 80dip, Root.Width - 32dip, 160dip) _
+    .Duration(280) _
+    .OnCompleted(Me, "CardEntrance_Completed") _
+    .Start
+
+Sub CardEntrance_Completed
+    ' The native bounds animation has finished.
+End Sub
+```
+
+The animation starts from the view's current bounds unless a destination is omitted. Use `MoveTo` for position-only transitions, `SizeTo` for size-only transitions, or `MoveAndResize` for both. `Duration(0)` applies the destination immediately and still invokes the completion callback through the same asynchronous-safe path as longer animations. Calling `Start` again restarts the descriptor and invalidates the previous completion callback. `Cancel` invalidates the pending completion callback and requests synchronization of the native view at its current bounds; the exact visual interpolation point remains controlled by Android.
+
+`UIAnimation` is intentionally limited to bounds. The framework keeps ownership of widget configuration and layout; application code can animate a native view after its declarative parent has assigned the current layout. Future animation features should remain additive and preserve this opt-in behavior.
 
 ## UIState
 
@@ -227,6 +274,31 @@ End Sub
 
 The input preserves its native `EditText` during normal renders, so a focused keyboard field is not recreated just because its parent recalculates bounds. `UIColumn`, `UIRow`, `UIPadding` and `UICenter` can use its natural 48dip height and measured width.
 
+## Rounded buttons and inputs
+
+Buttons and text inputs keep their native appearance by default. Rounded corners are opt-in and use the same fluent B4A composition style:
+
+```basic
+Dim saveButton As UIButton
+saveButton.Initialize _
+    .Text("SAVE") _
+    .BackgroundColor(0xFF00A896) _
+    .TextColor(Colors.White) _
+    .CornerRadius(12dip) _
+    .Border(1dip, 0xFF008577) _
+    .OnClick(Me, "Save_Click")
+
+Dim emailInput As UIInput
+emailInput.Initialize _
+    .Hint("Email address") _
+    .BackgroundColor(0xFFF4F7FB) _
+    .TextColor(0xFF132238) _
+    .CornerRadius(10dip) _
+    .Border(1dip, 0xFFD0D7E2)
+```
+
+`CornerRadius(0)` is the default and preserves the native background. `Border(width, color)` is optional; a width of `0` disables the custom border. When a custom input background is used, the library restores internal padding so text remains comfortably inset. A custom button background may not preserve the platform ripple exactly; use the default background when native button feedback is more important than custom shape.
+
 ## UITheme
 
 `UITheme` centralizes palette decisions without coupling the framework widgets to one application:
@@ -292,6 +364,39 @@ Navigator.NavigateTo("Activity")
 The host uses the available content rectangle reported by the B4A `IME` API. This keeps the declarative root below the Android status area, including the battery and clock region, without requiring every screen to calculate top insets independently.
 
 This is intentionally a single-Activity navigation model. It avoids pretending that a virtual declarative screen is a physical B4A Activity or layout file. Native Activity behavior can still be added later when a real Activity is genuinely required.
+
+## Bottom navigation
+
+`UIBottomNavigationBar` defines navigation items as data and can bind its selected index to `UIState`:
+
+```basic
+Private SelectedTabState As UIState
+Private Navigation As UIBottomNavigationBar
+
+SelectedTabState.Initialize(0)
+Navigation.Initialize _
+    .AddItem("home", "⌂", "Home") _
+    .AddItem("activity", "◉", "Activity") _
+    .AddItem("settings", "⚙", "Settings") _
+    .BindSelectedIndex(SelectedTabState) _
+    .OnSelected(Me, "Navigation_Selected")
+
+Dim screen As UIScaffold
+screen.Initialize.BottomNavigationBar(Navigation).Body(body)
+
+Sub Navigation_Selected(Index As Int, Id As String)
+    Select Case Id
+        Case "home"
+            Navigator.NavigateTo("Home")
+        Case "activity"
+            Navigator.NavigateTo("Activity")
+        Case "settings"
+            Navigator.NavigateTo("Settings")
+    End Select
+End Sub
+```
+
+`UIScaffold` reserves the bottom-navigation area before measuring the body. Selection changes update only the existing native labels and indicator; the bar does not rebuild its native children for ordinary tab changes. `ShowInactiveLabels(True)` displays every caption, while the default shows the active caption and keeps the inactive tabs compact. Use Unicode strings for icons so the component does not require an extra icon-font dependency.
 
 ## NOVA Control Center demo
 

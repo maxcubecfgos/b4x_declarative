@@ -6,7 +6,9 @@ $stage = Join-Path ([IO.Path]::GetTempPath()) ('DeclarativeUI_b4xlib_' + [Guid]:
 $tempZip = Join-Path ([IO.Path]::GetTempPath()) ('DeclarativeUI_b4xlib_' + [Guid]::NewGuid().ToString('N') + '.zip')
 
 $expectedModules = @(
+    'UIAnimation.bas'
     'UIAppBar.bas'
+    'UIBottomNavigationBar.bas'
     'UIBox.bas'
     'UIButton.bas'
     'UICard.bas'
@@ -78,7 +80,7 @@ try {
         $actualEntries = @($entries | ForEach-Object FullName)
         $missingEntries = @($expectedEntries | Where-Object { $_ -notin $actualEntries })
         $unexpectedEntries = @($actualEntries | Where-Object { $_ -notin $expectedEntries })
-        if ($entries.Count -ne 24 -or $missingEntries.Count -gt 0 -or $unexpectedEntries.Count -gt 0) {
+        if ($entries.Count -ne 26 -or $missingEntries.Count -gt 0 -or $unexpectedEntries.Count -gt 0) {
             throw ('Package entry mismatch. Missing: ' + ($missingEntries -join ', ') + '; unexpected: ' + ($unexpectedEntries -join ', '))
         }
 
@@ -111,7 +113,7 @@ try {
     Write-Host ('File: ' + $output)
     Write-Host ('Size: ' + $fileInfo.Length + ' bytes')
     Write-Host ('SHA-256: ' + $hash)
-    Write-Host 'Contents: 21 UI modules + manifest.txt + README.txt + SYNTAX.md'
+    Write-Host 'Contents: 23 UI modules + manifest.txt + README.txt + SYNTAX.md'
 }
 catch {
     Write-Error ('The b4xlib could not be created or validated: ' + $_.Exception.Message)

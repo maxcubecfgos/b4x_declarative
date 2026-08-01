@@ -11,9 +11,9 @@ NumberOfModules=0
 Version=13.62
 @EndOfDesignText@
 #Region  Project Attributes
-    #ApplicationLabel: Declarative UI Examples
-    #VersionCode: 6
-    #VersionName: 3.0
+    #ApplicationLabel: Declarative UI Demo
+    #VersionCode: 1
+    #VersionName: 1.0
     #SupportedOrientations: portrait
     #EdgeToEdgeOldDevices: True
 #End Region
@@ -23,15 +23,15 @@ Version=13.62
     #IncludeTitle: False
 #End Region
 
-' One Activity, no Starter.bas, no extra modules.
-' This file is intentionally compact so the code reduction is visible.
+' Pulse is a deliberately small product-style demo rather than a widget gallery.
+' One Activity declares three navigable screens with reusable widget builders.
 
 Sub Process_Globals
+    Private NavigationState As UIState
     Private CounterState As UIState
-    Private EmailState As UIState
-    Private PasswordState As UIState
-    Private LoginStatusState As UIState
-    Private RefreshState As UIState
+    Private ActivityState As UIState
+    Private ThemeDetailsState As UIState
+    Private ProfileNameState As UIState
 End Sub
 
 Sub Globals
@@ -39,180 +39,158 @@ Sub Globals
     Private Navigator As UINavigator
     Private AppTheme As UITheme
     Private ActiveRoute As String
-    Private WidgetsDetailsVisible As Boolean
     Private UiMounted As Boolean
     Private LastWidth, LastHeight As Int
+    Private HeroCard As UICard
+    Private HeroOriginalLeft, HeroOriginalTop As Int
+    Private SettingsDetails As UIVisibility
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
     Root = Activity
+    If NavigationState.IsInitialized = False Then NavigationState.Initialize(0)
     If CounterState.IsInitialized = False Then CounterState.Initialize(0)
-    If EmailState.IsInitialized = False Then EmailState.Initialize("")
-    If PasswordState.IsInitialized = False Then PasswordState.Initialize("")
-    If LoginStatusState.IsInitialized = False Then LoginStatusState.Initialize("No submission yet.")
-    If RefreshState.IsInitialized = False Then RefreshState.Initialize(0)
-    AppTheme.Initialize.Scheme(0xFF00A896)
-    WidgetsDetailsVisible = True
-    ActiveRoute = "Catalog"
+    If ActivityState.IsInitialized = False Then ActivityState.Initialize(3)
+    If ThemeDetailsState.IsInitialized = False Then ThemeDetailsState.Initialize(False)
+    If ProfileNameState.IsInitialized = False Then ProfileNameState.Initialize("Alex")
 
+    AppTheme.Initialize.Scheme(0xFF6750A4)
+    ActiveRoute = "Home"
     Navigator.Initialize
-    Navigator.AddScreen("Catalog", BuildCatalogScreen)
-    Navigator.AddScreen("Counter", BuildCounterScreen)
-    Navigator.AddScreen("Login", BuildLoginScreen)
-    Navigator.AddScreen("Widgets", BuildWidgetsScreen)
+    Navigator.AddScreen("Home", BuildHomeScreen)
+    Navigator.AddScreen("Activity", BuildActivityScreen)
+    Navigator.AddScreen("Settings", BuildSettingsScreen)
     BuildUI
 End Sub
 
-' The catalog is deliberately small: it introduces the examples without
-' duplicating a complete screen implementation for every individual widget.
-Private Sub BuildCatalogScreen As UIScaffold
-    Dim title As UILabel
-    title.Initialize.Text("Declarative UI examples").Size(26).Color(AppTheme.PrimaryText)
-    Dim intro As UILabel
-    intro.Initialize.Text("One Activity, reusable widget trees, and less native view plumbing.").Size(15).Color(AppTheme.SecondaryText)
+' ------------------------------------------------------------------------------
+' Screens
+' ------------------------------------------------------------------------------
 
-    Dim list As UIColumn
-    list.Initialize.Spacing(10dip) _
-        .AddChild(title) _
-        .AddChild(intro) _
-        .AddChild(BuildDivider) _
-        .AddChild(BuildButton("COUNTER  /  state + FAB", "OpenCounter_Click", AppTheme.Accent)) _
-        .AddChild(BuildButton("LOGIN  /  native input", "OpenLogin_Click", AppTheme.SurfaceVariant)) _
-        .AddChild(BuildButton("WIDGETS  /  layout + layers + scroll", "OpenWidgets_Click", AppTheme.SurfaceVariant))
+Private Sub BuildHomeScreen As UIScaffold
+    Dim greeting As UILabel
+    greeting.Initialize.Text("Good morning, Alex").Size(14).Color(AppTheme.SecondaryText)
+    Dim headline As UILabel
+    headline.Initialize.Text("Keep your momentum.").Size(28).Color(AppTheme.PrimaryText)
 
-    Dim body As UIPadding
-    body.Initialize.All(16dip).Child(list)
-    Dim screen As UIScaffold
-    screen.Initialize.AppBar(BuildBar("DECLARATIVE UI  /  CATALOG")).Body(body)
-    Return screen
+    Dim heroTitle As UILabel
+    heroTitle.Initialize.Text("TODAY'S PULSE").Size(12).Color(AppTheme.AccentText)
+    Dim heroValue As UILabel
+    heroValue.Initialize.BindText(CounterState).Size(48).Color(AppTheme.PrimaryText)
+    Dim heroCaption As UILabel
+    heroCaption.Initialize.Text("small actions, visible progress").Size(14).Color(AppTheme.SecondaryText)
+    Dim heroContent As UIColumn
+    heroContent.Initialize.Spacing(4dip).AddChild(heroTitle).AddChild(heroValue).AddChild(heroCaption)
 
-    ' Imperative B4X would need a Panel, repeated AddView calls, manual vertical
-    ' offsets, and click listeners. The list above is the complete catalog tree.
-End Sub
+    HeroCard.Initialize.BackgroundColor(AppTheme.HeroSurface).BorderColor(AppTheme.Border) _
+        .CornerRadius(20dip).Child(BuildPadding(heroContent, 20dip))
+    Dim badge As UICard
+    badge.Initialize.BackgroundColor(AppTheme.Accent).CornerRadius(14dip) _
+        .Child(BuildPadding(Label("LIVE", 12, AppTheme.AccentText), 8dip))
+    Dim heroStack As UIStack
+    heroStack.Initialize.Alignment("topleft").AddChild(HeroCard).AddChild(BuildBadgeOverlay(badge))
 
-' This is the honest reduction example: a counter with state, centering and a FAB.
-Private Sub BuildCounterScreen As UIScaffold
-    Dim description As UILabel
-    description.Initialize.Text("You have pressed the button this many times:").Size(17).Color(AppTheme.SecondaryText)
-    Dim value As UILabel
-    value.Initialize.BindText(CounterState).Size(52).Color(AppTheme.PrimaryText)
-    Dim note As UILabel
-    note.Initialize.Text("Only the state changes; the tree stays mounted.").Size(14).Color(AppTheme.MutedText)
+    Dim pulseButton As UIButton
+    pulseButton.Initialize.Text("ADD PULSE").BackgroundColor(AppTheme.Accent) _
+        .TextColor(AppTheme.AccentText).CornerRadius(14dip).OnClick(Me, "Increment_Click")
+    Dim activityButton As UIButton
+    activityButton.Initialize.Text("VIEW ACTIVITY").BackgroundColor(AppTheme.SurfaceVariant) _
+        .TextColor(AppTheme.ButtonText).CornerRadius(14dip).OnClick(Me, "OpenActivity_Click")
+
+    Dim actionRow As UIRow
+    actionRow.Initialize.Spacing(10dip).CrossAxisAlignment("center") _
+        .AddChild(pulseButton).AddChild(activityButton)
+
+    Dim metricOne As UICard = BuildMetric("PULSES", CounterState, AppTheme.Accent)
+    Dim metricTwo As UICard = BuildMetric("STREAK", ActivityState, AppTheme.Info)
+    Dim metricRow As UIRow
+    metricRow.Initialize.Spacing(10dip).AddChild(metricOne).AddChild(BuildExpanded(metricTwo))
 
     Dim content As UIColumn
-    content.Initialize.Spacing(8dip).MainAxisAlignment("center").CrossAxisAlignment("center") _
-        .AddChild(description).AddChild(value).AddChild(note)
-    Dim center As UICenter
-    center.Initialize.Child(content)
+    content.Initialize.Spacing(12dip).AddChild(greeting).AddChild(headline) _
+        .AddChild(heroStack).AddChild(actionRow).AddChild(metricRow) _
+        .AddChild(BuildSectionTitle("A calm, declarative UI tree")) _
+        .AddChild(BuildInfoCard("State drives the screen", "CounterState updates bound labels without manually finding native views.")) _
+        .AddChild(BuildInfoCard("Composition drives layout", "Column, Row, Stack, Padding and Card describe relationships instead of coordinates."))
 
-    Dim expandedCenter As UIExpanded
-    expandedCenter.Initialize.Child(center)
-    Dim body As UIColumn
-    body.Initialize.Spacing(10dip).AddChild(expandedCenter).AddChild(BuildBackButton)
+    Dim scroll As UIScrollView
+    scroll.Initialize.Child(content)
     Dim screen As UIScaffold
-    screen.Initialize _
-        .AppBar(BuildBar("COUNTER  /  UIState")) _
-        .Body(BuildPadding16(body)) _
+    screen.Initialize.AppBar(BuildBar("PULSE")) _
+        .Body(BuildPadding(scroll, 16dip)).BottomNavigationBar(BuildNavigation) _
         .FloatingActionButtonRight(BuildFab)
     Return screen
-
-    ' Traditional B4X needs native Label/Button references, AddView calls,
-    ' coordinate math, safe-area offsets and a manual Text update. This tree
-    ' expresses the same screen in about 25 application lines.
 End Sub
 
-' The form demonstrates UIInput without introducing a second event language.
-Private Sub BuildLoginScreen As UIScaffold
+Private Sub BuildActivityScreen As UIScaffold
     Dim title As UILabel
-    title.Initialize.Text("Welcome back").Size(24).Color(AppTheme.PrimaryText)
-    Dim description As UILabel
-    description.Initialize.Text("Native EditText controls inside a declarative form.").Size(15).Color(AppTheme.SecondaryText)
+    title.Initialize.Text("Your activity").Size(26).Color(AppTheme.PrimaryText)
+    Dim subtitle As UILabel
+    subtitle.Initialize.Text("A scrollable timeline built from the same small set of widgets.").Size(15).Color(AppTheme.SecondaryText)
 
-    Dim email As UIInput
-    email.Initialize.Hint("Email address").BindText(EmailState) _
-        .OnTextChanged(Me, "Email_Changed") _
-        .BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.PrimaryText)
-    Dim password As UIInput
-    password.Initialize.Hint("Password").BindText(PasswordState) _
-        .OnTextChanged(Me, "Password_Changed") _
-        .BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.PrimaryText)
+    Dim activityCount As UILabel
+    activityCount.Initialize.BindText(ActivityState).Size(13).Color(AppTheme.AccentText)
+    Dim activitySummary As UICard
+    activitySummary.Initialize.BackgroundColor(AppTheme.Accent).CornerRadius(14dip) _
+        .Child(BuildPadding(BuildSummaryRow("COMPLETED TODAY", activityCount), 12dip))
 
-    Dim status As UILabel
-    status.Initialize.BindText(LoginStatusState).Size(14).Color(AppTheme.SecondaryText)
-    Dim form As UIColumn
-    form.Initialize.Spacing(10dip).AddChild(title).AddChild(description) _
-        .AddChild(email).AddChild(password) _
-        .AddChild(BuildButton("SIGN IN", "SubmitLogin_Click", AppTheme.Accent)) _
-        .AddChild(status)
+    Dim list As UIColumn
+    list.Initialize.Spacing(10dip).AddChild(title).AddChild(subtitle).AddChild(activitySummary) _
+        .AddChild(BuildTimelineCard("08:40", "Morning focus", "You started the day with intention.", AppTheme.Accent)) _
+        .AddChild(BuildTimelineCard("11:20", "Deep work", "A quiet block completed successfully.", AppTheme.Info)) _
+        .AddChild(BuildTimelineCard("14:05", "Small win", "One more pulse added to your streak.", AppTheme.Negative)) _
+        .AddChild(BuildTimelineCard("NOW", "Keep going", "The interface reacts to state, not to boilerplate.", AppTheme.Accent)) _
+        .AddChild(BuildInfoCard("UIScrollView", "The content column measures naturally and scrolls inside the scaffold.")) _
+        .AddChild(BuildButton("REFRESH ACTIVITY", "RefreshActivity_Click", AppTheme.SurfaceVariant))
 
-    Dim card As UICard
-    card.Initialize.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border) _
-        .CornerRadius(16dip).Child(BuildPaddingAmount(form, 18dip))
-    Dim body As UIColumn
-    body.Initialize.Spacing(10dip).AddChild(card).AddChild(BuildBackButton)
-    Dim screen As UIScaffold
-    screen.Initialize.AppBar(BuildBar("LOGIN  /  UIInput")).Body(BuildPadding16(body))
-    Return screen
-
-    ' Imperative B4X requires two EditTexts, parent panels, bounds, text-change
-    ' handlers and teardown code. Here layout and native mounting are delegated;
-    ' the Activity keeps only validation and state decisions.
-End Sub
-
-' One concise gallery covers the remaining widgets instead of one screen per API.
-Private Sub BuildWidgetsScreen As UIScaffold
-    Dim heading As UILabel
-    heading.Initialize.Text("Composition gallery").Size(24).Color(AppTheme.PrimaryText)
-    Dim explanation As UILabel
-    explanation.Initialize.Text("Column, Row, Expanded, Card, Stack, Visibility, ScrollView, Space and Divider.").Size(15).Color(AppTheme.SecondaryText)
-
-    Dim row As UIRow
-    row.Initialize.Spacing(8dip).CrossAxisAlignment("center") _
-        .AddChild(BuildBox("UIBox")) _
-        .AddChild(BuildExpandedLabel("UIExpanded")) _
-        .AddChild(BuildSpace(8dip))
-
-    Dim layer As UIStack
-    layer.Initialize.Alignment("center") _
-        .AddChild(BuildCard("UIStack background", "Later children are rendered above earlier children.")) _
-        .AddChild(BuildBadge("STACK BADGE"))
-
-    Dim details As UIVisibility
-    details.Initialize.Visible(WidgetsDetailsVisible) _
-        .Child(BuildCard("UIVisibility", "Hide this child and the Column reflows its siblings."))
-
-    Dim content As UIColumn
-    content.Initialize.Spacing(10dip) _
-        .AddChild(heading).AddChild(explanation) _
-        .AddChild(BuildDivider).AddChild(row).AddChild(layer) _
-        .AddChild(details)
-
-    Dim longList As UIColumn
-    longList.Initialize.Spacing(8dip) _
-        .AddChild(content) _
-        .AddChild(BuildCard("UIScrollView", "The parent measures this list and provides a scrollable viewport.")) _
-        .AddChild(BuildCard("UITheme", "Toggle the palette without changing the widget API.")) _
-        .AddChild(BuildCard("UIState", "Refresh updates a bound label without rebuilding the tree."))
     Dim scroll As UIScrollView
-    scroll.Initialize.Child(longList)
-    Dim flexible As UIExpanded
-    flexible.Initialize.Child(scroll)
-
-    Dim body As UIColumn
-    body.Initialize.Spacing(10dip).AddChild(flexible) _
-        .AddChild(BuildButton(IIf(WidgetsDetailsVisible, "HIDE DETAILS", "SHOW DETAILS"), "ToggleDetails_Click", AppTheme.Accent)) _
-        .AddChild(BuildButton("TOGGLE THEME", "ToggleTheme_Click", AppTheme.ThemeAction)) _
-        .AddChild(BuildButton("REFRESH STATE: " & RefreshState.GetState, "Refresh_Click", AppTheme.Info)) _
-        .AddChild(BuildBackButton)
+    scroll.Initialize.Child(list)
     Dim screen As UIScaffold
-    screen.Initialize.AppBar(BuildBar("WIDGETS  /  GALLERY")).Body(BuildPadding16(body))
+    screen.Initialize.AppBar(BuildBar("ACTIVITY")) _
+        .Body(BuildPadding(scroll, 16dip)).BottomNavigationBar(BuildNavigation)
     Return screen
-
-    ' Imperative B4X would manually create a ScrollView and content Panel, set
-    ' Panel.Height, calculate z-order, toggle visibility and position each view.
-    ' This compact tree demonstrates those relationships without six duplicate
-    ' screen implementations or dozens of persistent native view references.
 End Sub
+
+Private Sub BuildSettingsScreen As UIScaffold
+    Dim title As UILabel
+    title.Initialize.Text("Personalize Pulse").Size(26).Color(AppTheme.PrimaryText)
+    Dim subtitle As UILabel
+    subtitle.Initialize.Text("Theme and visibility are state-driven too.").Size(15).Color(AppTheme.SecondaryText)
+
+    Dim profile As UIInput
+    profile.Initialize.Hint("Your name").BindText(ProfileNameState) _
+        .OnTextChanged(Me, "ProfileName_Changed") _
+        .BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.PrimaryText).CornerRadius(14dip)
+
+    Dim themeButton As UIButton
+    themeButton.Initialize.Text(ThemeButtonText).BackgroundColor(AppTheme.Accent) _
+        .TextColor(AppTheme.AccentText).CornerRadius(14dip).OnClick(Me, "ToggleTheme_Click")
+    Dim detailsButton As UIButton
+    detailsButton.Initialize.Text(DetailsButtonText).BackgroundColor(AppTheme.SurfaceVariant) _
+        .TextColor(AppTheme.ButtonText).CornerRadius(14dip).OnClick(Me, "ToggleDetails_Click")
+
+    Dim detailsCard As UIVisibility
+    detailsCard.Initialize.BindVisible(ThemeDetailsState).OnVisibilityChanged(Me, "SettingsVisibilityChanged") _
+        .Child(BuildInfoCard("UIVisibility", "This section leaves the layout when hidden and returns when shown."))
+    SettingsDetails = detailsCard
+
+    Dim form As UIColumn
+    form.Initialize.Spacing(12dip).AddChild(title).AddChild(subtitle) _
+        .AddChild(BuildLabeledInput("DISPLAY NAME", profile)) _
+        .AddChild(BuildInfoCard("UITheme Scheme", "A single seed color derives surfaces, text, borders and accents.")) _
+        .AddChild(themeButton).AddChild(detailsButton).AddChild(detailsCard)
+
+    Dim scroll As UIScrollView
+    scroll.Initialize.Child(form)
+    Dim screen As UIScaffold
+    screen.Initialize.AppBar(BuildBar("SETTINGS")) _
+        .Body(BuildPadding(scroll, 16dip)).BottomNavigationBar(BuildNavigation)
+    Return screen
+End Sub
+
+' ------------------------------------------------------------------------------
+' Declarative helpers
+' ------------------------------------------------------------------------------
 
 Private Sub BuildUI
     If Root.Width <= 0 Or Root.Height <= 0 Then Return
@@ -230,14 +208,12 @@ End Sub
 
 Private Sub RebuildCurrentScreen
     Select Case ActiveRoute
-        Case "Catalog"
-            Navigator.AddScreen("Catalog", BuildCatalogScreen)
-        Case "Counter"
-            Navigator.AddScreen("Counter", BuildCounterScreen)
-        Case "Login"
-            Navigator.AddScreen("Login", BuildLoginScreen)
-        Case "Widgets"
-            Navigator.AddScreen("Widgets", BuildWidgetsScreen)
+        Case "Home"
+            Navigator.AddScreen("Home", BuildHomeScreen)
+        Case "Activity"
+            Navigator.AddScreen("Activity", BuildActivityScreen)
+        Case "Settings"
+            Navigator.AddScreen("Settings", BuildSettingsScreen)
     End Select
 End Sub
 
@@ -246,29 +222,20 @@ Private Sub GoTo(Route As String)
     Navigator.NavigateTo(Route)
 End Sub
 
-' Small builders keep screen code readable while still showing the real API.
 Private Sub BuildBar(Title As String) As UIAppBar
     Dim bar As UIAppBar
-    bar.Initialize.Title(Title).BackgroundColor(AppTheme.SecondaryBar)
+    bar.Initialize.Title(Title).BackgroundColor(AppTheme.DashboardBar)
     Return bar
 End Sub
 
-Private Sub BuildPadding16(Child As Object) As UIPadding
-    Return BuildPaddingAmount(Child, 16dip)
-End Sub
-
-Private Sub BuildPaddingAmount(Child As Object, Amount As Int) As UIPadding
-    Dim padding As UIPadding
-    padding.Initialize.All(Amount).Child(Child)
-    Return padding
-End Sub
-
-Private Sub BuildButton(Text As String, EventName As String, Background As Int) As UIButton
-    Dim buttonTextColor As Int = Colors.White
-    If Background = AppTheme.SurfaceVariant Then buttonTextColor = AppTheme.ButtonText
-    Dim button As UIButton
-    button.Initialize.Text(Text).BackgroundColor(Background).TextColor(buttonTextColor).OnClick(Me, EventName)
-    Return button
+Private Sub BuildNavigation As UIBottomNavigationBar
+    Dim nav As UIBottomNavigationBar
+    nav.Initialize.AddItem("Home", "H", "Home").AddItem("Activity", "A", "Activity") _
+        .AddItem("Settings", "S", "Settings").BindSelectedIndex(NavigationState) _
+        .OnSelected(Me, "Navigation_Changed").BackgroundColor(AppTheme.Surface) _
+        .ActiveColor(AppTheme.Accent).InactiveColor(AppTheme.MutedText) _
+        .IndicatorColor(AppTheme.Accent).DividerColor(AppTheme.Divider)
+    Return nav
 End Sub
 
 Private Sub BuildFab As UIFloatingActionButton
@@ -277,113 +244,170 @@ Private Sub BuildFab As UIFloatingActionButton
     Return fab
 End Sub
 
-Private Sub BuildBackButton As UIButton
-    Return BuildButton("BACK TO EXAMPLES", "BackToCatalog_Click", AppTheme.SurfaceVariant)
+Private Sub BuildPadding(Child As Object, Amount As Int) As UIPadding
+    Dim padding As UIPadding
+    padding.Initialize.All(Amount).Child(Child)
+    Return padding
 End Sub
 
-Private Sub BuildDivider As UIDivider
-    Dim divider As UIDivider
-    divider.Initialize.Color(AppTheme.Divider)
-    Return divider
+Private Sub BuildButton(Text As String, EventName As String, Background As Int) As UIButton
+    Dim textColor As Int = AppTheme.ButtonText
+    If Background = AppTheme.Accent Then textColor = AppTheme.AccentText
+    Dim button As UIButton
+    button.Initialize.Text(Text).BackgroundColor(Background).TextColor(textColor) _
+        .CornerRadius(14dip).OnClick(Me, EventName)
+    Return button
 End Sub
 
-Private Sub BuildSpace(Size As Int) As UISpace
-    Dim space As UISpace
-    space.Initialize.Size(Size)
-    Return space
-End Sub
-
-Private Sub BuildBox(Text As String) As UIBox
+Private Sub Label(Text As String, Size As Int, Color As Int) As UILabel
     Dim label As UILabel
-    label.Initialize.Text(Text).Size(15).Color(AppTheme.PrimaryText)
-    Dim box As UIBox
-    box.Initialize(label, 12dip)
-    Return box
+    label.Initialize.Text(Text).Size(Size).Color(Color)
+    Return label
 End Sub
 
-Private Sub BuildExpandedLabel(Text As String) As UIExpanded
-    Dim label As UILabel
-    label.Initialize.Text(Text).Size(15).Color(AppTheme.PrimaryText)
-    Dim expanded As UIExpanded
-    expanded.Initialize.Child(label)
-    Return expanded
+Private Sub BuildSectionTitle(Text As String) As UILabel
+    Return Label(Text, 17, AppTheme.PrimaryText)
 End Sub
 
-Private Sub BuildCard(Title As String, Description As String) As UICard
-    Dim titleLabel As UILabel
-    titleLabel.Initialize.Text(Title).Size(17).Color(AppTheme.PrimaryText)
-    Dim descriptionLabel As UILabel
-    descriptionLabel.Initialize.Text(Description).Size(14).Color(AppTheme.SecondaryText)
+Private Sub BuildInfoCard(Title As String, Description As String) As UICard
     Dim content As UIColumn
-    content.Initialize.Spacing(4dip).AddChild(titleLabel).AddChild(descriptionLabel)
+    content.Initialize.Spacing(4dip).AddChild(Label(Title, 16, AppTheme.PrimaryText)) _
+        .AddChild(Label(Description, 14, AppTheme.SecondaryText))
     Dim card As UICard
     card.Initialize.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border) _
-        .CornerRadius(14dip).Child(BuildPaddingAmount(content, 14dip))
+        .CornerRadius(16dip).Child(BuildPadding(content, 14dip))
     Return card
 End Sub
 
-Private Sub BuildBadge(Text As String) As UICard
+Private Sub BuildMetric(Title As String, State As UIState, Accent As Int) As UICard
+    Dim metric As UIColumn
+    metric.Initialize.Spacing(2dip).AddChild(Label(Title, 12, AppTheme.SecondaryText)) _
+        .AddChild(LabelFromState(State, 28, AppTheme.PrimaryText))
+    Dim card As UICard
+    card.Initialize.BackgroundColor(AppTheme.Surface).BorderColor(Accent).CornerRadius(16dip) _
+        .Child(BuildPadding(metric, 14dip))
+    Return card
+End Sub
+
+Private Sub LabelFromState(State As UIState, Size As Int, Color As Int) As UILabel
     Dim label As UILabel
-    label.Initialize.Text(Text).Size(14).Color(Colors.White)
-    Dim badge As UICard
-    badge.Initialize.BackgroundColor(AppTheme.Accent).CornerRadius(14dip) _
-        .Child(BuildPaddingAmount(label, 12dip))
-    Return badge
+    label.Initialize.BindText(State).Size(Size).Color(Color)
+    Return label
 End Sub
 
-Sub OpenCounter_Click
-    GoTo("Counter")
+Private Sub BuildExpanded(Child As Object) As UIExpanded
+    Dim expanded As UIExpanded
+    expanded.Initialize.Child(Child)
+    Return expanded
 End Sub
 
-Sub OpenLogin_Click
-    GoTo("Login")
+Private Sub BuildTimelineCard(Time As String, Title As String, Description As String, Accent As Int) As UICard
+    Dim timeLabel As UILabel = Label(Time, 12, Accent)
+    Dim textColumn As UIColumn
+    textColumn.Initialize.Spacing(3dip).AddChild(Label(Title, 16, AppTheme.PrimaryText)) _
+        .AddChild(Label(Description, 14, AppTheme.SecondaryText))
+    Dim row As UIRow
+    row.Initialize.Spacing(12dip).CrossAxisAlignment("center").AddChild(timeLabel).AddChild(BuildExpanded(textColumn))
+    Dim card As UICard
+    card.Initialize.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border) _
+        .CornerRadius(16dip).Child(BuildPadding(row, 14dip))
+    Return card
 End Sub
 
-Sub OpenWidgets_Click
-    GoTo("Widgets")
+Private Sub BuildLabeledInput(Caption As String, Input As UIInput) As UIColumn
+    Dim group As UIColumn
+    group.Initialize.Spacing(5dip).AddChild(Label(Caption, 12, AppTheme.SecondaryText)).AddChild(Input)
+    Return group
 End Sub
 
-Sub BackToCatalog_Click
-    GoTo("Catalog")
+Private Sub BuildSummaryRow(Caption As String, Value As UILabel) As UIRow
+    Dim row As UIRow
+    row.Initialize.Spacing(8dip).CrossAxisAlignment("center") _
+        .AddChild(Label(Caption, 13, AppTheme.AccentText)).AddChild(BuildExpanded(Value))
+    Return row
+End Sub
+
+Private Sub BuildBadgeOverlay(Badge As UICard) As UICenter
+    Dim center As UICenter
+    center.Initialize.Child(Badge)
+    Return center
+End Sub
+
+' ------------------------------------------------------------------------------
+' Events and state
+' ------------------------------------------------------------------------------
+
+Sub Navigation_Changed(Index As Int, Id As String)
+    If Id.Trim = "" Then Return
+    NavigationState.SetState(Index)
+    GoTo(Id)
+End Sub
+
+Sub OpenActivity_Click
+    NavigationState.SetState(1)
+    GoTo("Activity")
 End Sub
 
 Sub Increment_Click
     Dim value As Int = CounterState.GetState
     CounterState.SetState(value + 1)
+    AnimateHero
 End Sub
 
-Sub Email_Changed(NewText As String)
-    EmailState.SetState(NewText)
+Private Sub AnimateHero
+    If HeroCard = Null Then Return
+    Dim heroView As B4XView = HeroCard.GetView
+    If heroView = Null Then Return
+    If heroView.IsInitialized = False Then Return
+    HeroOriginalLeft = heroView.Left
+    HeroOriginalTop = heroView.Top
+    Dim animation As UIAnimation
+    animation.Initialize.TargetView(heroView).MoveTo(HeroOriginalLeft, HeroOriginalTop - 8dip) _
+        .Duration(130).OnCompleted(Me, "HeroAnimationOut").Start
 End Sub
 
-Sub Password_Changed(NewText As String)
-    PasswordState.SetState(NewText)
+Sub HeroAnimationOut
+    If HeroCard = Null Then Return
+    Dim heroView As B4XView = HeroCard.GetView
+    If heroView = Null Then Return
+    Dim animation As UIAnimation
+    animation.Initialize.TargetView(heroView).MoveTo(HeroOriginalLeft, HeroOriginalTop).Duration(180).Start
 End Sub
 
-Sub SubmitLogin_Click
-    Dim email As String = "" & EmailState.GetState
-    Dim password As String = "" & PasswordState.GetState
-    If email.Trim = "" Or password.Trim = "" Then
-        LoginStatusState.SetState("Enter both fields before submitting.")
-    Else
-        LoginStatusState.SetState("Validation passed. No server call was made.")
-    End If
-End Sub
-
-Sub ToggleDetails_Click
-    WidgetsDetailsVisible = Not(WidgetsDetailsVisible)
-    RebuildCurrentScreen
-End Sub
-
-Sub Refresh_Click
-    Dim value As Int = RefreshState.GetState
-    RefreshState.SetState(value + 1)
-    RebuildCurrentScreen
+Sub RefreshActivity_Click
+    Dim value As Int = ActivityState.GetState
+    ActivityState.SetState(value + 1)
 End Sub
 
 Sub ToggleTheme_Click
     AppTheme.Toggle
     RebuildCurrentScreen
+End Sub
+
+Sub ToggleDetails_Click
+    ThemeDetailsState.SetState(Not(IsThemeDetailsVisible))
+End Sub
+
+Sub SettingsVisibilityChanged(Visibility As UIVisibility)
+    RebuildCurrentScreen
+End Sub
+
+Private Sub IsThemeDetailsVisible As Boolean
+    Return ("" & ThemeDetailsState.GetState).Trim.ToLowerCase = "true"
+End Sub
+
+Private Sub ThemeButtonText As String
+    If AppTheme.IsDark Then Return "USE LIGHT THEME"
+    Return "USE DARK THEME"
+End Sub
+
+Private Sub DetailsButtonText As String
+    If IsThemeDetailsVisible Then Return "HIDE THEME DETAILS"
+    Return "SHOW THEME DETAILS"
+End Sub
+
+Sub ProfileName_Changed(NewText As String)
+    ProfileNameState.SetState(NewText)
 End Sub
 
 Sub Activity_Resume
@@ -394,22 +418,17 @@ Sub Activity_Pause (UserClosed As Boolean)
 End Sub
 
 ' ==============================================================================
-' Honest comparison for the forum
+' Why this demo is useful for the forum
 ' ==============================================================================
-' The counter itself is the reduction proof, not this gallery.
+' The Activity owns state and event decisions. The screen builders describe the
+' UI tree: Scaffold -> AppBar/Body/BottomNavigation/FAB, then Column/Row/Card.
 '
-' Declarative counter composition:
+' The same counter in traditional B4A would require creating native Panels,
+' Labels and Buttons, calculating each bound, attaching click events, preserving
+' references and updating the Label manually. Here the bound UILabel reacts to
+' CounterState, while UIAnimation handles the visual feedback declaratively.
 '
-'     content.Initialize.Spacing(8dip).MainAxisAlignment("center") _
-'         .AddChild(description).AddChild(value).AddChild(note)
-'     screen.Initialize.AppBar(BuildBar("COUNTER / UIState")) _
-'         .Body(BuildPadding(content)).FloatingActionButtonRight(BuildFab)
-'
-' The equivalent imperative version must create native Panels, Labels and a
-' Button, calculate safe-area and centered bounds, call AddView repeatedly,
-' attach a click event, and update the counter Label after every press.
-'
-' The gallery has more code because it demonstrates many widgets. It should not
-' be presented as a line-count benchmark. The benchmark is the focused counter
-' above versus its imperative equivalent.
+' This is not a claim that the library replaces Flutter. It demonstrates the
+' narrower, practical promise: clearer composition, reusable builders and less
+' view plumbing for dynamic B4A screens.
 ' ==============================================================================

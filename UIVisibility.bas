@@ -10,21 +10,83 @@ Sub Class_Globals
 	Private mVisible As Boolean
 	Private mBaseView As B4XView
 	Private mParent As B4XView
+	Private mVisibilityState As UIState
+	Private mVisibilityTarget As Object
+	Private mVisibilityEventName As String
 	Private mLeft, mTop, mWidth, mHeight As Int
 End Sub
 
 ' Creates a visible wrapper with no child.
 Public Sub Initialize As UIVisibility
+	' Re-initialization is safe when the same declarative instance is reused
+	' by a screen builder after navigation, theme or state updates.
+	If mBaseView <> Null Then
+		If mBaseView.IsInitialized Then Unmount
+	End If
+	If mVisibilityState <> Null Then
+		If mVisibilityState.IsInitialized Then mVisibilityState.Unsubscribe(Me, "VisibilityState_Changed")
+	End If
 	mChild = Null
 	mVisible = True
+	mVisibilityState = Null
+	mVisibilityTarget = Null
+	mVisibilityEventName = ""
 	Return Me
 End Sub
 
 ' Controls whether the child participates in measurement and rendering.
 ' The parent container must be rendered after changing visibility so it can reflow siblings.
+' An explicit value replaces any previous state binding.
 Public Sub Visible(Value As Boolean) As UIVisibility
+	UnbindVisible
 	mVisible = Value
 	Return Me
+End Sub
+
+' Binds participation in layout to an observable UIState.
+' The state value must be Boolean. The host should render the affected parent
+' from OnVisibilityChanged so siblings are measured again.
+Public Sub BindVisible(State As UIState) As UIVisibility
+	UnbindVisible
+	mVisibilityState = State
+	If mVisibilityState <> Null Then
+		If mVisibilityState.IsInitialized Then
+			mVisible = ReadBoolean(mVisibilityState.GetState)
+			mVisibilityState.Subscribe(Me, "VisibilityState_Changed")
+		End If
+	End If
+	Return Me
+End Sub
+
+' Removes the visibility binding while preserving the current value.
+Public Sub UnbindVisible As UIVisibility
+	If mVisibilityState <> Null Then
+		If mVisibilityState.IsInitialized Then mVisibilityState.Unsubscribe(Me, "VisibilityState_Changed")
+	End If
+	mVisibilityState = Null
+	Return Me
+End Sub
+
+' Registers a callback invoked after a bound visibility value changes.
+' The callback signature is: Sub EventName(Visibility As UIVisibility)
+Public Sub OnVisibilityChanged(Target As Object, EventName As String) As UIVisibility
+	mVisibilityTarget = Target
+	mVisibilityEventName = EventName
+	Return Me
+End Sub
+
+Private Sub VisibilityState_Changed(State As UIState)
+	If State = Null Then Return
+	If State.IsInitialized = False Then Return
+	mVisible = ReadBoolean(State.GetState)
+	' An unmounted screen keeps its declarative binding, but must not ask the
+	' host to render an obsolete parent tree.
+	If mParent = Null Then Return
+	If mParent.IsInitialized = False Then Return
+	If mVisibilityTarget = Null Or mVisibilityEventName.Trim = "" Then Return
+	If xui.SubExists(mVisibilityTarget, mVisibilityEventName, 1) Then
+		CallSub2(mVisibilityTarget, mVisibilityEventName, Me)
+	End If
 End Sub
 
 ' Replaces the single child managed by this wrapper.
@@ -56,6 +118,12 @@ End Sub
 Public Sub Render
 	If mParent = Null Then Return
 	If mParent.IsInitialized = False Then Return
+	If mVisibilityState <> Null Then
+		If mVisibilityState.IsInitialized Then
+			mVisible = ReadBoolean(mVisibilityState.GetState)
+			mVisibilityState.Subscribe(Me, "VisibilityState_Changed")
+		End If
+	End If
 
 	Dim needsCreate As Boolean = False
 	If mBaseView = Null Then
@@ -91,6 +159,11 @@ Public Sub Render
 End Sub
 
 Public Sub Unmount
+	If mVisibilityState <> Null Then
+		If mVisibilityState.IsInitialized Then mVisibilityState.Unsubscribe(Me, "VisibilityState_Changed")
+	End If
+	' Unmount is temporary during navigation/remounting; preserve the state
+	' binding so the same declarative widget remains reactive when mounted again.
 	If mChild <> Null And xui.SubExists(mChild, "Unmount", 0) Then CallSub(mChild, "Unmount")
 	If mBaseView <> Null Then
 		If mBaseView.IsInitialized Then mBaseView.RemoveAllViews
@@ -105,6 +178,11 @@ Public Sub ParticipatesInLayout As Boolean
 End Sub
 
 ' Hidden children occupy no layout space. Visible children delegate natural measurement.
+Private Sub ReadBoolean(Value As Object) As Boolean
+	If Value = Null Then Return False
+	Return ("" & Value).Trim.ToLowerCase = "true"
+End Sub
+
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim result As List
 	result.Initialize

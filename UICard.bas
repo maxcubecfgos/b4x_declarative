@@ -88,6 +88,14 @@ Public Sub Render
 	End If
 End Sub
 
+' Returns the mounted native view for opt-in transitions such as UIAnimation.
+' The view is available after the card has been rendered.
+Public Sub GetView As B4XView
+	If mBaseView = Null Then Return Null
+	If mBaseView.IsInitialized = False Then Return Null
+	Return mBaseView
+End Sub
+
 Public Sub Unmount
 	If mChild <> Null And xui.SubExists(mChild, "Unmount", 0) Then CallSub(mChild, "Unmount")
 	mBaseView = Null

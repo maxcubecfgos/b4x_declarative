@@ -103,6 +103,12 @@ Public Sub Render
 	If mParent.IsInitialized = False Then
 		Return
 	End If
+	If mTextState <> Null Then
+		If mTextState.IsInitialized Then
+			mText = "" & mTextState.GetState
+			mTextState.Subscribe(Me, "TextState_Changed")
+		End If
+	End If
 
 	Dim needsCreate As Boolean = False
 	If mBaseView = Null Then
@@ -131,6 +137,9 @@ Public Sub Render
 End Sub
 
 Public Sub Unmount
+    If mTextState <> Null Then
+        If mTextState.IsInitialized Then mTextState.Unsubscribe(Me, "TextState_Changed")
+    End If
 	mBaseView = Null
 	mParent = Null
 End Sub

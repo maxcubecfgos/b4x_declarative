@@ -93,12 +93,14 @@ Every public method belongs to one of three tiers.
 This is the API application code is expected to use:
 
 - `Initialize`;
-- widget configuration such as `Text`, `Color`, `Size`, `Child`, `AddChild` and `Spacing`;
+- widget configuration such as `Text`, `Color`, `Size`, `Child`, `AddChild`, `Spacing`, `CornerRadius` and `Border`;
 - state bindings such as `BindText` and `BindTitle`;
-- text input configuration through `Hint`, `Text`, `TextColor`, `BackgroundColor` and `GetText`;
+- text input configuration through `Hint`, `Text`, `TextColor`, `BackgroundColor`, `CornerRadius`, `Border` and `GetText`;
 - event registration through `OnClick` and `OnTextChanged`;
 - navigation methods such as `AddScreen` and `NavigateTo`;
-- `ScrollTo` and other explicitly documented control methods.
+- `ScrollTo` and other explicitly documented control methods;
+- opt-in bounds animation through `UIAnimation`.
+
 
 Tier A is the compatibility-sensitive public surface.
 
@@ -144,7 +146,28 @@ The normal order is:
 
 Configuration methods change the declarative object. They do not promise to create a native view immediately. If a widget is already mounted, methods documented as reactive bindings update it immediately; ordinary property changes become visible after the next `Render`.
 
-## 6. Composition and children
+## 6. Shape configuration
+
+`UIButton` and `UIInput` expose the same optional shape configuration:
+
+```basic
+button.Initialize _
+    .Text("SAVE") _
+    .CornerRadius(12dip) _
+    .Border(1dip, 0xFF008577)
+```
+
+Rules:
+
+- `CornerRadius(Int)` returns the same widget and clamps negative values to zero.
+- `Border(width, color)` returns the same widget and clamps negative widths to zero.
+- The default radius and border width are both zero, preserving the native control background.
+- A positive radius or border width activates a `ColorDrawable` background using the configured fill and border values.
+- `UIInput` restores a touch-friendly internal padding when a custom background is active.
+- Custom button backgrounds can replace the platform ripple drawable; this is an explicit trade-off of custom shaping.
+- Shape properties affect the next `Render` and do not change event or state-binding behavior.
+
+## 7. Composition and children
 
 A container owns a tree of child objects:
 
@@ -167,13 +190,14 @@ Rules:
 - Structural changes are explicit: change the tree, then render the relevant root.
 - The library does not infer ownership from global variables.
 - `UIExpanded` is a layout marker for remaining space; it is not a general-purpose state or visibility widget.
-- `UIVisibility` is the compositional visibility wrapper; it preserves one child while conditionally including it in layout.
+- `UIVisibility` is the compositional visibility wrapper; it preserves one child while conditionally including it in layout and can bind that condition to `UIState`.
 - `UIStack` is the Z-axis container; `AddChild` insertion order defines the visual stacking order.
+- `UIBottomNavigationBar` is the declarative navigation surface; `AddItem` defines item data and `OnSelected` handles selection.
 - `UIInput` is a native text-editing widget that participates in the same layout protocol.
 
 The current library uses `Object` for child parameters so different widget classes can participate without inheritance. A custom child must satisfy the composition protocol; otherwise the parent cannot measure or render it safely.
 
-## 7. Layout and measurement contract
+## 8. Layout and measurement contract
 
 `GetContentSize(maxWidth, maxHeight)` returns a `List` with two values:
 
@@ -228,7 +252,7 @@ Rules:
 
 `UIStack` follows the same lifecycle and composition protocol as the other containers. Structural changes require rendering the affected parent; no implicit tree diff is introduced.
 
-## 8. Rendering and lifecycle
+## 9. Rendering and lifecycle
 
 The stable lifecycle is:
 
@@ -247,6 +271,7 @@ Rules:
 - Navigation and theme changes may remount a virtual screen.
 - A property update that affects only one widget should prefer a targeted `Render` or a documented binding.
 - A structural change requires rendering the affected root/container; there is no implicit full-tree diff in this release.
+- A bound visibility change is a localized structural update: the wrapper changes first and its explicit callback requests the affected parent render.
 
 The library must not change the meaning of `Render` from “create or update the native representation” to “rebuild application state”.
 
@@ -264,16 +289,101 @@ optionalCard.Visible(False)
 body.Render
 ```
 
+For state-driven visibility, use an explicit Boolean `UIState` and a normal B4A callback to render the affected parent:
+
+```basic
+Dim detailsState As UIState
+detailsState.Initialize(True)
+
+Dim details As UIVisibility
+details.Initialize _
+    .BindVisible(detailsState) _
+    .OnVisibilityChanged(Me, "DetailsVisibilityChanged") _
+    .Child(detailsCard)
+
+Sub DetailsVisibilityChanged(Visibility As UIVisibility)
+    body.Render
+End Sub
+```
+
 Rules:
 
 - `Visible(True)` is the default.
 - `Child(Object)` replaces the single declarative child.
+- `BindVisible(UIState)` reads the current Boolean value immediately and observes later replacements.
+- `Visible(Boolean)` and `UnbindVisible` remove the visibility binding while preserving the current value.
+- `OnVisibilityChanged(Target, EventName)` receives the changed `UIVisibility` instance through a one-argument callback.
 - When hidden, the wrapper returns `List(0, 0)`, unmounts the child and removes the child's native views.
 - When visible again, the child is mounted from its declarative configuration.
-- Changing visibility is a structural layout update; render the containing `UIColumn`, `UIRow` or other affected root afterward so siblings are remeasured and reflowed.
-- `UIVisibility` does not implicitly subscribe to `UIState` in this contract. A future reactive visibility binding must define how parent remeasurement is triggered before it is added.
+- The binding changes the wrapper immediately, but the callback owns parent remeasurement. Render the containing `UIColumn`, `UIRow`, `UIScrollView` or other affected root so siblings are remeasured and reflowed.
+- `UIVisibility` does not guess which parent to render; this keeps ownership explicit and avoids hidden global rendering.
 
-## 9. Events and callbacks
+### UIBottomNavigationBar
+
+`UIBottomNavigationBar` defines a persistent navigation surface without introducing a second event language:
+
+```basic
+Dim selectedState As UIState
+selectedState.Initialize(0)
+
+Dim navigation As UIBottomNavigationBar
+navigation.Initialize _
+    .AddItem("home", "⌂", "Home") _
+    .AddItem("settings", "⚙", "Settings") _
+    .BindSelectedIndex(selectedState) _
+    .OnSelected(Me, "Navigation_Selected")
+
+Sub Navigation_Selected(Index As Int, Id As String)
+    Navigator.NavigateTo(Id)
+End Sub
+```
+
+Rules:
+
+- `AddItem(Id, Icon, Text)` appends one item and returns the bar.
+- `Id` is application data and is returned unchanged by `GetSelectedId` and the callback.
+- `Icon` is a displayable Unicode string; icon-font dependencies are not required.
+- `BindSelectedIndex(UIState)` expects a number-like state value and keeps the selected index synchronized.
+- `SetSelectedIndex(Index)` changes selection and invokes the registered callback.
+- `OnSelected(Target, EventName)` expects `Sub EventName(Index As Int, Id As String)`.
+- `ActiveColor`, `InactiveColor`, `IndicatorColor`, `BackgroundColor`, `DividerColor`, `IconSize`, `TextSize` and `ShowInactiveLabels` are configuration methods.
+- The default layout height is `64dip`; `UIScaffold.BottomNavigationBar` reserves that area before laying out the body.
+- Ordinary selection changes update existing native children; changing item count or bar dimensions rebuilds the native item views.
+- `UIBottomNavigationBar` follows the same lifecycle protocol and preserves its state binding across temporary `Unmount` calls.
+
+### UIAnimation
+
+`UIAnimation` is the stable opt-in API for animating an existing native view's bounds:
+
+```basic
+Dim animation As UIAnimation
+animation.Initialize _
+    .TargetView(cardView) _
+    .MoveAndResize(16dip, 96dip, 280dip, 160dip) _
+    .Duration(240) _
+    .OnCompleted(Me, "Animation_Completed") _
+    .Start
+
+Sub Animation_Completed
+    ' Optional completion work.
+End Sub
+```
+
+Rules:
+
+- `TargetView(B4XView)` selects the already-mounted native view.
+- `MoveTo(left, top)` changes only the destination position.
+- `SizeTo(width, height)` changes only the destination size and clamps dimensions to zero or greater.
+- `MoveAndResize(...)` sets both destination position and size.
+- `Duration(milliseconds)` clamps negative values to zero.
+- `Start` uses the view's current bounds as the unspecified starting values and restarts the descriptor when called again.
+- `OnCompleted(Target, EventName)` expects a parameterless normal B4A callback.
+- `Cancel` stops the native transition at its current bounds and suppresses completion.
+- A new `Start` or `Cancel` invalidates pending completion work from an earlier run.
+- The current release animates bounds only; it does not imply color, opacity, text or arbitrary-property animation.
+- Animations are opt-in and do not replace the normal parent layout/render protocol.
+
+## 10. Events and callbacks
 
 Events use normal B4A target-plus-sub-name callbacks:
 
@@ -297,7 +407,7 @@ Rules:
 
 `UIInput.OnTextChanged(Target, EventName)` uses the callback signature `Sub EventName(NewText As String)`. It reports user edits only; programmatic changes through `Text` or `BindText` do not invoke the callback. Future widgets may expose additional callbacks, but they must use normal B4A callback conventions and document their parameter signature explicitly.
 
-## 10. State and bindings
+## 11. State and bindings
 
 `UIState` is the standard explicit state primitive:
 
@@ -356,7 +466,7 @@ End Sub
 
 `Text(String)` cancels `BindText(UIState)`. `GetText` returns the current text. The native field is preserved during ordinary `Render` calls so focus and keyboard state are not discarded. `GetContentSize` reports a natural 48dip height and a width based on the current text or hint.
 
-## 11. Themes
+## 12. Themes
 
 `UITheme` is a palette value provider, not a global renderer:
 
@@ -381,7 +491,7 @@ Rules:
 - Theme changes must not silently change application state or navigation.
 - New palette values may be added; existing property meanings must remain stable.
 
-## 12. Navigation and safe area
+## 13. Navigation and safe area
 
 `UINavigator` manages virtual screens inside one real B4A Activity:
 
@@ -404,7 +514,7 @@ Rules:
 
 A future native multi-Activity integration must be additive and must not redefine virtual screens as Activities.
 
-## 13. Compatibility and versioning
+## 14. Compatibility and versioning
 
 The syntax contract is more important than internal implementation details.
 
@@ -456,7 +566,7 @@ New widgets and optional methods may be added without changing existing syntax. 
 4. does not require a global state manager or hidden lifecycle;
 5. can be documented with a stable compatibility rule.
 
-## 14. Rules for future contributors
+## 15. Rules for future contributors
 
 Before merging a library change:
 
@@ -471,14 +581,14 @@ Before merging a library change:
 9. Test runtime changes through **IDE focus → F5 → Ctrl+R → bundle inspection**.
 10. Do not publish a new syntax convention only in an example or in a private implementation comment.
 
-## 15. Current deliberate boundaries
+## 16. Current deliberate boundaries
 
 The following are intentionally outside the contract for now:
 
 - automatic virtual-DOM diffing;
 - automatic two-way data binding;
-- implicit `UIState` binding for `UIVisibility`;
-- automatic animations or positioning transitions for `UIStack` children;
+- implicit parent rendering for `UIVisibility` (use explicit `BindVisible` and `OnVisibilityChanged` instead);
+- automatic animations or positioning transitions for `UIStack` children; `UIAnimation` remains explicit and opt-in;
 - implicit global application state;
 - inheritance-based widget extension;
 - a custom expression language;

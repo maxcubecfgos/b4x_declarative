@@ -10,6 +10,10 @@ Sub Class_Globals
 	Private mTextState As UIState
 	Private mColor As Int
 	Private mTextColor As Int
+	Private mCornerRadius As Int
+	Private mBorderWidth As Int
+	Private mBorderColor As Int
+	Private mCustomBackgroundApplied As Boolean
 	Private mTarget As Object
 	Private mEventName As String
 	Private mBaseView As B4XView
@@ -21,6 +25,10 @@ Public Sub Initialize As UIButton
 	mText = ""
 	mColor = Colors.LightGray
 	mTextColor = Colors.Black
+	mCornerRadius = 0
+	mBorderWidth = 0
+	mBorderColor = Colors.Transparent
+	mCustomBackgroundApplied = False
 	' Clear the callback target so a new instance starts in a predictable state.
 	mTarget = Null
 	mEventName = ""
@@ -81,6 +89,19 @@ Public Sub TextColor(c As Int) As UIButton
 	Return Me
 End Sub
 
+' Sets the corner radius in pixels. Zero preserves the native button background.
+Public Sub CornerRadius(Radius As Int) As UIButton
+	mCornerRadius = Max(0, Radius)
+	Return Me
+End Sub
+
+' Sets an optional border for a custom rounded button background.
+Public Sub Border(Width As Int, Color As Int) As UIButton
+	mBorderWidth = Max(0, Width)
+	mBorderColor = Color
+	Return Me
+End Sub
+
 Public Sub OnClick(Target As Object, EventName As String) As UIButton
 	mTarget = Target
 	mEventName = EventName
@@ -108,11 +129,26 @@ Public Sub Render
 	If mParent.IsInitialized = False Then
 		Return
 	End If
+	If mTextState <> Null Then
+		If mTextState.IsInitialized Then
+			mText = "" & mTextState.GetState
+			mTextState.Subscribe(Me, "TextState_Changed")
+		End If
+	End If
 
 	Dim needsCreate As Boolean = False
 	If mBaseView = Null Then
 		needsCreate = True
 	Else If mBaseView.IsInitialized = False Then
+		needsCreate = True
+	End If
+	If mCustomBackgroundApplied And mCornerRadius = 0 And mBorderWidth = 0 Then
+		' Recreate the native control to restore its original drawable and states.
+		If mBaseView <> Null Then
+			If mBaseView.IsInitialized Then mBaseView.RemoveViewFromParent
+		End If
+		mBaseView = Null
+		mCustomBackgroundApplied = False
 		needsCreate = True
 	End If
 	If needsCreate Then
@@ -128,11 +164,22 @@ Public Sub Render
 	mBaseView.BringToFront
     
 	If mBaseView.Text <> mText Then mBaseView.Text = mText
-	If mBaseView.Color <> mColor Then mBaseView.Color = mColor
+	If mCornerRadius > 0 Or mBorderWidth > 0 Then
+		Dim buttonBackground As ColorDrawable
+		buttonBackground.Initialize2(mColor, mCornerRadius, mBorderWidth, mBorderColor)
+		Dim nativeButton As Button = mBaseView
+		nativeButton.Background = buttonBackground
+		mCustomBackgroundApplied = True
+	Else
+		If mBaseView.Color <> mColor Then mBaseView.Color = mColor
+	End If
 	If mBaseView.TextColor <> mTextColor Then mBaseView.TextColor = mTextColor
 End Sub
 
 Public Sub Unmount
+	If mTextState <> Null Then
+		If mTextState.IsInitialized Then mTextState.Unsubscribe(Me, "TextState_Changed")
+	End If
 	mBaseView = Null
 	mParent = Null
 End Sub

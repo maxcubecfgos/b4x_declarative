@@ -87,6 +87,12 @@ End Sub
 Public Sub Render
 	If mParent = Null Then Return
 	If mParent.IsInitialized = False Then Return
+	If mTitleState <> Null Then
+		If mTitleState.IsInitialized Then
+			mTitle = "" & mTitleState.GetState
+			mTitleState.Subscribe(Me, "TitleState_Changed")
+		End If
+	End If
 
 	Dim needsCreate As Boolean = False
 	If mBaseView = Null Then
@@ -128,6 +134,9 @@ Public Sub Render
 End Sub
 
 Public Sub Unmount
+	If mTitleState <> Null Then
+		If mTitleState.IsInitialized Then mTitleState.Unsubscribe(Me, "TitleState_Changed")
+	End If
 	mTitleLabel = Null
 	mBaseView = Null
 	mParent = Null
