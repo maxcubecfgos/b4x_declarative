@@ -2,6 +2,8 @@
 
 This guide explains how to use the declarative UI classes included in this project and in the preliminary `.b4xlib` package.
 
+> **Stable syntax contract:** Read [SYNTAX.md](SYNTAX.md) before publishing or extending the library. It defines the rules that future releases must preserve.
+
 > **Current status:** this release is B4A-only. It uses native B4A `Panel`, `ScrollView`, `IME`, `Colors` and `B4XView` APIs. It is not yet a cross-platform B4X library for B4i or B4J.
 
 ## 1. What this library provides
@@ -27,7 +29,7 @@ It is inspired by declarative UI systems such as Flutter, but it is intentionall
 
 ### Using the preliminary `.b4xlib`
 
-1. Copy `DeclarativeUI-0.1.b4xlib` to the B4A Additional Libraries folder.
+1. Copy `DeclarativeUI.b4xlib` to the B4A Additional Libraries folder.
 2. Refresh the Libraries Manager in the B4A IDE.
 3. Enable the library in the host project.
 4. Enable the required B4A libraries:
@@ -35,7 +37,7 @@ It is inspired by declarative UI systems such as Flutter, but it is intentionall
    - `IME`
 5. Create or open a B4A Activity project and use the classes from the package.
 
-The package contains reusable UI classes only. It intentionally excludes the NOVA demo Activity and `Starter.bas`.
+The package contains reusable UI classes and the `SYNTAX.md` contract only. It intentionally excludes the NOVA demo Activity and `Starter.bas`.
 
 ### Using the source modules
 
@@ -105,11 +107,12 @@ The important idea is that `body` describes the child tree. The parent is respon
 
 | Widget | Main purpose | Main configuration methods |
 | --- | --- | --- |
-| `UILabel` | Native label | `Text`, `Size`, `Color` |
-| `UIButton` | Native clickable button | `Text`, `BackgroundColor`, `TextColor`, `OnClick` |
-| `UIFloatingActionButton` | Compact circular-style native button | `Text`, `BackgroundColor`, `OnClick` |
-| `UIState` | Observable value holder with selective callbacks | `Initialize`, `GetState`, `SetState`, `Subscribe`, `Unsubscribe`, `ClearListeners` |
-| `UIAppBar` | Top application bar | `Title`, `BackgroundColor` |
+| `UILabel` | Native label | `Text`, `BindText`, `UnbindText`, `Size`, `Color` |
+| `UIButton` | Native clickable button | `Text`, `BindText`, `UnbindText`, `BackgroundColor`, `TextColor`, `OnClick` |
+| `UIFloatingActionButton` | Compact circular-style native button | `Text`, `BindText`, `UnbindText`, `BackgroundColor`, `OnClick` |
+| `UIInput` | Native text input | `Hint`, `Text`, `BindText`, `UnbindText`, `OnTextChanged`, `TextColor`, `BackgroundColor`, `GetText` |
+| `UIState` | Observable value holder with selective callbacks | `Initialize`, `GetState`, `SetState`, `Subscribe`, `Unsubscribe`, `UnsubscribeTarget`, `ClearListeners` |
+| `UIAppBar` | Top application bar | `Title`, `BindTitle`, `UnbindTitle`, `BackgroundColor` |
 | `UIDivider` | Horizontal divider | `Color` |
 | `UISpace` | Fixed-size spacer | `Size` |
 
@@ -117,13 +120,15 @@ The important idea is that `body` describes the child tree. The parent is respon
 
 | Widget | Main purpose | Main configuration methods |
 | --- | --- | --- |
-| `UIColumn` | Vertical layout | `Spacing`, `MainAxisAlignment`, `CrossAxisAlignment`, `AddChild` |
-| `UIRow` | Horizontal layout | `Spacing`, `MainAxisAlignment`, `CrossAxisAlignment`, `AddChild` |
+| `UIColumn` | Vertical layout | `Spacing`, `MainAxisSize`, `MainAxisAlignment`, `CrossAxisAlignment`, `AddChild` |
+| `UIRow` | Horizontal layout | `Spacing`, `MainAxisSize`, `MainAxisAlignment`, `CrossAxisAlignment`, `AddChild` |
 | `UIPadding` | Adds configurable padding around one child | `All`, `Horizontal`, `Vertical`, `Only`, `Child` |
 | `UIBox` | Padded child container | `Initialize(child, padding)` |
 | `UICenter` | Centers one child using natural size | `Child` |
 | `UICard` | Rounded surface with border | `BackgroundColor`, `BorderColor`, `CornerRadius`, `Child` |
 | `UIExpanded` | Flexible child marker | `Child` |
+| `UIVisibility` | Conditionally includes one child in layout | `Visible`, `Child` |
+| `UIStack` | Overlapping children on the Z axis | `AddChild`, `Alignment` |
 | `UIScrollView` | Native vertical scroll container | `Child`, `ScrollTo` |
 | `UIScaffold` | App bar, body and optional FABs | `AppBar`, `Body`, `FloatingActionButtonLeft`, `FloatingActionButtonRight` |
 | `UINavigator` | Virtual screens and safe-area host | `AddScreen`, `NavigateTo` |
@@ -153,18 +158,31 @@ column.Initialize _
     .AddChild(actionButton)
 ```
 
-`UIColumn` places children vertically and adds the configured spacing between them. Use `MainAxisAlignment` to distribute free space when the children have natural sizes:
+`UIColumn` places children vertically and adds the configured spacing between them. Use `MainAxisSize` to choose whether it keeps its natural height or fills the height assigned by its parent:
+
+```basic
+Dim compactColumn As UIColumn
+compactColumn.Initialize _
+    .MainAxisSize("min") _
+    .Spacing(8dip) _
+    .AddChild(title) _
+    .AddChild(subtitle)
+```
+
+`MainAxisSize("min")` uses the measured child height plus spacing. An empty column with `MainAxisSize("min")` has zero height. `MainAxisSize("max")` is the default and uses the height assigned by the parent, which is useful for screen roots and columns containing `UIExpanded`. In nested composition, the parent still decides the constraints; `GetContentSize` reports the natural size so the parent can choose how much space to assign. Invalid values fall back to `max`.
+
+Use `MainAxisAlignment` to distribute free space when the children have natural sizes:
 
 ```basic
 Dim column As UIColumn
 column.Initialize _
-    .Spacing(8dip) _
+    .MainAxisSize("max") _
     .MainAxisAlignment("center") _
     .AddChild(title) _
     .AddChild(subtitle)
 ```
 
-Supported values are `start`, `center`, `end`, `spaceBetween`, `spaceAround` and `spaceEvenly`. The default is `start`. If the column contains `UIExpanded`, the flexible-child allocation takes precedence.
+Supported `MainAxisAlignment` values are `start`, `center`, `end`, `spaceBetween`, `spaceAround` and `spaceEvenly`. The default is `start`. If the column contains `UIExpanded`, the flexible-child allocation takes precedence.
 
 ### UIRow
 
@@ -176,17 +194,29 @@ row.Initialize _
     .AddChild(rightButton)
 ```
 
-`UIRow` lays out children horizontally and distributes flexible children across the available width. For naturally sized children, `MainAxisAlignment` supports the same values as `UIColumn`:
+`UIRow` lays out children horizontally and distributes flexible children across the available width. Use `MainAxisSize("min")` when the row should wrap its natural child width instead of occupying all assigned width:
+
+```basic
+Dim compactRow As UIRow
+compactRow.Initialize _
+    .MainAxisSize("min") _
+    .Spacing(8dip) _
+    .AddChild(firstButton) _
+    .AddChild(secondButton)
+```
+
+`MainAxisSize("max")` is the default and uses the width assigned by the parent, preserving the original layout behavior. An empty row with `MainAxisSize("min")` has zero width. A row containing `UIExpanded` keeps the assigned width so flexible children can receive the remaining space. In nested composition, `GetContentSize` still reports natural width and the parent decides the final constraint. For naturally sized children, `MainAxisAlignment` supports the same values as `UIColumn`:
 
 ```basic
 Dim row As UIRow
 row.Initialize _
+    .MainAxisSize("max") _
     .MainAxisAlignment("spaceEvenly") _
     .AddChild(firstButton) _
     .AddChild(secondButton)
 ```
 
-The default is `start`, preserving the original layout behavior.
+The default alignment is `start`. `MainAxisSize` and `MainAxisAlignment` are case-insensitive; invalid size values fall back to `max`.
 
 Both containers also expose `CrossAxisAlignment`. A column aligns children horizontally and a row aligns children vertically:
 
@@ -226,6 +256,46 @@ body.Initialize _
 ```
 
 Without `UIExpanded`, a flexible child may not receive the remaining height expected by the parent.
+
+### UIVisibility
+
+Use `UIVisibility` when a child should be part of the declarative tree only while a condition is true:
+
+```basic
+Dim detailsVisibility As UIVisibility
+detailsVisibility.Initialize _
+    .Visible(True) _
+    .Child(detailsCard)
+
+' Structural visibility changes require rendering the parent container.
+detailsVisibility.Visible(False)
+dashBoardBody.Render
+
+detailsVisibility.Visible(True)
+dashBoardBody.Render
+```
+
+`Visible(True)` is the default. When hidden, `UIVisibility` reports a natural size of `0, 0`, removes the child's native views and lets `UIColumn` or `UIRow` reflow the remaining children without a gap. The wrapper preserves the declarative child, so it can be mounted again when visibility returns.
+
+`UIVisibility` does not yet bind directly to `UIState`; changing visibility is an explicit structural update and the parent must be rendered afterward.
+
+### UIStack
+
+`UIStack` places children on top of one another. It is useful for badges, overlays, layered cards and backgrounds:
+
+```basic
+Dim layered As UIStack
+layered.Initialize _
+    .Alignment("bottomRight") _
+    .AddChild(backgroundCard) _
+    .AddChild(statusBadge)
+```
+
+Supported alignment values are `topLeft`, `topCenter`, `topRight`, `centerLeft`, `center`, `centerRight`, `bottomLeft`, `bottomCenter` and `bottomRight`. Matching is case-insensitive; invalid values fall back to `topLeft`.
+
+The stack measures to the largest participating natural child. A flexible child (one returning an empty `GetContentSize` list) receives the complete stack bounds. Children are rendered in insertion order, so the last child added is visually above earlier children. Hidden `UIVisibility` children do not participate in measurement or rendering.
+
+`UIStack` preserves the declarative child order while rendering and remounting its children. Structural changes still require rendering the affected parent; `Render` does not remount every child, so stateful native controls such as `UIScrollView` can preserve their current state.
 
 ### UICenter
 
@@ -370,31 +440,71 @@ Use normal B4A event-style names such as `Save_Click`, `Increment_Click` or `Nav
 
 `UIState` is an observable value holder for application state. It keeps the value outside widgets and notifies only the callbacks subscribed to that state instance.
 
+For a label, the widget can own the subscription declaratively:
+
 ```basic
 Private CounterState As UIState
+Private CounterLabel As UILabel
 
-CounterState.Initialize(0).Subscribe(Me, "CounterState_Changed")
+CounterState.Initialize(0)
+CounterLabel.Initialize.BindText(CounterState).Size(48)
 
 Sub Increment_Click
     Dim value As Int = CounterState.GetState
     CounterState.SetState(value + 1)
 End Sub
+```
+
+`BindText` applies the current state value immediately and renders the widget whenever that state changes. The binding remains attached while the widget is temporarily unmounted for navigation or remounting. `UILabel`, `UIButton` and `UIFloatingActionButton` use the same optional `BindText`/`UnbindText` pattern. Calling `Text(...)` after `BindText(...)` replaces the binding and makes the text static. Call `UnbindText` when the widget should stop observing the state.
+
+App bar titles can also bind directly to a state value:
+
+```basic
+Private ScreenTitleState As UIState
+Private AppBar As UIAppBar
+
+ScreenTitleState.Initialize("Dashboard")
+AppBar.Initialize.BindTitle(ScreenTitleState)
+ScreenTitleState.SetState("Activity")
+```
+
+Call `UnbindTitle` when the title should stop observing the state. Calling `Title(...)` afterwards also replaces the binding and makes the title static. The original callback API remains available for custom or composite updates:
+
+```basic
+CounterState.Subscribe(Me, "CounterState_Changed")
 
 Sub CounterState_Changed(State As UIState)
     CounterLabel.Text("" & State.GetState)
     CounterLabel.Render
 End Sub
+
+CounterState.Unsubscribe(Me, "CounterState_Changed")
 ```
 
-The callback receives the changed `UIState` instance. Use `Unsubscribe` when a long-lived state outlives its screen, or `ClearListeners` when the owner is being destroyed:
+`UIState.UnsubscribeTarget` removes every subscription owned by one widget or object. This milestone provides targeted observable updates, not a complete Flutter-style virtual-DOM diff engine: bound widgets update themselves, while structural changes still require updating and rendering the tree. State values are replacement values; mutating an existing `Map` or `List` does not automatically notify listeners.
+
+### UIInput
+
+`UIInput` provides a native B4A `EditText` that participates in the same measure, layout and render protocol as the other widgets:
 
 ```basic
-CounterState.Unsubscribe(Me, "CounterState_Changed")
-' Or, when the state is no longer needed:
-CounterState.ClearListeners
+Private NameState As UIState
+Private NameInput As UIInput
+
+NameState.Initialize("")
+NameInput.Initialize _
+    .Hint("Operator name") _
+    .BindText(NameState) _
+    .OnTextChanged(Me, "Name_Changed")
+
+Sub Name_Changed(NewText As String)
+    NameState.SetState(NewText)
+End Sub
 ```
 
-This milestone provides selective observable updates; it is not yet a complete Flutter-style virtual-DOM diff engine. The host still decides which widgets depend on a state instance, while `UIState` removes the need to rebuild the root tree for simple value changes. Structural changes still require updating the tree and rendering its root.
+The binding is intentionally one-way. `BindText` applies state values to the native field; `OnTextChanged` reports user edits through the normal B4A callback convention, and the host decides whether to call `SetState`. This avoids hidden two-way updates and makes validation or transformation explicit.
+
+`Text(...)` removes the state binding. `GetText` returns the current text. Programmatic changes do not invoke `OnTextChanged`; the callback represents user edits. The native field is preserved during ordinary `Render` calls so focus and keyboard state are not discarded. The component reports a natural 48dip height and measures its width from the current text or hint.
 
 `SetState` is a replacement operation. It compares the assigned value using B4A's normal equality semantics, which is appropriate for simple values such as numbers and strings. It does not observe mutations made inside an existing `Map` or `List`; assign a new value when you want to notify listeners. A callback may perform one follow-up state change, but callbacks should not continuously mutate the same state or create an update cycle.
 
@@ -413,9 +523,11 @@ Keep state explicit and keep rendering predictable.
 ```basic
 Private AppTheme As UITheme
 
-AppTheme.Initialize
+' Scheme is a seed color from which the semantic palette is derived.
+AppTheme.Initialize.Scheme(0xFF00A896)
 Dim surface As Int = AppTheme.Surface
 Dim primaryText As Int = AppTheme.PrimaryText
+Dim accentText As Int = AppTheme.AccentText
 ```
 
 Switch the palette and apply the returned colors in the host:
@@ -423,6 +535,19 @@ Switch the palette and apply the returned colors in the host:
 ```basic
 AppTheme.Toggle
 ApplyTheme
+```
+
+Choose a different brand seed without changing the rest of the application:
+
+```basic
+AppTheme.Scheme(0xFF6750A4)
+```
+
+`Scheme` accepts a normal B4A ARGB `Int`. The same theme object derives `Background`, `Surface`, `SurfaceVariant`, app bars, `Accent`, borders and dividers from that seed. Use `InitializeWithScheme` when you prefer a single initialization call:
+
+```basic
+Dim AppTheme As UITheme
+AppTheme.InitializeWithScheme(0xFF6750A4)
 ```
 
 You can select a mode explicitly:
@@ -457,6 +582,12 @@ Available palette properties:
 - `Border`
 - `ButtonText`
 - `ThemeAction`
+- `AccentText`
+- `InfoText`
+- `NegativeText`
+- `ThemeActionText`
+
+The `*Text` properties are contrast-aware foregrounds for their matching semantic action colors. Prefer them over hard-coded `Colors.White` when a button background comes from the theme.
 
 A host-side theme application routine typically looks like this:
 
@@ -513,6 +644,18 @@ The scaffold reserves space for its app bar and FAB area before rendering the bo
 
 ## 13. Common problems
 
+### A text input does not update my state
+
+`UIInput` does not mutate `UIState` automatically. Verify that the callback has the exact one-argument signature and explicitly updates the state:
+
+```basic
+Sub Name_Changed(NewText As String)
+    NameState.SetState(NewText)
+End Sub
+```
+
+If the field should remain independent from application state, omit `BindText` and read its value with `GetText` when needed.
+
 ### A button appears but does nothing
 
 Check that:
@@ -525,7 +668,7 @@ Check that:
 
 ### Content is clipped or labels are cut off
 
-Prefer natural measurement through `UIColumn`, `UIRow`, `UIPadding` and `UICard`. Avoid assigning arbitrary fixed heights to text widgets. Use `UIExpanded` for content that should consume remaining space.
+Prefer natural measurement through `UIColumn`, `UIRow`, `UIPadding`, `UICard` and `UIVisibility`. Avoid assigning arbitrary fixed heights to text widgets. Use `UIExpanded` for content that should consume remaining space.
 
 ### A scroll view does not scroll
 
@@ -573,7 +716,22 @@ Suggested demonstration flow:
 6. Open Settings and toggle the theme.
 7. Navigate again to verify that state and mounting remain stable.
 
-## 15. Design boundaries and roadmap
+## 15. Stable syntax and compatibility
+
+The library's public syntax is defined in [SYNTAX.md](SYNTAX.md). Treat that file as the contract for examples, forum releases and future contributions.
+
+The most important compatibility rules are:
+
+- keep normal B4A declarations and optional fluent chaining as the only composition syntax;
+- preserve documented public method names, return types and callback signatures;
+- preserve `BindText`/`BindTitle` precedence: calling `Text(...)` or `Title(...)` removes the corresponding binding;
+- preserve the lifecycle protocol: `SetParent`, `SetPosition`, `SetSize`, `Render`, `Unmount` and `GetContentSize`;
+- add features additively whenever possible;
+- document any breaking change with a migration note and a contract-version update.
+
+If an implementation idea cannot be explained by these rules, it should not be added to the public API yet.
+
+## 16. Design boundaries and roadmap
 
 The project intentionally keeps its first release small:
 
@@ -587,4 +745,4 @@ The project intentionally keeps its first release small:
 - no complete virtual-DOM diff engine;
 - no promise that every Flutter layout behavior is supported.
 
-Potential future work includes more robust incremental updates, additional widgets, animation support, better scroll abstractions and a cross-platform implementation. These should be added only when they solve a concrete problem for B4A users.
+Potential future work includes more robust incremental updates, additional widgets, animation support, better scroll abstractions and a cross-platform implementation. These should be added only when they solve a concrete problem for B4A users and can preserve the syntax contract.

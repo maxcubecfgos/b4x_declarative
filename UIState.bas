@@ -66,6 +66,17 @@ Public Sub Unsubscribe(Target As Object, EventName As String) As UIState
 	Return Me
 End Sub
 
+' Removes every subscription owned by Target.
+' This is useful for widget bindings that need to be replaced or disposed.
+Public Sub UnsubscribeTarget(Target As Object) As UIState
+	If Target = Null Or mListeners.IsInitialized = False Then Return Me
+	For i = mListeners.Size - 1 To 0 Step -1
+		Dim listener As Map = mListeners.Get(i)
+		If listener.Get("Target") = Target Then mListeners.RemoveAt(i)
+	Next
+	Return Me
+End Sub
+
 ' Removes all subscriptions. Call this when the owner of a state is destroyed.
 Public Sub ClearListeners
 	If mListeners.IsInitialized Then mListeners.Clear

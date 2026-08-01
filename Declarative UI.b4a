@@ -6,16 +6,19 @@ Library3=xui
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
 Module1=Starter
 Module10=UIFloatingActionButton
-Module11=UILabel
-Module12=UINavigator
-Module13=UIPadding
-Module14=UIRow
-Module15=UIScaffold
-Module16=UIScrollView
-Module17=UISpace
-Module18=UIState
-Module19=UITheme
+Module11=UIInput
+Module12=UILabel
+Module13=UINavigator
+Module14=UIPadding
+Module15=UIRow
+Module16=UIScaffold
+Module17=UIScrollView
+Module18=UISpace
+Module19=UIStack
 Module2=UIAppBar
+Module20=UIState
+Module21=UITheme
+Module22=UIVisibility
 Module3=UIBox
 Module4=UIButton
 Module5=UICard
@@ -25,12 +28,12 @@ Module8=UIDivider
 Module9=UIExpanded
 NumberOfFiles=0
 NumberOfLibraries=3
-NumberOfModules=19
+NumberOfModules=22
 Version=13.62
 @EndOfDesignText@
 #Region  Project Attributes
     #ApplicationLabel: NOVA Control Center
-    #VersionCode: 4
+    #VersionCode: 1
     #VersionName: 1.1
     #SupportedOrientations: unspecified
     #CanInstallToExternalStorage: False
@@ -138,10 +141,9 @@ End Sub
 Sub Activity_Create(FirstTime As Boolean)
     Root = Activity
     If CounterState.IsInitialized = False Then CounterState.Initialize(24)
-    CounterState.Subscribe(Me, "CounterState_Changed")
     If ActivityRefreshState.IsInitialized = False Then ActivityRefreshState.Initialize(0)
     ActivityRefreshState.Subscribe(Me, "ActivityRefreshState_Changed")
-    AppTheme.Initialize
+    AppTheme.Initialize.Scheme(0xFF00A896)
     Root.Color = AppTheme.Background
     ActiveRoute = "Dashboard"
     InitializeDashboard
@@ -165,7 +167,7 @@ Private Sub InitializeDashboard
     LblDashboardTitle.Initialize.Text("Good evening, operator").Size(26).Color(AppTheme.PrimaryText)
     LblDashboardSubtitle.Initialize.Text("Your control center is healthy and ready.").Size(14).Color(AppTheme.SecondaryText)
     LblHeroOverline.Initialize.Text("LIVE SIGNAL").Size(12).Color(AppTheme.Accent)
-    LblValue.Initialize.Text("" & CounterState.GetState).Size(48).Color(AppTheme.PrimaryText)
+    LblValue.Initialize.BindText(CounterState).Size(48).Color(AppTheme.PrimaryText)
     LblValueCaption.Initialize.Text("active sessions").Size(14).Color(AppTheme.SecondaryText)
     LblHealth.Initialize.Text("ALL SYSTEMS NOMINAL").Size(13).Color(AppTheme.Accent)
     LblSync.Initialize.Text("Last sync  •  just now").Size(12).Color(AppTheme.MutedText)
@@ -191,7 +193,7 @@ Private Sub InitializeDashboard
     MetricUptimeExpanded.Initialize.Child(MetricCardUptime)
     MetricsRow.Initialize.Spacing(10dip).AddChild(MetricActiveExpanded).AddChild(MetricUptimeExpanded)
 
-    BtnOpenActivity.Initialize.Text("VIEW ACTIVITY").BackgroundColor(AppTheme.Accent).TextColor(Colors.White).OnClick(Me, "NavigateToActivity_Click")
+    BtnOpenActivity.Initialize.Text("VIEW ACTIVITY").BackgroundColor(AppTheme.Accent).TextColor(AppTheme.AccentText).OnClick(Me, "NavigateToActivity_Click")
     BtnOpenSettings.Initialize.Text("SETTINGS").BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText).OnClick(Me, "NavigateToSettings_Click")
     HeroActions.Initialize.Spacing(8dip).AddChild(BtnOpenActivity).AddChild(BtnOpenSettings)
     DashboardDivider.Initialize.Color(AppTheme.Divider)
@@ -258,7 +260,7 @@ Private Sub InitializeActivity
     ActivityList.Initialize.Spacing(8dip).AddChild(ActivityCardOne).AddChild(ActivityCardTwo).AddChild(ActivityCardThree).AddChild(ActivityCardFour).AddChild(ActivityCardFive).AddChild(ActivityCardSix)
     ActivityScroll.Initialize.Child(ActivityList)
     ActivityScrollExpanded.Initialize.Child(ActivityScroll)
-    BtnRefreshActivity.Initialize.Text("REFRESH STREAM").BackgroundColor(AppTheme.Info).TextColor(Colors.White).OnClick(Me, "RefreshActivity_Click")
+    BtnRefreshActivity.Initialize.Text("REFRESH STREAM").BackgroundColor(AppTheme.Info).TextColor(AppTheme.InfoText).OnClick(Me, "RefreshActivity_Click")
     BtnActivityBack.Initialize.Text("BACK TO DASHBOARD").BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText).OnClick(Me, "NavigateToDashboard_Click")
     ActivityBody.Initialize.Spacing(10dip) _
         .AddChild(LblActivityOverline) _
@@ -280,7 +282,7 @@ Private Sub InitializeSettings
     LblSettingsDescription.Initialize.Text("These controls are live and update the mounted screen.").Size(14).Color(AppTheme.SecondaryText)
     LblThemeStatus.Initialize.Text("Theme: light workspace").Size(15).Color(AppTheme.PrimaryText)
     LblRuntimeStatus.Initialize.Text("Runtime: connected  •  latency 42 ms").Size(13).Color(AppTheme.Accent)
-    BtnTheme.Initialize.Text("TOGGLE THEME STATUS").BackgroundColor(AppTheme.ThemeAction).TextColor(Colors.White).OnClick(Me, "ToggleTheme_Click")
+    BtnTheme.Initialize.Text("TOGGLE THEME STATUS").BackgroundColor(AppTheme.ThemeAction).TextColor(AppTheme.ThemeActionText).OnClick(Me, "ToggleTheme_Click")
     BtnSettingsBack.Initialize.Text("BACK TO DASHBOARD").BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText).OnClick(Me, "NavigateToDashboard_Click")
     SettingsCardBody.Initialize.Spacing(8).AddChild(LblSettingsTitle).AddChild(LblSettingsDescription).AddChild(LblThemeStatus).AddChild(LblRuntimeStatus).AddChild(BtnTheme)
     SettingsCardPadding.Initialize.All(18dip).Child(SettingsCardBody)
@@ -310,8 +312,7 @@ End Sub
 Private Sub UpdateActiveLabels
     If UiMounted = False Then Return
     If ActiveRoute = "Dashboard" Then
-        LblValue.Text("" & CounterState.GetState)
-        LblValue.Render
+        ' LblValue is bound directly to CounterState.
     Else If ActiveRoute = "Activity" Then
         LblActivityRefreshes.Text("Refresh cycles: " & ActivityRefreshState.GetState)
         LblActivityRefreshes.Render
@@ -382,11 +383,11 @@ Private Sub ApplyTheme
     LblThemeStatus.Color(AppTheme.PrimaryText)
     LblRuntimeStatus.Color(AppTheme.Accent)
 
-    BtnOpenActivity.BackgroundColor(AppTheme.Accent).TextColor(Colors.White)
+    BtnOpenActivity.BackgroundColor(AppTheme.Accent).TextColor(AppTheme.AccentText)
     BtnOpenSettings.BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText)
-    BtnRefreshActivity.BackgroundColor(AppTheme.Info).TextColor(Colors.White)
+    BtnRefreshActivity.BackgroundColor(AppTheme.Info).TextColor(AppTheme.InfoText)
     BtnActivityBack.BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText)
-    BtnTheme.BackgroundColor(AppTheme.ThemeAction).TextColor(Colors.White)
+    BtnTheme.BackgroundColor(AppTheme.ThemeAction).TextColor(AppTheme.ThemeActionText)
     BtnSettingsBack.BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText)
 End Sub
 
@@ -436,14 +437,7 @@ Sub RefreshActivity_Click
     ActivityRefreshState.SetState(currentValue + 1)
 End Sub
 
-' UIState callbacks update only the widget that depends on the changed value.
-Sub CounterState_Changed(State As UIState)
-    If UiMounted And ActiveRoute = "Dashboard" Then
-        LblValue.Text("" & State.GetState)
-        LblValue.Render
-    End If
-End Sub
-
+' UIState updates LblValue through UILabel.BindText.
 Sub ActivityRefreshState_Changed(State As UIState)
     If UiMounted And ActiveRoute = "Activity" Then
         LblActivityRefreshes.Text("Refresh cycles: " & State.GetState)
@@ -453,12 +447,10 @@ End Sub
 
 ' Reapplies layout after the activity resumes.
 Sub Activity_Resume
-    CounterState.Subscribe(Me, "CounterState_Changed")
     ActivityRefreshState.Subscribe(Me, "ActivityRefreshState_Changed")
     BuildUI
 End Sub
 
 Sub Activity_Pause (UserClosed As Boolean)
-    CounterState.Unsubscribe(Me, "CounterState_Changed")
     ActivityRefreshState.Unsubscribe(Me, "ActivityRefreshState_Changed")
 End Sub

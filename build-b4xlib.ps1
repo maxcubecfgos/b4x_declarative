@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$output = Join-Path $root 'DeclarativeUI-0.1.b4xlib'
+$output = Join-Path $root 'DeclarativeUI.b4xlib'
 $stage = Join-Path ([IO.Path]::GetTempPath()) ('DeclarativeUI_b4xlib_' + [Guid]::NewGuid().ToString('N'))
 $tempZip = Join-Path ([IO.Path]::GetTempPath()) ('DeclarativeUI_b4xlib_' + [Guid]::NewGuid().ToString('N') + '.zip')
 
@@ -15,6 +15,7 @@ $expectedModules = @(
     'UIDivider.bas'
     'UIExpanded.bas'
     'UIFloatingActionButton.bas'
+    'UIInput.bas'
     'UILabel.bas'
     'UINavigator.bas'
     'UIPadding.bas'
@@ -22,8 +23,10 @@ $expectedModules = @(
     'UIScaffold.bas'
     'UIScrollView.bas'
     'UISpace.bas'
+    'UIStack.bas'
     'UIState.bas'
     'UITheme.bas'
+    'UIVisibility.bas'
 )
 
 try {
@@ -58,9 +61,11 @@ try {
         ''
         'Dependencies: XUI and IME. This release is B4A-only.'
         ''
-        'See the project GUIDE.md for the complete usage documentation.'
+        'SYNTAX.md is the included syntax and API compatibility contract.'
+        'See the project GUIDE.md for the complete usage documentation and examples.'
     ) -join [Environment]::NewLine
     [IO.File]::WriteAllText((Join-Path $stage 'README.txt'), $packageReadme, $utf8NoBom)
+    Copy-Item -LiteralPath (Join-Path $root 'SYNTAX.md') -Destination (Join-Path $stage 'SYNTAX.md')
 
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     [IO.Compression.ZipFile]::CreateFromDirectory($stage, $tempZip, [IO.Compression.CompressionLevel]::Optimal, $false)
@@ -69,11 +74,11 @@ try {
     $zip = [IO.Compression.ZipFile]::OpenRead($tempZip)
     try {
         $entries = @($zip.Entries)
-        $expectedEntries = @('README.txt', 'manifest.txt') + $expectedModules
+        $expectedEntries = @('README.txt', 'SYNTAX.md', 'manifest.txt') + $expectedModules
         $actualEntries = @($entries | ForEach-Object FullName)
         $missingEntries = @($expectedEntries | Where-Object { $_ -notin $actualEntries })
         $unexpectedEntries = @($actualEntries | Where-Object { $_ -notin $expectedEntries })
-        if ($entries.Count -ne 20 -or $missingEntries.Count -gt 0 -or $unexpectedEntries.Count -gt 0) {
+        if ($entries.Count -ne 24 -or $missingEntries.Count -gt 0 -or $unexpectedEntries.Count -gt 0) {
             throw ('Package entry mismatch. Missing: ' + ($missingEntries -join ', ') + '; unexpected: ' + ($unexpectedEntries -join ', '))
         }
 
@@ -106,7 +111,7 @@ try {
     Write-Host ('File: ' + $output)
     Write-Host ('Size: ' + $fileInfo.Length + ' bytes')
     Write-Host ('SHA-256: ' + $hash)
-    Write-Host 'Contents: 18 UI modules + manifest.txt + README.txt'
+    Write-Host 'Contents: 21 UI modules + manifest.txt + README.txt + SYNTAX.md'
 }
 catch {
     Write-Error ('The b4xlib could not be created or validated: ' + $_.Exception.Message)

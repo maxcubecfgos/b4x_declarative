@@ -2,7 +2,7 @@
 
 A small, code-first declarative UI layer for native B4A applications.
 
-> **Documentation:** See [GUIDE.md](GUIDE.md) for installation, examples, widget APIs, lifecycle, layout, events, themes, navigation and troubleshooting.
+> **Documentation:** See [GUIDE.md](GUIDE.md) for installation, examples, widget APIs, lifecycle, layout, events, themes, navigation and troubleshooting. See [SYNTAX.md](SYNTAX.md) for the stable syntax and API compatibility contract.
 
 This project explores a Flutter-inspired way to compose Android interfaces in B4A while keeping the result native, lightweight, and understandable. It does not try to recreate Flutter internally. Instead, it provides a focused set of composable widgets with a predictable mount, measure, layout, render, and unmount lifecycle.
 
@@ -12,34 +12,39 @@ The included **NOVA Control Center** is a demonstration application designed to 
 - Natural child measurement
 - Vertical and horizontal layout
 - Flexible children through `UIExpanded`
+- Conditional composition through `UIVisibility`
+- Z-axis composition through `UIStack`
 - A native `ScrollView` wrapped as `UIScrollView`
 - Virtual navigation inside one real B4A Activity
 - Automatic safe-area handling below the Android status area
 - Observable runtime state updates for counters and activity refreshes
 - Reusable light and dark palettes through `UITheme`
-- Native B4A buttons and floating action buttons with declarative callbacks
+- Native B4A buttons, floating action buttons, and text inputs with declarative callbacks
 
 ## Project structure
 
 | File | Responsibility |
 | --- | --- |
 | `Declarative UI.b4a` | NOVA demo Activity and screen composition |
-| `UITheme.bas` | Reusable light/dark color palette |
+| `UITheme.bas` | Reusable light/dark seed-color scheme and semantic palette |
 | `UIState.bas` | Observable state holder with selective callbacks |
 | `UIScrollView.bas` | Declarative wrapper around the native B4A `ScrollView` |
 | `UINavigator.bas` | Virtual screen registration, navigation, and safe-area host |
 | `UIScaffold.bas` | App bar, body, and optional floating action button layout |
-| `UIColumn.bas` | Vertical child layout with natural measurement and axis alignment |
-| `UIRow.bas` | Horizontal child layout with natural measurement and axis alignment |
+| `UIColumn.bas` | Vertical child layout with natural measurement, axis sizing and alignment |
+| `UIRow.bas` | Horizontal child layout with natural measurement, axis sizing and alignment |
 | `UIExpanded.bas` | Flexible space marker for Column and Row |
+| `UIVisibility.bas` | Conditionally includes or removes one child from layout |
+| `UIStack.bas` | Overlapping children with natural measurement and alignment |
 | `UIPadding.bas` | Flutter-inspired padding around a child (`All`, `Horizontal`, `Vertical`, `Only`) |
 | `UICard.bas` | Rounded surface with background and border colors |
 | `UIBox.bas` | Lightweight padded child container |
 | `UICenter.bas` | Centers a child using its measured natural size |
-| `UILabel.bas` | Native label wrapper |
-| `UIButton.bas` | Native button wrapper with safe callback dispatch |
-| `UIFloatingActionButton.bas` | Compact native floating action button with safe callback dispatch |
-| `UIAppBar.bas` | App bar with a persistent, vertically centered title |
+| `UILabel.bas` | Native label wrapper with optional `UIState` text binding |
+| `UIButton.bas` | Native button wrapper with safe callbacks and optional `UIState` text binding |
+| `UIFloatingActionButton.bas` | Compact native floating action button with safe callbacks and optional `UIState` text binding |
+| `UIInput.bas` | Native text input with natural measurement, optional state binding, and safe text-change callbacks |
+| `UIAppBar.bas` | App bar with a persistent title and optional `UIState` binding |
 | `UIDivider.bas` | Themed horizontal divider |
 | `UISpace.bas` | Fixed-size layout spacer |
 
@@ -91,9 +96,36 @@ result.Add(naturalHeight)
 Return result
 ```
 
-An empty list represents a flexible child. `UIColumn` and `UIRow` first measure natural children, then distribute the remaining space among flexible children such as `UIExpanded`. When all children have natural sizes, `MainAxisAlignment` can place them at the start, center, end, or distribute the free space evenly. `CrossAxisAlignment` controls the perpendicular axis and supports `stretch`, `start`, `center`, and `end`. The default remains `stretch`.
+An empty list represents a flexible child. `UIColumn` and `UIRow` first measure natural children, then distribute the remaining space among flexible children such as `UIExpanded`. When all children have natural sizes, `MainAxisAlignment` can place them at the start, center, end, or distribute the free space evenly. `MainAxisSize` controls whether the container keeps its natural size (`min`) or uses all assigned space (`max`, the default). An empty container with `MainAxisSize("min")` has zero size on its main axis. The visible difference is greatest when the parent assigns more space than the children naturally need; nested parents still determine the constraints passed to each child. `CrossAxisAlignment` controls the perpendicular axis and supports `stretch`, `start`, `center`, and `end`. The default remains `stretch`.
 
 This avoids hard-coding every label height and prevents common clipping problems caused by positioning text using arbitrary constants.
+
+`UIVisibility` can conditionally include a child in the measured tree:
+
+```basic
+Dim detailsVisibility As UIVisibility
+detailsVisibility.Initialize _
+    .Visible(True) _
+    .Child(detailsCard)
+
+' After changing visibility, render the parent container to reflow siblings.
+detailsVisibility.Visible(False)
+dashBoardBody.Render
+```
+
+When hidden, the wrapper reports a natural size of `0, 0`, unmounts the child's native views and allows `UIColumn` or `UIRow` to place the remaining children without a gap.
+
+`UIStack` provides Flutter-like Z-axis composition:
+
+```basic
+Dim layered As UIStack
+layered.Initialize _
+    .Alignment("bottomRight") _
+    .AddChild(backgroundCard) _
+    .AddChild(statusBadge)
+```
+
+The stack measures to the largest participating natural child. Flexible children receive the full stack bounds. Children are rendered in insertion order, so later children appear above earlier children.
 
 ## UIScrollView
 
@@ -132,15 +164,37 @@ ActivityBody.Initialize.Spacing(10dip) _
 
 `UIState` is a small observable value holder for application state. It keeps state outside widgets and notifies only the callbacks subscribed to that value.
 
+For a label, the widget can own the subscription declaratively:
+
 ```basic
 Private CounterState As UIState
+Private CounterLabel As UILabel
 
-CounterState.Initialize(0).Subscribe(Me, "CounterState_Changed")
+CounterState.Initialize(0)
+CounterLabel.Initialize.BindText(CounterState).Size(48)
 
 Sub Increment_Click
     Dim value As Int = CounterState.GetState
     CounterState.SetState(value + 1)
 End Sub
+```
+
+`BindText` applies the current value immediately and renders the label when the state changes. Use `UnbindText` when the binding should be removed. `UIButton` and `UIFloatingActionButton` expose the same optional `BindText`/`UnbindText` pattern for reactive captions. Calling `Text(...)` afterwards replaces the binding and makes the caption static. App bar titles support the same optional pattern:
+
+```basic
+Private ScreenTitleState As UIState
+Private AppBar As UIAppBar
+
+ScreenTitleState.Initialize("Dashboard")
+AppBar.Initialize.BindTitle(ScreenTitleState)
+
+ScreenTitleState.SetState("Activity")
+```
+
+Use `UnbindTitle` to stop observing the title state. The existing callback API remains available for custom or composite updates:
+
+```basic
+CounterState.Subscribe(Me, "CounterState_Changed")
 
 Sub CounterState_Changed(State As UIState)
     CounterLabel.Text("" & State.GetState)
@@ -148,7 +202,30 @@ Sub CounterState_Changed(State As UIState)
 End Sub
 ```
 
-This is selective notification, not a full virtual-DOM diff engine. The host still decides which widget belongs to the state callback, while `UIState` removes the need to manually call a root rebuild for simple value changes.
+`UIState.UnsubscribeTarget` removes every subscription owned by one widget or object. This is selective notification, not a full virtual-DOM diff engine: bindings update their target widget, while structural changes still require updating and rendering the tree.
+
+### UIInput
+
+`UIInput` wraps a native B4A `EditText` while keeping it inside the same declarative layout protocol:
+
+```basic
+Private NameState As UIState
+Private NameInput As UIInput
+
+NameState.Initialize("")
+NameInput.Initialize _
+    .Hint("Operator name") _
+    .BindText(NameState) _
+    .OnTextChanged(Me, "Name_Changed")
+
+Sub Name_Changed(NewText As String)
+    NameState.SetState(NewText)
+End Sub
+```
+
+`BindText` is one-way: it applies state values to the input, but the input does not mutate the state automatically. The callback receives the user's new text so the host can validate, transform, or store it explicitly. `Text(...)` removes the state binding, and `GetText` returns the current text. Programmatic updates do not invoke `OnTextChanged`; the callback represents user edits only.
+
+The input preserves its native `EditText` during normal renders, so a focused keyboard field is not recreated just because its parent recalculates bounds. `UIColumn`, `UIRow`, `UIPadding` and `UICenter` can use its natural 48dip height and measured width.
 
 ## UITheme
 
@@ -157,10 +234,12 @@ This is selective notification, not a full virtual-DOM diff engine. The host sti
 ```basic
 Private AppTheme As UITheme
 
-AppTheme.Initialize
+' Scheme is a seed color; the remaining semantic colors are derived from it.
+AppTheme.Initialize.Scheme(0xFF00A896)
 Dim background As Int = AppTheme.Background
 Dim cardSurface As Int = AppTheme.Surface
 Dim primaryText As Int = AppTheme.PrimaryText
+Dim buttonText As Int = AppTheme.AccentText
 ```
 
 Switch palettes at runtime:
@@ -188,6 +267,12 @@ Available palette groups include:
 - `Border`
 - `ButtonText`
 - `ThemeAction`
+- `AccentText`
+- `InfoText`
+- `NegativeText`
+- `ThemeActionText`
+
+`Scheme(seedColor)` changes the seed while keeping the same semantic property names. `InitializeWithScheme(seedColor)` is the one-call alternative. Foreground properties such as `AccentText` and `ThemeActionText` choose a readable light or dark text color for their corresponding background.
 
 The demo's `ApplyTheme` method injects these colors into the existing widget instances and then remounts the active virtual screen. The palette remains reusable because `UITheme` only provides values; it does not know about NOVA screens or controls.
 
@@ -261,6 +346,10 @@ For a forum presentation, use this sequence:
 6. Return to Dashboard and verify that navigation and state remain intact.
 
 The most important comparison with imperative UI code is that the demo describes a reusable tree of widgets. Native views are still used underneath, but screen composition, measurement, and mounting are handled consistently by the declarative layer.
+
+## Stable syntax contract
+
+The public syntax and compatibility rules are maintained in [SYNTAX.md](SYNTAX.md). New releases should preserve the documented fluent API, callback conventions, state-binding precedence, layout values and lifecycle protocol. If a future change breaks one of those rules, it must include a migration note and a contract-version update.
 
 ## Design principles
 

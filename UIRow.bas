@@ -8,6 +8,7 @@ Sub Class_Globals
 	Private xui As XUI
 	Private mChildren As List
 	Private mSpacing As Int
+	Private mMainAxisSize As String
 	Private mMainAxisAlignment As String
 	Private mCrossAxisAlignment As String
 	Private mBaseView As B4XView
@@ -18,6 +19,7 @@ End Sub
 Public Sub Initialize As UIRow
 	mChildren.Initialize
 	mSpacing = 0
+	mMainAxisSize = "max"
 	mMainAxisAlignment = "start"
 	mCrossAxisAlignment = "stretch"
 	Return Me
@@ -30,6 +32,18 @@ End Sub
 
 Public Sub Spacing(Value As Int) As UIRow
 	mSpacing = Max(0, Value)
+	Return Me
+End Sub
+
+' Controls whether the row uses its natural width or all assigned width.
+' Accepted values: min, max. The default is max.
+Public Sub MainAxisSize(Value As String) As UIRow
+	Dim normalized As String = Value.Trim.ToLowerCase
+	If normalized = "min" Or normalized = "max" Then
+		mMainAxisSize = normalized
+	Else
+		mMainAxisSize = "max"
+	End If
 	Return Me
 End Sub
 
@@ -88,16 +102,22 @@ Public Sub Render
 		mBaseView.Color = Colors.Transparent
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
-	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
-    
-	If mChildren.Size = 0 Then Return
+	If mChildren.Size = 0 Then
+		Dim emptyWidth As Int = mWidth
+		If mMainAxisSize = "min" Then emptyWidth = 0
+		mBaseView.SetLayoutAnimated(0, mLeft, mTop, emptyWidth, mHeight)
+		Return
+	End If
     
 	' First pass: measure children and classify flexible items.
 	' Measure every child and classify flexible items.
 	Dim expandedCount As Int = 0
 	Dim totalNaturalWidth As Int = 0
+	Dim participantCount As Int = 0
 	
 	For Each child As Object In mChildren
+		Dim participates As Boolean = IsLayoutParticipant(child)
+		If participates Then participantCount = participantCount + 1
 		Dim size As List = CallSub3(child, "GetContentSize", mWidth, mHeight)
 		Dim hasNaturalSize As Boolean = False
 		If size <> Null Then
@@ -105,6 +125,7 @@ Public Sub Render
 				If size.Size >= 2 Then hasNaturalSize = True
 			End If
 		End If
+		If participates = False Then Continue
 		If hasNaturalSize Then
 			totalNaturalWidth = totalNaturalWidth + size.Get(0)
 		Else
@@ -112,10 +133,18 @@ Public Sub Render
 			expandedCount = expandedCount + 1
 		End If
 	Next
-	totalNaturalWidth = totalNaturalWidth + mSpacing * Max(0, mChildren.Size - 1)
+	totalNaturalWidth = totalNaturalWidth + mSpacing * Max(0, participantCount - 1)
+
+	' MainAxisSize(min) keeps the container at its natural width.
+	' A UIExpanded child needs the assigned width, so max behavior is retained.
+	Dim layoutWidth As Int = mWidth
+	If mMainAxisSize = "min" And expandedCount = 0 Then
+		layoutWidth = Min(mWidth, totalNaturalWidth)
+	End If
+	mBaseView.SetLayoutAnimated(0, mLeft, mTop, layoutWidth, mHeight)
     
 	' Fixed children keep their natural size; overflow is clipped by the parent.
-	Dim remainingWidth As Int = Max(0, mWidth - totalNaturalWidth)
+	Dim remainingWidth As Int = Max(0, layoutWidth - totalNaturalWidth)
 	Dim expandedWidth As Int = 0
 	Dim expandedRemainder As Int = 0
 	If expandedCount > 0 Then
@@ -127,26 +156,31 @@ Public Sub Render
 	Dim initialOffset As Int = 0
 	Dim layoutSpacing As Int = mSpacing
 	If expandedCount = 0 Then
-		Dim freeSpace As Int = Max(0, mWidth - totalNaturalWidth)
+		Dim freeSpace As Int = Max(0, layoutWidth - totalNaturalWidth)
 		Select Case mMainAxisAlignment
 			Case "center"
 				initialOffset = freeSpace / 2
 			Case "end"
 				initialOffset = freeSpace
 			Case "spacebetween"
-				If mChildren.Size > 1 Then layoutSpacing = mSpacing + freeSpace / (mChildren.Size - 1)
+				If participantCount > 1 Then layoutSpacing = mSpacing + freeSpace / (participantCount - 1)
 			Case "spacearound"
-				layoutSpacing = mSpacing + freeSpace / mChildren.Size
-				initialOffset = (layoutSpacing - mSpacing) / 2
+				If participantCount > 0 Then
+					layoutSpacing = mSpacing + freeSpace / participantCount
+					initialOffset = (layoutSpacing - mSpacing) / 2
+				End If
 			Case "spaceevenly"
-				layoutSpacing = mSpacing + freeSpace / (mChildren.Size + 1)
-				initialOffset = layoutSpacing - mSpacing
+				If participantCount > 0 Then
+					layoutSpacing = mSpacing + freeSpace / (participantCount + 1)
+					initialOffset = layoutSpacing - mSpacing
+				End If
 		End Select
 	End If
 	Dim currentLeft As Int = initialOffset
-	Dim childIndex As Int = 0
+	Dim participantIndex As Int = 0
     
 	For Each child As Object In mChildren
+		Dim participates As Boolean = IsLayoutParticipant(child)
 		Dim currentWidth As Int = 0
 		Dim childHeight As Int
 		Dim childTop As Int
@@ -158,7 +192,9 @@ Public Sub Render
 				If size.Size >= 2 Then hasNaturalSize = True
 			End If
 		End If
-		If hasNaturalSize Then
+		If participates = False Then
+			currentWidth = 0
+		Else If hasNaturalSize Then
 			currentWidth = size.Get(0) ' Ancho natural
 		Else
 			currentWidth = expandedWidth ' También se expande
@@ -171,7 +207,8 @@ Public Sub Render
 		If currentWidth < 0 Then currentWidth = 0
 		childHeight = mHeight
 		childTop = 0
-		If mCrossAxisAlignment <> "stretch" And hasNaturalSize Then
+		If participates = False Then childHeight = 0
+		If mCrossAxisAlignment <> "stretch" And hasNaturalSize And participates Then
 			childHeight = Min(size.Get(1), mHeight)
 			If mCrossAxisAlignment = "center" Then
 				childTop = (mHeight - childHeight) / 2
@@ -188,8 +225,10 @@ Public Sub Render
 		End If
         
 		currentLeft = currentLeft + currentWidth
-		childIndex = childIndex + 1
-		If childIndex < mChildren.Size Then currentLeft = currentLeft + layoutSpacing
+		If participates Then
+			participantIndex = participantIndex + 1
+			If participantIndex < participantCount Then currentLeft = currentLeft + layoutSpacing
+		End If
 	Next
 End Sub
 
@@ -216,8 +255,11 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim maxChildHeight As Int = 0
 	Dim hasExpanded As Boolean = False
 	Dim naturalChildCount As Int = 0
+	Dim participantCount As Int = 0
 	
 	For Each child As Object In mChildren
+		Dim participates As Boolean = IsLayoutParticipant(child)
+		If participates Then participantCount = participantCount + 1
 		Dim size As List = CallSub3(child, "GetContentSize", safeMaxWidth, safeMaxHeight)
 		Dim hasNaturalSize As Boolean = False
 		If size <> Null Then
@@ -225,6 +267,7 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 				If size.Size >= 2 Then hasNaturalSize = True
 			End If
 		End If
+		If participates = False Then Continue
 		If hasNaturalSize Then
 			totalNaturalWidth = totalNaturalWidth + size.Get(0)
 			maxChildHeight = Max(maxChildHeight, size.Get(1))
@@ -233,10 +276,10 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 			hasExpanded = True
 		End If
 	Next
-	totalNaturalWidth = totalNaturalWidth + mSpacing * Max(0, mChildren.Size - 1)
+	totalNaturalWidth = totalNaturalWidth + mSpacing * Max(0, participantCount - 1)
 	
 	' If every child is flexible, return the flexible marker.
-	If hasExpanded And naturalChildCount = 0 Then
+	If participantCount > 0 And hasExpanded And naturalChildCount = 0 Then
 		Dim flexibleSize As List
 		flexibleSize.Initialize
 		Return flexibleSize
@@ -247,4 +290,13 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	result.Add(Min(totalNaturalWidth, safeMaxWidth))
 	result.Add(Min(maxChildHeight, safeMaxHeight))
 	Return result
+End Sub
+
+Private Sub IsLayoutParticipant(Child As Object) As Boolean
+	If Child = Null Then Return False
+	If xui.SubExists(Child, "ParticipatesInLayout", 0) Then
+		Dim result As Boolean = CallSub(Child, "ParticipatesInLayout")
+		Return result
+	End If
+	Return True
 End Sub

@@ -6,6 +6,7 @@ Version=13.5
 @EndOfDesignText@
 Sub Class_Globals
 	Private mText As String
+	Private mTextState As UIState
 	Public mSize As Int
 	Private mTextColor As Int
 	Private mGravityValue As Int
@@ -25,6 +26,40 @@ End Sub
 Public Sub Text(t As String) As UILabel
 	mText = t
 	Return Me
+End Sub
+
+' Binds the label text to an observable UIState.
+' The current state value is applied immediately and future changes render this label.
+Public Sub BindText(State As UIState) As UILabel
+	If mTextState <> Null Then
+		If mTextState.IsInitialized Then mTextState.Unsubscribe(Me, "TextState_Changed")
+	End If
+	mTextState = State
+	If mTextState <> Null Then
+		If mTextState.IsInitialized Then
+			mText = "" & mTextState.GetState
+			mTextState.Subscribe(Me, "TextState_Changed")
+			If mParent <> Null Then
+				If mParent.IsInitialized Then Render
+			End If
+		End If
+	End If
+	Return Me
+End Sub
+
+' Removes the text binding while preserving the current displayed text.
+Public Sub UnbindText As UILabel
+	If mTextState <> Null Then
+		If mTextState.IsInitialized Then mTextState.Unsubscribe(Me, "TextState_Changed")
+	End If
+	mTextState = Null
+	Return Me
+End Sub
+
+Private Sub TextState_Changed(State As UIState)
+	If State = Null Then Return
+	mText = "" & State.GetState
+	Render
 End Sub
 
 Public Sub Size(s As Int) As UILabel

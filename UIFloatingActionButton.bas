@@ -7,6 +7,7 @@ Version=13.5
 Sub Class_Globals
     Private xui As XUI
     Private mText As String
+    Private mTextState As UIState
 	Private mBgColor As Int
 	Private mTextColor As Int
 	Private mTarget As Object
@@ -27,8 +28,47 @@ Public Sub Initialize As UIFloatingActionButton
 End Sub
 
 Public Sub Text(t As String) As UIFloatingActionButton
+	' An explicit text replaces any previous state binding.
+	If mTextState <> Null Then
+		If mTextState.IsInitialized Then mTextState.Unsubscribe(Me, "TextState_Changed")
+	End If
+	mTextState = Null
 	mText = t
 	Return Me
+End Sub
+
+' Binds the floating action button text to an observable UIState.
+Public Sub BindText(State As UIState) As UIFloatingActionButton
+	If mTextState <> Null Then
+		If mTextState.IsInitialized Then mTextState.Unsubscribe(Me, "TextState_Changed")
+	End If
+	mTextState = State
+	If mTextState <> Null Then
+		If mTextState.IsInitialized Then
+			mText = "" & mTextState.GetState
+			mTextState.Subscribe(Me, "TextState_Changed")
+			If mParent <> Null Then
+				If mParent.IsInitialized Then Render
+			End If
+		End If
+	End If
+	Return Me
+End Sub
+
+' Removes the text binding while preserving the current displayed text.
+Public Sub UnbindText As UIFloatingActionButton
+	If mTextState <> Null Then
+		If mTextState.IsInitialized Then mTextState.Unsubscribe(Me, "TextState_Changed")
+	End If
+	mTextState = Null
+	Return Me
+End Sub
+
+Private Sub TextState_Changed(State As UIState)
+	If State = Null Then Return
+	If State.IsInitialized = False Then Return
+	mText = "" & State.GetState
+	Render
 End Sub
 
 Public Sub BackgroundColor(c As Int) As UIFloatingActionButton

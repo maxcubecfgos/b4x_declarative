@@ -6,6 +6,7 @@ Version=13.5
 @EndOfDesignText@
 Sub Class_Globals
 	Private mTitle As String
+	Private mTitleState As UIState
 	Private mColor As Int
 	Private mBaseView As B4XView
 	Private mParent As B4XView
@@ -20,8 +21,48 @@ Public Sub Initialize As UIAppBar
 End Sub
 
 Public Sub Title(t As String) As UIAppBar
+	' An explicit title replaces any previous state binding.
+	If mTitleState <> Null Then
+		If mTitleState.IsInitialized Then mTitleState.Unsubscribe(Me, "TitleState_Changed")
+	End If
+	mTitleState = Null
 	mTitle = t
 	Return Me
+End Sub
+
+' Binds the app bar title to an observable UIState.
+' The current state value is applied immediately and future changes re-render the title.
+Public Sub BindTitle(State As UIState) As UIAppBar
+	If mTitleState <> Null Then
+		If mTitleState.IsInitialized Then mTitleState.Unsubscribe(Me, "TitleState_Changed")
+	End If
+	mTitleState = State
+	If mTitleState <> Null Then
+		If mTitleState.IsInitialized Then
+			mTitle = "" & mTitleState.GetState
+			mTitleState.Subscribe(Me, "TitleState_Changed")
+			If mParent <> Null Then
+				If mParent.IsInitialized Then Render
+			End If
+		End If
+	End If
+	Return Me
+End Sub
+
+' Removes the title binding while preserving the current displayed title.
+Public Sub UnbindTitle As UIAppBar
+	If mTitleState <> Null Then
+		If mTitleState.IsInitialized Then mTitleState.Unsubscribe(Me, "TitleState_Changed")
+	End If
+	mTitleState = Null
+	Return Me
+End Sub
+
+Private Sub TitleState_Changed(State As UIState)
+	If State = Null Then Return
+	If State.IsInitialized = False Then Return
+	mTitle = "" & State.GetState
+	Render
 End Sub
 
 Public Sub BackgroundColor(c As Int) As UIAppBar
