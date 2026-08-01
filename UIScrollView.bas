@@ -90,7 +90,8 @@ Public Sub Render
         mContentHeight = contentHeight
 
         mScrollView.Panel.Height = contentHeight
-        CallSub2(mChild, "SetParent", mScrollView.Panel)
+        Dim contentPanel As B4XView = mScrollView.Panel
+        CallSub2(mChild, "SetParent", contentPanel)
         CallSub3(mChild, "SetPosition", 0, 0)
         CallSub3(mChild, "SetSize", viewportWidth, contentHeight)
         CallSub(mChild, "Render")
