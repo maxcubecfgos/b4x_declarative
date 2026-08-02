@@ -32,6 +32,7 @@ The included **NOVA Control Center** is a demonstration application designed to 
 | `UISnackBar.bas` | Transient overlay notification with optional action callback |
 | `UIAnimation.bas` | Small opt-in native bounds animation utility with cancellation and completion callbacks |
 | `UIScrollView.bas` | Declarative wrapper around the native B4A `ScrollView` |
+| `UIListView.bas` | Fixed-height virtualized list with pooled declarative item widgets |
 | `UINavigator.bas` | Virtual screen registration, navigation, and safe-area host |
 | `UIScaffold.bas` | App bar, body, bottom navigation, and optional floating action button layout |
 | `UIBottomNavigationBar.bas` | Declarative bottom navigation with items, selection state, indicator and callbacks |
@@ -205,6 +206,45 @@ End Sub
 ```
 
 `Show` mounts the overlay over the supplied `B4XView`, `Dismiss` removes it, and `Duration(0)` keeps it visible until dismissed. `AnimationDuration(0)` disables the entrance and exit animation. Calling `Show`, `Dismiss` or `Unmount` invalidates older delayed work so an earlier snackbar cannot remove a newer one.
+
+## UIListView
+
+`UIListView` is the efficient option for long, homogeneous vertical datasets. It keeps a small visible window mounted instead of creating one native tree per item:
+
+```basic
+Private NewsItems As List
+Private NewsList As UIListView
+
+Sub BuildNewsList As UIListView
+    NewsItems.Initialize
+    For i = 1 To 5000
+        NewsItems.Add("News item " & i)
+    Next
+
+    NewsList.Initialize _
+        .Items(NewsItems) _
+        .ItemHeight(72dip) _
+        .Overscan(2) _
+        .CreateItem(Me, "CreateNewsItem") _
+        .BindItem(Me, "BindNewsItem")
+    Return NewsList
+End Sub
+
+Sub CreateNewsItem(Index As Int) As Object
+    Dim title As UILabel
+    title.Initialize.Size(16dip)
+    Return title
+End Sub
+
+Sub BindNewsItem(Index As Int, ItemView As Object)
+    Dim title As UILabel = ItemView
+    title.Text("" & NewsList.GetItem(Index))
+End Sub
+```
+
+The list requires a fixed `ItemHeight`. `CreateItem` must return an initialized widget implementing the normal composition protocol, and `BindItem` must update that widget for the current index before it is rendered. `BindItem` is required for safe pooling when rows display changing data. Call `NotifyDataSetChanged` after changing the external data source or the contents of an item.
+
+`UIListView` recycles declarative widget instances and keeps only visible plus overscanned rows mounted. It currently does not implement variable-height rows or a platform `RecyclerView`; recycled widget instances may recreate their internal native controls after unmounting. Use `UIScrollView` for small, variable-height content and `UIListView` for long, fixed-height collections.
 
 ## UIAnimation
 

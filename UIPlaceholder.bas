@@ -108,7 +108,7 @@ Public Sub Render
 	End If
 
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
-	mCanvas.Initialize(mPanel)
+	EnsureCanvas
 	DrawPlaceholder
 End Sub
 
@@ -116,6 +116,8 @@ Private Sub DrawPlaceholder
 	If mBaseView = Null Then Return
 	If mBaseView.IsInitialized = False Then Return
 	If mWidth <= 0 Or mHeight <= 0 Then Return
+	EnsureCanvas
+	If mCanvas = Null Then Return
 
 	mCanvas.DrawColor(Colors.Transparent)
 	Dim safeStroke As Int = Max(1dip, mStrokeWidth)
@@ -129,11 +131,22 @@ Private Sub DrawPlaceholder
 	mCanvas.DrawLine(right, inset, inset, bottom, mColor, safeStroke)
 End Sub
 
+Private Sub EnsureCanvas
+	If mPanel = Null Then Return
+	If mPanel.IsInitialized = False Then Return
+	' Canvas is a reusable wrapper. Rebind it after every remount because
+	' Unmount may have replaced the backing Panel.
+	Dim canvas As Canvas
+	canvas.Initialize(mPanel)
+	mCanvas = canvas
+End Sub
+
 Private Sub RedrawIfMounted
 	If mBaseView = Null Then Return
 	If mBaseView.IsInitialized = False Then Return
 	If mWidth <= 0 Or mHeight <= 0 Then Return
-	mCanvas.Initialize(mPanel)
+	EnsureCanvas
+	If mCanvas = Null Then Return
 	DrawPlaceholder
 End Sub
 
@@ -141,8 +154,7 @@ Public Sub Unmount
 	If mBaseView <> Null Then
 		If mBaseView.IsInitialized Then mBaseView.RemoveViewFromParent
 	End If
-	mCanvas = Null
-	mPanel = Null
+	' Keep the Canvas wrapper alive; Render will rebind it to the next Panel.
 	mBaseView = Null
 	mParent = Null
 End Sub

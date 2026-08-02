@@ -1,4 +1,4 @@
-﻿B4A=true
+B4A=true
 Group=Default Group
 ModulesStructureVersion=1
 Type=Class
@@ -331,14 +331,15 @@ Private Sub BuildNativeItems
         caption.Gravity = Gravity.CENTER
         caption.TextSize = mTextSize
         caption.TextColor = mInactiveColor
-        tabView.AddView(caption, navPadding, mTheme.NavigationCaptionTop, Max(0, currentWidth - 2 * navPadding), Max(0, mHeight - mTheme.NavigationCaptionTop - 6dip))
+        tabView.AddView(caption, navPadding, mTheme.NavigationCaptionTop, Max(0, currentWidth - 2 * navPadding), Max(0, mHeight - mTheme.NavigationCaptionTop - mTheme.NavigationLabelBottomInset))
         mTextLabels.Add(caption)
 
         Dim indicator As Panel
         indicator.Initialize("")
         indicator.Color = mIndicatorColor
         Dim indicatorView As B4XView = indicator
-        tabView.AddView(indicatorView, 6dip, Max(0, mHeight - mTheme.NavigationIndicatorHeight), Max(0, currentWidth - 12dip), mTheme.NavigationIndicatorHeight)
+        Dim indicatorInset As Int = mTheme.NavigationIndicatorInset
+        tabView.AddView(indicatorView, indicatorInset, Max(0, mHeight - mTheme.NavigationIndicatorHeight), Max(0, currentWidth - 2 * indicatorInset), mTheme.NavigationIndicatorHeight)
         mIndicatorViews.Add(indicatorView)
 
         Dim clickSurface As Panel
@@ -410,7 +411,7 @@ End Sub
 
 Private Sub DispatchSelection
     If mTarget = Null Or mEventName.Trim = "" Then Return
-    If xui.SubExists(mTarget, mEventName, 2) = False Then Return
+    If SubExists(mTarget, mEventName) = False Then Return
     CallSub3(mTarget, mEventName, mSelectedIndex, GetSelectedId)
 End Sub
 

@@ -1,4 +1,4 @@
-﻿B4A=true
+B4A=true
 Group=Default Group
 ModulesStructureVersion=1
 Type=Class
@@ -238,7 +238,7 @@ End Sub
 ' Dispatches the configured callback only when the target exposes it.
 Private Sub DispatchClick
 	If mTarget = Null Or mEventName.Trim = "" Then Return
-	If xui.SubExists(mTarget, mEventName, 0) Then CallSub(mTarget, mEventName)
+	If SubExists(mTarget, mEventName) Then CallSub(mTarget, mEventName)
 End Sub
 
 Public Sub TriggerClick

@@ -12,7 +12,7 @@ NumberOfModules=0
 Version=13.62
 @EndOfDesignText@
 #Region  Project Attributes
-    #ApplicationLabel: NOVA UI Lab
+    #ApplicationLabel: Declarative Counter
     #VersionCode: 1
     #VersionName: 1.0
     #SupportedOrientations: portrait
@@ -24,15 +24,17 @@ Version=13.62
     #IncludeTitle: False
 #End Region
 
-' NOVA UI Lab is intentionally small: one Activity, three declarative screens.
-' It is an offline showcase so the first run does not depend on network access.
+' A small, practical example of declarative UI for B4A.
+' It uses one Activity, two screens and explicit buttons instead of a bottom bar.
 
 Sub Process_Globals
-    Private NavigationState As UIState
     Private CounterState As UIState
-    Private CounterTextState As UIState
-    Private NameState As UIState
-    Private GreetingState As UIState
+    Private AdvancedCounterState As UIState
+    Private StepState As UIState
+    Private ProgressState As UIState
+    Private ImcResultState As UIState
+    Private ImcHistoryState As UIState
+    Private ImcHistoryList As List
 End Sub
 
 Sub Globals
@@ -40,37 +42,47 @@ Sub Globals
     Private Navigator As UINavigator
     Private AppTheme As UITheme
     Private Snack As UISnackBar
-    Private HeroCard As UICard
-    Private HeroAnimation As UIAnimation
+    Private ActiveScreen As String
+    Private ActiveCard As UICard
+    Private CardAnimation As UIAnimation
     Private UiMounted As Boolean
     Private LastWidth, LastHeight As Int
-    Private ActiveScreen As String
+    Private WeightInput As UIInput
+    Private HeightInput As UIInput
+    Private ImcResultLabel As UILabel
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
     Root = Activity
-    If NavigationState.IsInitialized = False Then NavigationState.Initialize(0)
     If CounterState.IsInitialized = False Then CounterState.Initialize(0)
-    If CounterTextState.IsInitialized = False Then CounterTextState.Initialize("00")
-    If NameState.IsInitialized = False Then NameState.Initialize("")
-    If GreetingState.IsInitialized = False Then GreetingState.Initialize("Type a name to update this message.")
-    ActiveScreen = "Home"
+    If AdvancedCounterState.IsInitialized = False Then AdvancedCounterState.Initialize(0)
+    If StepState.IsInitialized = False Then StepState.Initialize(1)
+    If ProgressState.IsInitialized = False Then ProgressState.Initialize(0)
+    If ImcResultState.IsInitialized = False Then ImcResultState.Initialize("Enter your values and press CALCULATE")
+    If ImcHistoryState.IsInitialized = False Then ImcHistoryState.Initialize("No calculations yet.")
+    If ImcHistoryList.IsInitialized = False Then ImcHistoryList.Initialize
 
+    ActiveScreen = "Simple"
     AppTheme.Initialize.Scheme(0xFF6558D3)
-    Root.Color = AppTheme.Background
-    Snack.Initialize.ApplyTheme(AppTheme).CornerRadius(AppTheme.SnackbarRadius)
+    Snack.Initialize.ApplyTheme(AppTheme)
     RebuildScreens
 End Sub
 
-' Recreates only the virtual screen tree. The native Activity remains untouched.
+' Rebuilds the declarative tree while preserving the current route.
 Private Sub RebuildScreens
+    Dim route As String = ActiveScreen
+    If route.Trim = "" Then route = "Simple"
+
     If Navigator <> Null Then
         If Navigator.IsInitialized Then Navigator.Unmount
     End If
+
     Navigator.Initialize
-    Navigator.AddScreen("Home", BuildHome)
-    Navigator.AddScreen("Components", BuildComponents)
-    Navigator.AddScreen("Playground", BuildPlayground)
+    Navigator.AddScreen("Simple", BuildSimpleScreen)
+    Navigator.AddScreen("Advanced", BuildAdvancedScreen)
+    Navigator.AddScreen("Imc", BuildImcScreen)
+    If route <> "Simple" Then Navigator.NavigateTo(route)
+
     UiMounted = False
     LastWidth = 0
     LastHeight = 0
@@ -81,234 +93,205 @@ End Sub
 ' Screens
 ' ============================================================================
 
-Private Sub BuildHome As UIScaffold
-    Dim eyebrow As UILabel = TextLabel("DECLARATIVE UI FOR B4A", 12, AppTheme.Accent)
-    Dim heading As UILabel = TextLabel("Build interfaces\nthat feel alive.", 30, AppTheme.PrimaryText)
-    Dim intro As UILabel = TextLabel("A compact, Flutter-inspired layer for composing native Android screens with readable B4A code.", 15, AppTheme.SecondaryText)
+Private Sub BuildSimpleScreen As UIScaffold
+    Dim counterBody As UIColumn
+    counterBody.Initialize.Spacing(16dip).MainAxisAlignment("center") _
+        .CrossAxisAlignment("center") _
+        .AddChild(LabelText("You have pushed the button this many times:", AppTheme.BodyLarge, AppTheme.SecondaryText)) _
+        .AddChild(ValueLabel(CounterState, 48))
 
-    Dim titleBlock As UIColumn
-    titleBlock.Initialize.Spacing(7dip).AddChild(eyebrow).AddChild(heading).AddChild(intro)
-
-    Dim placeholder As UIPlaceholder
-    placeholder.Initialize.FallbackSize(260dip, 150dip).Color(AppTheme.Accent).StrokeWidth(2dip) _
-        .ApplyTheme(AppTheme)
-    Dim visualCard As UICard
-    visualCard.Initialize.BackgroundColor(AppTheme.HeroSurface).BorderColor(AppTheme.Border) _
-        .CornerRadius(AppTheme.RadiusLarge).Child(BuildPadding(placeholder, 14dip)).ApplyTheme(AppTheme)
-
-    Dim badge As UICard
-    badge.Initialize.BackgroundColor(AppTheme.Accent).CornerRadius(AppTheme.RadiusSmall) _
-        .Child(BuildPadding(TextLabel("ONE ACTIVITY · THREE SCREENS", 11, AppTheme.AccentText), 8dip))
-    Dim heroStack As UIStack
-    heroStack.Initialize.Alignment("topRight").AddChild(visualCard).AddChild(badge)
-
-    HeroCard.Initialize.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border) _
-        .CornerRadius(AppTheme.RadiusLarge).Child(BuildPadding(BuildColumn2(titleBlock, heroStack), 16dip)) _
-        .ApplyTheme(AppTheme)
-
-    Dim explore As UIButton
-    explore.Initialize.Text("EXPLORE COMPONENTS").BackgroundColor(AppTheme.Accent) _
-        .TextColor(AppTheme.AccentText).CornerRadius(AppTheme.ButtonRadius) _
-        .OnClick(Me, "OpenComponents_Click")
-    Dim tryIt As UIButton
-    tryIt.Initialize.Text("TRY THE PLAYGROUND").BackgroundColor(AppTheme.SurfaceVariant) _
-        .TextColor(AppTheme.ButtonText).CornerRadius(AppTheme.ButtonRadius) _
-        .OnClick(Me, "OpenPlayground_Click")
-    Dim actions As UIRow
-    actions.Initialize.Spacing(10dip).CrossAxisAlignment("center").AddChild(explore).AddChild(tryIt)
-
-    Dim stateCard As UICard = FeatureCard("State-driven", "Change a value and let the bound widgets update themselves.", Chr(61664), AppTheme.Info)
-    Dim layoutCard As UICard = FeatureCard("Measured layout", "Column, Row, Center, Stack and Card compose naturally without manual coordinates.", Chr(61695), AppTheme.Accent)
-    Dim polishCard As UICard = FeatureCard("Native polish", "Themes, rounded controls, navigation, snackbars and animations stay close to native Android.", Chr(61473), AppTheme.Negative)
-
-    Dim features As UIColumn
-    features.Initialize.Spacing(10dip).AddChild(stateCard).AddChild(layoutCard).AddChild(polishCard)
-
-    Dim content As UIColumn
-    content.Initialize.Spacing(14dip).AddChild(HeroCard).AddChild(actions) _
-        .AddChild(TextLabel("WHY THIS APPROACH", 12, AppTheme.MutedText)).AddChild(features)
-    Return Screen("NOVA UI LAB", content)
-End Sub
-
-Private Sub BuildComponents As UIScaffold
-    Dim title As UILabel = TextLabel("A small design system,\ncomposed in code.", 27, AppTheme.PrimaryText)
-    Dim intro As UILabel = TextLabel("The same theme flows through every component. Explicit overrides are still available when a screen needs a distinct accent.", 15, AppTheme.SecondaryText)
-
-    Dim palette As UICard
-    palette.Initialize.BackgroundColor(AppTheme.HeroSurface).BorderColor(AppTheme.Border) _
-        .CornerRadius(AppTheme.RadiusLarge).Child(BuildPadding(BuildPalette, 14dip)).ApplyTheme(AppTheme)
-
-    Dim placeholder As UIPlaceholder
-    placeholder.Initialize.FallbackSize(320dip, 90dip).StrokeWidth(2dip).Color(AppTheme.Info) _
-        .ApplyTheme(AppTheme)
-    Dim placeholderCard As UICard
-    placeholderCard.Initialize.CornerRadius(AppTheme.CardRadius).BorderColor(AppTheme.Info) _
-        .Child(BuildPadding(BuildColumn3(TextLabel("Flutter-like Placeholder", 16, AppTheme.PrimaryText), _
-        TextLabel("A visual layout marker, useful while designing a screen.", 14, AppTheme.SecondaryText), placeholder), 14dip)) _
-        .ApplyTheme(AppTheme)
-
-    Dim divider As UIDivider
-    divider.Initialize.ApplyTheme(AppTheme)
-    Dim button As UIButton
-    button.Initialize.Text("SHOW SNACKBAR").BackgroundColor(AppTheme.Accent) _
-        .TextColor(AppTheme.AccentText).CornerRadius(AppTheme.ButtonRadius) _
-        .OnClick(Me, "ShowComponentsSnack_Click")
-    Dim buttonCard As UICard
-    buttonCard.Initialize.CornerRadius(AppTheme.CardRadius)        .Child(BuildPadding(BuildColumn3( _
-        TextLabel("Interactive controls", 16, AppTheme.PrimaryText), button, divider), 14dip)).ApplyTheme(AppTheme)
-
-    Dim content As UIColumn
-    content.Initialize.Spacing(12dip).AddChild(title).AddChild(intro).AddChild(palette) _
-        .AddChild(placeholderCard).AddChild(buttonCard)
-    Return Screen("COMPONENTS", content)
-End Sub
-
-Private Sub BuildPlayground As UIScaffold
-    Dim title As UILabel = TextLabel("A living screen,\nnot a static mockup.", 27, AppTheme.PrimaryText)
-    Dim intro As UILabel = TextLabel("UIState keeps the counter and the input synchronized while the same Activity handles navigation and feedback.", 15, AppTheme.SecondaryText)
-
-    Dim counterText As UILabel
-    counterText.Initialize.BindText(CounterTextState).Size(52).Color(AppTheme.PrimaryText).ApplyTheme(AppTheme)
-    Dim counterCaption As UILabel = TextLabel("CURRENT VALUE", 11, AppTheme.MutedText)
-    Dim minus As UIButton
-    minus.Initialize.Text("−").BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText) _
-        .CornerRadius(AppTheme.RadiusMedium).OnClick(Me, "Decrement_Click")
-    Dim plus As UIButton
-    plus.Initialize.Text("+").BackgroundColor(AppTheme.Accent).TextColor(AppTheme.AccentText) _
-        .CornerRadius(AppTheme.RadiusMedium).OnClick(Me, "Increment_Click")
-    Dim counterActions As UIRow
-    counterActions.Initialize.Spacing(10dip).MainAxisAlignment("center").AddChild(minus).AddChild(plus)
     Dim counterCard As UICard
-    counterCard.Initialize.BackgroundColor(AppTheme.HeroSurface).CornerRadius(AppTheme.RadiusLarge) _
-        .Child(BuildPadding(BuildColumn3(counterCaption, counterText, counterActions), 16dip)).ApplyTheme(AppTheme)
+    counterCard.Initialize.BackgroundColor(AppTheme.HeroSurface).BorderColor(AppTheme.Border) _
+        .CornerRadius(AppTheme.RadiusLarge).Child(Pad(counterBody, 24dip)).ApplyTheme(AppTheme)
+    ActiveCard = counterCard
 
-    Dim nameInput As UIInput
-    nameInput.Initialize.Hint("Your name").BindText(NameState).OnTextChanged(Me, "Name_Changed") _
-        .CornerRadius(AppTheme.InputRadius).Border(AppTheme.BorderWidth, AppTheme.Border).ApplyTheme(AppTheme)
-    Dim greeting As UILabel
-    greeting.Initialize.BindText(GreetingState).Size(16).ApplyTheme(AppTheme).Color(AppTheme.PrimaryText)
-    Dim greetButton As UIButton
-    greetButton.Initialize.Text("SAY HELLO").BackgroundColor(AppTheme.SurfaceVariant) _
-        .TextColor(AppTheme.ButtonText).CornerRadius(AppTheme.ButtonRadius).OnClick(Me, "Greeting_Click")
-    Dim inputCard As UICard
-    inputCard.Initialize.CornerRadius(AppTheme.CardRadius)        .Child(BuildPadding(BuildColumn4( _
-        TextLabel("Bound input", 16, AppTheme.PrimaryText), nameInput, greeting, greetButton), 14dip)) _
-        .ApplyTheme(AppTheme)
-
-    Dim themeButton As UIButton
-    themeButton.Initialize.Text(ThemeButtonText).BackgroundColor(AppTheme.ThemeAction) _
-        .TextColor(AppTheme.ThemeActionText).CornerRadius(AppTheme.ButtonRadius) _
-        .OnClick(Me, "ToggleTheme_Click")
-    Dim note As UILabel = TextLabel("Toggle the theme to rebuild the same declarative tree with a new palette.", 13, AppTheme.SecondaryText)
-    Dim themeCard As UICard
-    themeCard.Initialize.BorderColor(AppTheme.Border).CornerRadius(AppTheme.CardRadius) _
-        .Child(BuildPadding(BuildColumn2(themeButton, note), 14dip)).ApplyTheme(AppTheme)
+    Dim bmi As UIButton
+    bmi.Initialize.Text("BMI CALCULATOR").CornerRadius(AppTheme.ButtonRadius) _
+        .BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText) _
+        .OnClick(Me, "OpenImc_Click")
 
     Dim content As UIColumn
-    content.Initialize.Spacing(12dip).AddChild(title).AddChild(intro).AddChild(counterCard) _
-        .AddChild(inputCard).AddChild(themeCard)
-    Return Screen("PLAYGROUND", content)
+    content.Initialize.Spacing(14dip).MainAxisAlignment("center") _
+        .AddChild(counterCard).AddChild(bmi)
+
+    Dim fab As UIFloatingActionButton
+    fab.Initialize.Text("+").OnClick(Me, "SimpleIncrement_Click").ApplyTheme(AppTheme)
+
+    Dim result As UIScaffold = ScreenWithAction("DECLARATIVE COUNTER", content, True)
+    result.FloatingActionButtonRight(fab)
+    Return result
+End Sub
+
+Private Sub BuildAdvancedScreen As UIScaffold
+    Dim title As UILabel = LabelText("Advanced counter", AppTheme.HeadlineSmall, AppTheme.PrimaryText)
+    Dim description As UILabel = LabelText("The same declarative model can coordinate several states, controls and visual feedback without manual view updates.", AppTheme.BodyMedium, AppTheme.SecondaryText)
+
+    Dim value As UILabel
+    value.Initialize.BindText(AdvancedCounterState).Size(56).Color(AppTheme.PrimaryText).ApplyTheme(AppTheme)
+
+    Dim minus As UIButton
+    minus.Initialize.Text("−").CornerRadius(AppTheme.RadiusMedium) _
+        .BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText) _
+        .OnClick(Me, "AdvancedDecrement_Click")
+    Dim plus As UIButton
+    plus.Initialize.Text("+").CornerRadius(AppTheme.RadiusMedium) _
+        .BackgroundColor(AppTheme.Accent).TextColor(AppTheme.AccentText) _
+        .OnClick(Me, "AdvancedIncrement_Click")
+    Dim counterButtons As UIRow
+    counterButtons.Initialize.Spacing(12dip).MainAxisAlignment("center") _
+        .AddChild(minus).AddChild(plus)
+
+    Dim counterBody As UIColumn
+    counterBody.Initialize.Spacing(10dip).MainAxisAlignment("center") _
+        .CrossAxisAlignment("center").AddChild(LabelText("ADVANCED VALUE", AppTheme.LabelMedium, AppTheme.MutedText)) _
+        .AddChild(value).AddChild(counterButtons)
+    Dim counterCard As UICard
+    counterCard.Initialize.BackgroundColor(AppTheme.HeroSurface).BorderColor(AppTheme.Border) _
+        .CornerRadius(AppTheme.RadiusLarge).Child(Pad(counterBody, 18dip)).ApplyTheme(AppTheme)
+    ActiveCard = counterCard
+
+    Dim stepLabel As UILabel
+    stepLabel.Initialize.BindText(StepState).Size(AppTheme.BodyLarge).Color(AppTheme.PrimaryText).ApplyTheme(AppTheme)
+    Dim stepTitle As UILabel = LabelText("STEP", AppTheme.LabelMedium, AppTheme.MutedText)
+    Dim smaller As UIButton
+    smaller.Initialize.Text("−").CornerRadius(AppTheme.RadiusSmall) _
+        .BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText) _
+        .OnClick(Me, "StepDown_Click")
+    Dim larger As UIButton
+    larger.Initialize.Text("+").CornerRadius(AppTheme.RadiusSmall) _
+        .BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText) _
+        .OnClick(Me, "StepUp_Click")
+    Dim stepRow As UIRow
+    stepRow.Initialize.Spacing(8dip).CrossAxisAlignment("center") _
+        .AddChild(stepTitle).AddChild(stepLabel).AddChild(smaller).AddChild(larger)
+
+    Dim progress As UIProgressBar
+    progress.Initialize.BindValue(ProgressState).BarHeight(8dip).ApplyTheme(AppTheme)
+    Dim progressLabel As UILabel = LabelText("PROGRESS · 0–100", AppTheme.LabelMedium, AppTheme.MutedText)
+    Dim details As UIColumn
+    details.Initialize.Spacing(8dip).AddChild(stepRow).AddChild(progressLabel).AddChild(progress)
+    Dim detailsCard As UICard
+    detailsCard.Initialize.BorderColor(AppTheme.Border).CornerRadius(AppTheme.CardRadius) _
+        .Child(Pad(details, 14dip)).ApplyTheme(AppTheme)
+
+    Dim reset As UIButton
+    reset.Initialize.Text("RESET").CornerRadius(AppTheme.ButtonRadius) _
+        .BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText) _
+        .OnClick(Me, "ResetAdvanced_Click")
+    Dim back As UIButton
+    back.Initialize.Text("BACK TO SIMPLE").CornerRadius(AppTheme.ButtonRadius) _
+        .BackgroundColor(AppTheme.Accent).TextColor(AppTheme.AccentText) _
+        .OnClick(Me, "BackToSimple_Click")
+    Dim actions As UIRow
+    actions.Initialize.Spacing(8dip).CrossAxisAlignment("center") _
+        .AddChild(reset).AddChild(back)
+
+    Dim content As UIColumn
+    content.Initialize.Spacing(12dip).AddChild(title).AddChild(description) _
+        .AddChild(counterCard).AddChild(detailsCard).AddChild(actions)
+    Return Screen("ADVANCED COUNTER", content)
+End Sub
+
+Private Sub BuildImcScreen As UIScaffold
+    Dim title As UILabel = LabelText("Body mass index", AppTheme.HeadlineSmall, AppTheme.PrimaryText)
+    Dim description As UILabel = LabelText("Enter your weight and height to calculate your body mass index.", AppTheme.BodyMedium, AppTheme.SecondaryText)
+
+    Dim weightLabel As UILabel = LabelText("WEIGHT (KG)", AppTheme.LabelMedium, AppTheme.MutedText)
+    WeightInput.Initialize.Hint("e.g. 72").ApplyTheme(AppTheme)
+    Dim heightLabel As UILabel = LabelText("HEIGHT (CM)", AppTheme.LabelMedium, AppTheme.MutedText)
+    HeightInput.Initialize.Hint("e.g. 175").ApplyTheme(AppTheme)
+
+    Dim form As UIColumn
+    form.Initialize.Spacing(8dip).AddChild(weightLabel).AddChild(WeightInput) _
+        .AddChild(heightLabel).AddChild(HeightInput)
+    Dim formCard As UICard
+    formCard.Initialize.BorderColor(AppTheme.Border).CornerRadius(AppTheme.CardRadius) _
+        .Child(Pad(form, 14dip)).ApplyTheme(AppTheme)
+
+    Dim calculate As UIButton
+    calculate.Initialize.Text("CALCULATE").CornerRadius(AppTheme.ButtonRadius) _
+        .BackgroundColor(AppTheme.Accent).TextColor(AppTheme.AccentText) _
+        .OnClick(Me, "CalculateImc_Click")
+
+    ImcResultLabel.Initialize.BindText(ImcResultState).Size(AppTheme.TitleLarge) _
+        .Color(AppTheme.PrimaryText).ApplyTheme(AppTheme)
+    Dim resultCard As UICard
+    resultCard.Initialize.BackgroundColor(AppTheme.HeroSurface).BorderColor(AppTheme.Border) _
+        .CornerRadius(AppTheme.CardRadius).Child(Pad(ImcResultLabel, 16dip)).ApplyTheme(AppTheme)
+
+    Dim historyTitle As UILabel = LabelText("HISTORY", AppTheme.LabelMedium, AppTheme.MutedText)
+    Dim history As UILabel
+    history.Initialize.BindText(ImcHistoryState).Size(AppTheme.BodySmall) _
+        .Color(AppTheme.SecondaryText).ApplyTheme(AppTheme)
+    Dim historyCard As UICard
+    historyCard.Initialize.BorderColor(AppTheme.Border).CornerRadius(AppTheme.CardRadius) _
+        .Child(Pad(history, 14dip)).ApplyTheme(AppTheme)
+
+    Dim back As UIButton
+    back.Initialize.Text("BACK TO SIMPLE").CornerRadius(AppTheme.ButtonRadius) _
+        .BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText) _
+        .OnClick(Me, "BackToSimple_Click")
+
+    Dim content As UIColumn
+    content.Initialize.Spacing(12dip).AddChild(title).AddChild(description) _
+        .AddChild(formCard).AddChild(calculate).AddChild(resultCard) _
+        .AddChild(historyTitle).AddChild(historyCard).AddChild(back)
+    Return Screen("BMI CALCULATOR", content)
 End Sub
 
 ' ============================================================================
-' Reusable declarative builders
+' Declarative builders
 ' ============================================================================
 
 Private Sub Screen(Title As String, Content As Object) As UIScaffold
+    Return ScreenWithAction(Title, Content, False)
+End Sub
+
+Private Sub ScreenWithAction(Title As String, Content As Object, ShowThemeAction As Boolean) As UIScaffold
     Dim scroll As UIScrollView
-    scroll.Initialize.Child(BuildPadding(Content, 16dip)).ApplyTheme(AppTheme)
+    scroll.Initialize.Child(Pad(Content, 16dip)).ApplyTheme(AppTheme)
     Dim result As UIScaffold
-    result.Initialize.AppBar(BuildBar(Title)).Body(scroll).BottomNavigationBar(BuildNavigation) _
-        .ApplyTheme(AppTheme)
+    result.Initialize.AppBar(BuildBar(Title, ShowThemeAction)).Body(scroll).ApplyTheme(AppTheme)
     Return result
 End Sub
 
-Private Sub BuildBar(Title As String) As UIAppBar
+Private Sub BuildBar(Title As String, ShowThemeAction As Boolean) As UIAppBar
     Dim result As UIAppBar
     result.Initialize.Title(Title).ApplyTheme(AppTheme)
+    If ShowThemeAction Then
+        Dim icon As UIIcon
+        icon.Initialize.MaterialCode(ThemeIconCode).Size(24) _
+            .Color(AppTheme.DashboardBarText).OnClick(Me, "ToggleTheme_Click")
+        result.Action(icon)
+    End If
     Return result
 End Sub
 
-Private Sub BuildNavigation As UIBottomNavigationBar
-    Dim result As UIBottomNavigationBar
-    result.Initialize.AddItem("Home", Chr(61461), "Home").AddItem("Components", Chr(61502), "Components") _
-        .AddItem("Playground", Chr(61452), "Playground").BindSelectedIndex(NavigationState) _
-        .OnSelected(Me, "Navigation_Changed").UseFontAwesome(True).ApplyTheme(AppTheme)
-    Return result
+Private Sub ThemeIconCode As Int
+    If AppTheme.IsDark Then Return 58648 ' light_mode
+    Return 58652 ' dark_mode
 End Sub
 
-Private Sub BuildPadding(Child As Object, Amount As Int) As UIPadding
+Private Sub Pad(Child As Object, Amount As Int) As UIPadding
     Dim result As UIPadding
     result.Initialize.All(Amount).Child(Child)
     Return result
 End Sub
 
-Private Sub BuildColumn2(First As Object, Second As Object) As UIColumn
-    Dim result As UIColumn
-    result.Initialize.Spacing(7dip).AddChild(First).AddChild(Second)
-    Return result
-End Sub
-
-Private Sub BuildColumn3(First As Object, Second As Object, Third As Object) As UIColumn
-    Dim result As UIColumn
-    result.Initialize.Spacing(7dip).AddChild(First).AddChild(Second).AddChild(Third)
-    Return result
-End Sub
-
-Private Sub BuildColumn4(First As Object, Second As Object, Third As Object, Fourth As Object) As UIColumn
-    Dim result As UIColumn
-    result.Initialize.Spacing(7dip).AddChild(First).AddChild(Second).AddChild(Third).AddChild(Fourth)
-    Return result
-End Sub
-
-Private Sub TextLabel(Value As String, Size As Int, Color As Int) As UILabel
+Private Sub LabelText(Value As String, Size As Int, Color As Int) As UILabel
     Dim result As UILabel
-    result.Initialize.Text(Value).Size(Size).ApplyTheme(AppTheme).Color(Color)
+    result.Initialize.Text(Value).Size(Size).Color(Color).ApplyTheme(AppTheme)
     Return result
 End Sub
 
-Private Sub FeatureCard(Title As String, Description As String, Icon As String, Accent As Int) As UICard
-    Dim iconLabel As UILabel = TextLabel(Icon, 22, Accent)
-    Dim body As UIColumn
-    body.Initialize.Spacing(3dip).AddChild(iconLabel).AddChild(TextLabel(Title, 16, AppTheme.PrimaryText)) _
-        .AddChild(TextLabel(Description, 14, AppTheme.SecondaryText))
-    Dim result As UICard
-    result.Initialize.BorderColor(Accent).CornerRadius(AppTheme.CardRadius) _
-        .Child(BuildPadding(body, 13dip)).ApplyTheme(AppTheme)
+Private Sub ValueLabel(State As UIState, Size As Int) As UILabel
+    Dim result As UILabel
+    result.Initialize.BindText(State).Size(Size).Color(AppTheme.PrimaryText).ApplyTheme(AppTheme)
     Return result
-End Sub
-
-Private Sub BuildPalette As UIColumn
-    Dim row As UIRow
-    row.Initialize.Spacing(8dip).AddChild(ColorSwatch(AppTheme.Accent, "Primary", AppTheme.AccentText)) _
-        .AddChild(ColorSwatch(AppTheme.Info, "Info", AppTheme.InfoText)).AddChild(ColorSwatch(AppTheme.Negative, "Action", AppTheme.NegativeText))
-    Dim result As UIColumn
-    result.Initialize.Spacing(8dip).AddChild(TextLabel("Theme tokens", 16, AppTheme.PrimaryText)) _
-        .AddChild(TextLabel("One seed color generates a consistent visual language.", 14, AppTheme.SecondaryText)) _
-        .AddChild(row)
-    Return result
-End Sub
-
-Private Sub ColorSwatch(Color As Int, Caption As String, Foreground As Int) As UICard
-    Dim sample As UICard
-    sample.Initialize.BackgroundColor(Color).CornerRadius(AppTheme.RadiusSmall) _
-        .Child(BuildPadding(TextLabel(Caption, 12, Foreground), 8dip))
-    Return sample
-End Sub
-
-Private Sub ThemeButtonText As String
-    If AppTheme.IsDark Then Return "USE LIGHT THEME"
-    Return "USE DARK THEME"
-End Sub
-
-Private Sub GreetingText As String
-    Dim name As String = "" & NameState.GetState
-    If name.Trim = "" Then Return "Type a name to update this message."
-    Return "Hello, " & name & "!"
 End Sub
 
 ' ============================================================================
-' Mounting, navigation and interaction
+' Mounting and navigation
 ' ============================================================================
 
 Private Sub BuildUI
@@ -321,82 +304,164 @@ Private Sub BuildUI
         UiMounted = True
         LastWidth = Root.Width
         LastHeight = Root.Height
-        If ActiveScreen = "Home" Then AnimateHero
+        AnimateCard
     End If
     Navigator.RefreshInsets
 End Sub
 
-Sub Navigation_Changed(Index As Int, Id As String)
-    NavigationState.SetState(Index)
-    ActiveScreen = Id
-    Navigator.NavigateTo(Id)
+Sub OpenAdvanced_Click
+    ActiveScreen = "Advanced"
+    Navigator.NavigateTo(ActiveScreen)
+    AnimateCard
 End Sub
 
-Sub OpenComponents_Click
-    NavigationState.SetState(1)
-    ActiveScreen = "Components"
-    Navigator.NavigateTo("Components")
+Sub OpenImc_Click
+    ActiveScreen = "Imc"
+    Navigator.NavigateTo(ActiveScreen)
 End Sub
 
-Sub OpenPlayground_Click
-    NavigationState.SetState(2)
-    ActiveScreen = "Playground"
-    Navigator.NavigateTo("Playground")
+Sub BackToSimple_Click
+    ActiveScreen = "Simple"
+    Navigator.NavigateTo(ActiveScreen)
 End Sub
 
-Sub Increment_Click
-    Dim value As Int = CounterState.GetState
-    CounterState.SetState(value + 1)
-    CounterTextState.SetState(NumberFormat2(value + 1, 2, 0, 0, False))
-End Sub
+' ============================================================================
+' BMI calculator
+' ============================================================================
 
-Sub Decrement_Click
-    Dim value As Int = CounterState.GetState
-    CounterState.SetState(Max(0, value - 1))
-    CounterTextState.SetState(NumberFormat2(Max(0, value - 1), 2, 0, 0, False))
-End Sub
-
-Sub Name_Changed(NewText As String)
-    NameState.SetState(NewText)
-    If NewText.Trim = "" Then
-        GreetingState.SetState("Type a name to update this message.")
-    Else
-        GreetingState.SetState("Hello, " & NewText & "!")
+Sub CalculateImc_Click
+    Dim weightText As String = WeightInput.GetText.Trim
+    Dim heightText As String = HeightInput.GetText.Trim
+    If IsNumericText(weightText) = False Or IsNumericText(heightText) = False Then
+        Snack.Message("Enter a valid weight and height").Duration(1500).Show(Root)
+        Return
     End If
+    Dim weight As Double = weightText
+    Dim height As Double = heightText
+    If weight <= 0 Or height <= 0 Then
+        Snack.Message("Weight and height must be greater than zero").Duration(1500).Show(Root)
+        Return
+    End If
+
+    Dim heightMeters As Double = height / 100
+    Dim imc As Double = weight / (heightMeters * heightMeters)
+    Dim imcText As String = NumberFormat(imc, 1, 1)
+    Dim category As String
+    Dim categoryColor As Int
+    Select Case True
+        Case imc < 18.5
+            category = "Underweight"
+            categoryColor = AppTheme.Info
+        Case imc < 25
+            category = "Normal"
+            categoryColor = 0xFF2E7D32
+        Case imc < 30
+            category = "Overweight"
+            categoryColor = 0xFFF57C00
+        Case Else
+            category = "Obese"
+            categoryColor = AppTheme.Negative
+    End Select
+
+    ImcResultState.SetState(imcText & " · " & category)
+    If ImcResultLabel <> Null Then
+        If ImcResultLabel.IsInitialized Then ImcResultLabel.Color(categoryColor)
+    End If
+
+    ImcHistoryList.InsertAt(0, weightText & " kg / " & heightText & " cm → " & imcText & " · " & category)
+    Do While ImcHistoryList.Size > 5
+        ImcHistoryList.RemoveAt(ImcHistoryList.Size - 1)
+    Loop
+    ImcHistoryState.SetState(JoinHistory)
 End Sub
 
-Sub Greeting_Click
-    Snack.Message(GreetingText).Action("OK", Me, "CloseSnack_Click").Show(Root)
+Private Sub JoinHistory As String
+    Dim sb As StringBuilder
+    sb.Initialize
+    For i = 0 To ImcHistoryList.Size - 1
+        If i > 0 Then sb.Append(CRLF)
+        sb.Append(i + 1).Append(". ").Append(ImcHistoryList.Get(i))
+    Next
+    Return sb.ToString
 End Sub
 
-Sub ShowComponentsSnack_Click
-    Snack.Message("Every surface is declared in B4A.").Action("OK", Me, "CloseSnack_Click").Show(Root)
+Private Sub IsNumericText(Text As String) As Boolean
+    If Text = "" Then Return False
+    Dim dotFound As Boolean = False
+    For i = 0 To Text.Length - 1
+        Dim code As Int = Asc(Text.CharAt(i))
+        If code = 46 Then ' '.'
+            If dotFound Then Return False
+            dotFound = True
+        Else If code < 48 Or code > 57 Then ' digits 0-9
+            Return False
+        End If
+    Next
+    Return True
 End Sub
 
-Sub CloseSnack_Click
-    Snack.Dismiss
+' ============================================================================
+' State and interaction
+' ============================================================================
+
+Sub SimpleIncrement_Click
+    CounterState.SetState(CounterState.GetState + 1)
+End Sub
+
+Sub SimpleDecrement_Click
+    CounterState.SetState(Max(0, CounterState.GetState - 1))
+End Sub
+
+Sub AdvancedIncrement_Click
+    SetAdvancedValue(AdvancedCounterState.GetState + StepState.GetState)
+    Snack.Message("Advanced counter updated").Duration(1200).Show(Root)
+End Sub
+
+Sub AdvancedDecrement_Click
+    SetAdvancedValue(Max(0, AdvancedCounterState.GetState - StepState.GetState))
+End Sub
+
+Sub StepDown_Click
+    StepState.SetState(Max(1, StepState.GetState - 1))
+End Sub
+
+Sub StepUp_Click
+    StepState.SetState(Min(10, StepState.GetState + 1))
+End Sub
+
+Sub ResetAdvanced_Click
+    AdvancedCounterState.SetState(0)
+    ProgressState.SetState(0)
+    StepState.SetState(1)
+    Snack.Message("Advanced counter reset").Duration(1200).Show(Root)
+End Sub
+
+Private Sub SetAdvancedValue(Value As Int)
+    Dim safeValue As Int = Max(0, Value)
+    AdvancedCounterState.SetState(safeValue)
+    ProgressState.SetState(Min(100, safeValue))
 End Sub
 
 Sub ToggleTheme_Click
     AppTheme.Toggle
     Root.Color = AppTheme.Background
+    Snack.ApplyTheme(AppTheme)
     RebuildScreens
 End Sub
 
-Private Sub AnimateHero
-    If HeroCard = Null Then Return
-    Dim cardView As B4XView = HeroCard.GetView
-    If cardView = Null Or cardView.IsInitialized = False Then Return
-    HeroAnimation.Initialize.TargetView(cardView).MoveTo(cardView.Left, cardView.Top - 6dip) _
-        .Duration(180).OnCompleted(Me, "HeroAnimationBack").Start
+Private Sub AnimateCard
+    If ActiveCard = Null Then Return
+    Dim view As B4XView = ActiveCard.GetView
+    If view = Null Or view.IsInitialized = False Then Return
+    CardAnimation.Initialize.TargetView(view).MoveTo(view.Left, view.Top - 4dip) _
+        .Duration(160).OnCompleted(Me, "ReturnCard_Click").Start
 End Sub
 
-Sub HeroAnimationBack 'ignore
-    If HeroCard = Null Then Return
-    Dim cardView As B4XView = HeroCard.GetView
-    If cardView = Null Or cardView.IsInitialized = False Then Return
-    HeroAnimation.Initialize.TargetView(cardView).MoveTo(cardView.Left, cardView.Top + 6dip) _
-        .Duration(220).Start
+Sub ReturnCard_Click
+    If ActiveCard = Null Then Return
+    Dim view As B4XView = ActiveCard.GetView
+    If view = Null Or view.IsInitialized = False Then Return
+    CardAnimation.Initialize.TargetView(view).MoveTo(view.Left, view.Top + 4dip).Duration(180).Start
 End Sub
 
 Sub Activity_Resume
@@ -406,10 +471,10 @@ End Sub
 Sub Activity_Pause (UserClosed As Boolean)
 End Sub
 
-' The demo intentionally keeps the usage visible:
-' - screen builders describe the UI tree;
-' - UIState updates bound widgets;
-' - UIScrollView handles measured content;
-' - UIAnimation adds one opt-in transition;
-' - UIPlaceholder demonstrates a Flutter-like design marker;
-' - UISnackBar provides transient feedback without another Activity.
+' This example intentionally demonstrates:
+' - declarative screen builders;
+' - UIState bindings instead of manual label updates;
+' - measured Column, Row, Card, Padding and ScrollView layout;
+' - a state-bound progress bar;
+' - a snackbar and a small opt-in animation;
+' - explicit navigation without a bottom navigation bar.

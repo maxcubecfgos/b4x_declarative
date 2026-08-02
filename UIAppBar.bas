@@ -1,4 +1,4 @@
-﻿B4A=true
+B4A=true
 Group=Default Group
 ModulesStructureVersion=1
 Type=Class
@@ -15,6 +15,7 @@ Sub Class_Globals
 	Private mTitleColorOverridden As Boolean
 	Private mTheme As UITheme
 	Private mBaseView As B4XView
+	Private mActionWidget As Object
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
 	Private mTitleLabel As Label ' Persistent reference to the title label.
@@ -31,6 +32,7 @@ Public Sub Initialize As UIAppBar
 	mTitleSizeOverridden = False
 	mColorOverridden = False
 	mTitleColorOverridden = False
+	mActionWidget = Null
 	Return Me
 End Sub
 
@@ -93,6 +95,28 @@ Public Sub ApplyTheme(Theme As UITheme) As UIAppBar
 	If mTitleSizeOverridden = False Then mTitleSize = mTheme.AppBarTitleSize
 	If mColorOverridden = False Then mColor = mTheme.DashboardBar
 	If mTitleColorOverridden = False Then mTitleColor = mTheme.DashboardBarText
+	If mActionWidget <> Null And SubExists(mActionWidget, "ApplyTheme") Then CallSub2(mActionWidget, "ApplyTheme", Theme)
+	If mParent <> Null Then
+		If mParent.IsInitialized Then Render
+	End If
+	Return Me
+End Sub
+
+' Sets the trailing action widget, typically a UIIcon or UIButton.
+Public Sub Action(Widget As Object) As UIAppBar
+	If IsWidgetProtocol(Widget) = False Then Return Me
+	If mActionWidget <> Null And mActionWidget = Widget Then Return Me
+	mActionWidget = Widget
+	If mParent <> Null Then
+		If mParent.IsInitialized Then Render
+	End If
+	Return Me
+End Sub
+
+' Removes the trailing action widget.
+Public Sub ClearAction As UIAppBar
+	If mActionWidget <> Null And SubExists(mActionWidget, "Unmount") Then CallSub(mActionWidget, "Unmount")
+	mActionWidget = Null
 	If mParent <> Null Then
 		If mParent.IsInitialized Then Render
 	End If
@@ -169,6 +193,18 @@ Public Sub Render
 	
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
 	mBaseView.Color = mColor
+
+	Dim actionWidth As Int = 0
+	If mActionWidget <> Null Then actionWidth = 48dip
+	Dim titleWidth As Int = Max(0, mWidth - mTheme.HorizontalPadding * 2 - actionWidth)
+	mTitleLabel.SetLayoutAnimated(0, mTheme.HorizontalPadding, 0, titleWidth, mHeight)
+
+	If mActionWidget <> Null Then
+		CallSub2(mActionWidget, "SetParent", mBaseView)
+		CallSub3(mActionWidget, "SetPosition", mWidth - mTheme.HorizontalPadding - actionWidth, 0)
+		CallSub3(mActionWidget, "SetSize", actionWidth, mHeight)
+		CallSub(mActionWidget, "Render")
+	End If
 	
 	' Keep the title vertically centered across the whole bar.
 	mTitleLabel.Gravity = Gravity.CENTER_VERTICAL
@@ -179,12 +215,20 @@ Public Sub Render
 End Sub
 
 Public Sub Unmount
+	If mActionWidget <> Null And SubExists(mActionWidget, "Unmount") Then CallSub(mActionWidget, "Unmount")
 	If mTitleState <> Null Then
 		If mTitleState.IsInitialized Then mTitleState.Unsubscribe(Me, "TitleState_Changed")
 	End If
 	mTitleLabel = Null
 	mBaseView = Null
 	mParent = Null
+End Sub
+
+Private Sub IsWidgetProtocol(Widget As Object) As Boolean
+	If Widget = Null Then Return False
+	Return SubExists(Widget, "SetParent") And SubExists(Widget, "SetPosition") _
+		And SubExists(Widget, "SetSize") And SubExists(Widget, "Render") _
+		And SubExists(Widget, "GetContentSize")
 End Sub
 
 ' Natural measurement used by parent layout containers.

@@ -19,7 +19,9 @@ $expectedModules = @(
     'UIExpanded.bas'
     'UIFloatingActionButton.bas'
     'UIInput.bas'
+    'UIIcon.bas'
     'UIImage.bas'
+    'UIListView.bas'
     'UILabel.bas'
     'UINative.bas'
     'UINavigator.bas'
@@ -74,7 +76,7 @@ try {
         $actualEntries = @($entries | ForEach-Object FullName)
         $missingEntries = @($expectedEntries | Where-Object { $_ -notin $actualEntries })
         $unexpectedEntries = @($actualEntries | Where-Object { $_ -notin $expectedEntries })
-        if ($entries.Count -ne 31 -or $missingEntries.Count -gt 0 -or $unexpectedEntries.Count -gt 0) {
+        if ($entries.Count -ne 33 -or $missingEntries.Count -gt 0 -or $unexpectedEntries.Count -gt 0) {
             throw ('Package entry mismatch. Missing: ' + ($missingEntries -join ', ') + '; unexpected: ' + ($unexpectedEntries -join ', '))
         }
 
@@ -107,7 +109,7 @@ try {
     Write-Host ('File: ' + $output)
     Write-Host ('Size: ' + $fileInfo.Length + ' bytes')
     Write-Host ('SHA-256: ' + $hash)
-    Write-Host 'Contents: 30 UI modules + manifest.txt'
+    Write-Host 'Contents: 32 UI modules + manifest.txt'
 }
 catch {
     Write-Error ('The b4xlib could not be created or validated: ' + $_.Exception.Message)

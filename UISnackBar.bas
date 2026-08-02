@@ -1,4 +1,4 @@
-﻿B4A=true
+B4A=true
 Group=Default Group
 ModulesStructureVersion=1
 Type=Class
@@ -293,14 +293,14 @@ Private Sub LayoutVisible
 	mBaseView.SetLayoutAnimated(0, left, top, width, mHeight)
 	Dim actionWidth As Int = 0
 	If mActionButton <> Null Then
-		If mActionButton.IsInitialized Then actionWidth = 88dip
+		If mActionButton.IsInitialized Then actionWidth = mTheme.SnackbarActionWidth
 	End If
-	Dim messageWidth As Int = Max(0, width - 32dip - actionWidth)
+	Dim messageWidth As Int = Max(0, width - 2 * mTheme.SnackbarContentPadding - actionWidth)
 	If mMessageLabel <> Null Then
-		If mMessageLabel.IsInitialized Then mMessageLabel.SetLayoutAnimated(0, 16dip, 0, messageWidth, mHeight)
+		If mMessageLabel.IsInitialized Then mMessageLabel.SetLayoutAnimated(0, mTheme.SnackbarContentPadding, 0, messageWidth, mHeight)
 	End If
 	If mActionButton <> Null Then
-		If mActionButton.IsInitialized Then mActionButton.SetLayoutAnimated(0, width - actionWidth - 8dip, 0, actionWidth, mHeight)
+		If mActionButton.IsInitialized Then mActionButton.SetLayoutAnimated(0, width - actionWidth - mTheme.SnackbarActionSpacing, 0, actionWidth, mHeight)
 	End If
 End Sub
 
@@ -335,6 +335,6 @@ Private Sub SnackAction_Click
 	Dim actionEventName As String = snack.mActionEventName
 	snack.Dismiss
 	If actionTarget <> Null And actionEventName.Trim <> "" Then
-		If xui.SubExists(actionTarget, actionEventName, 0) Then CallSub(actionTarget, actionEventName)
+		If SubExists(actionTarget, actionEventName) Then CallSub(actionTarget, actionEventName)
 	End If
 End Sub

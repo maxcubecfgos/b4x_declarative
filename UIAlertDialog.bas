@@ -1,4 +1,4 @@
-﻿B4A=true
+B4A=true
 Group=Default Group
 ModulesStructureVersion=1
 Type=Class
@@ -96,7 +96,7 @@ End Sub
 Public Sub Content(Widget As Object) As UIAlertDialog
     If IsWidgetProtocol(Widget) = False Then Return Me
     If mContent = Widget Then Return Me
-    If mContent <> Null And xui.SubExists(mContent, "Unmount", 0) Then CallSub(mContent, "Unmount")
+    If mContent <> Null And SubExists(mContent, "Unmount") Then CallSub(mContent, "Unmount")
     mContent = Widget
     If mVisible Then
         EnsureViews
@@ -197,7 +197,7 @@ Public Sub ApplyTheme(Theme As UITheme) As UIAlertDialog
     If mOverlayColorOverridden = False Then mOverlayColor = mTheme.DialogOverlay
     If mRadiusOverridden = False Then mRadius = mTheme.RadiusExtraLarge
     ApplyAppearance
-    If mContent <> Null And xui.SubExists(mContent, "ApplyTheme", 1) Then CallSub2(mContent, "ApplyTheme", Theme)
+    If mContent <> Null And SubExists(mContent, "ApplyTheme") Then CallSub2(mContent, "ApplyTheme", Theme)
     Return Me
 End Sub
 
@@ -207,7 +207,7 @@ Public Sub Show(Parent As B4XView) As UIAlertDialog
     If Parent.IsInitialized = False Then Return Me
     If mParent <> Null And mParent.IsInitialized Then
         If mParent <> Parent Then
-            If mContent <> Null And xui.SubExists(mContent, "Unmount", 0) Then CallSub(mContent, "Unmount")
+            If mContent <> Null And SubExists(mContent, "Unmount") Then CallSub(mContent, "Unmount")
             RemoveNativeViews
         End If
     End If
@@ -223,7 +223,7 @@ End Sub
 
 Public Sub Dismiss As UIAlertDialog
     mVisible = False
-    If mContent <> Null And xui.SubExists(mContent, "Unmount", 0) Then CallSub(mContent, "Unmount")
+    If mContent <> Null And SubExists(mContent, "Unmount") Then CallSub(mContent, "Unmount")
     RemoveNativeViews
     Return Me
 End Sub
@@ -246,9 +246,9 @@ End Sub
 
 Private Sub IsWidgetProtocol(Widget As Object) As Boolean
     If Widget = Null Then Return False
-    Return xui.SubExists(Widget, "SetParent", 1) And xui.SubExists(Widget, "SetPosition", 2) _
-        And xui.SubExists(Widget, "SetSize", 2) And xui.SubExists(Widget, "Render", 0) _
-        And xui.SubExists(Widget, "GetContentSize", 2)
+    Return SubExists(Widget, "SetParent") And SubExists(Widget, "SetPosition") _
+        And SubExists(Widget, "SetSize") And SubExists(Widget, "Render") _
+        And SubExists(Widget, "GetContentSize")
 End Sub
 
 ' Dialogs are normally shown explicitly and do not participate in a parent layout.
@@ -327,11 +327,11 @@ End Sub
 
 Private Sub RenderContent
     If mContent = Null Then Return
-    If xui.SubExists(mContent, "SetParent", 1) = False Then Return
+    If SubExists(mContent, "SetParent") = False Then Return
     CallSub2(mContent, "SetParent", mCardView)
     CallSub3(mContent, "SetPosition", mTheme.HorizontalPadding, 0)
     CallSub3(mContent, "SetSize", Max(0, mCardView.Width - 2 * mTheme.HorizontalPadding), 0)
-    If xui.SubExists(mContent, "Render", 0) Then CallSub(mContent, "Render")
+    If SubExists(mContent, "Render") Then CallSub(mContent, "Render")
 End Sub
 
 Private Sub LayoutDialog
@@ -341,23 +341,23 @@ Private Sub LayoutDialog
 
     Dim parentWidth As Int = mParent.Width
     Dim parentHeight As Int = mParent.Height
-    Dim dialogWidth As Int = Min(Max(0, parentWidth - 32dip), 420dip)
+    Dim dialogWidth As Int = Min(Max(0, parentWidth - 2 * mTheme.DialogOuterMargin), mTheme.DialogMaxWidth)
     If dialogWidth <= 0 Then dialogWidth = parentWidth
     Dim horizontal As Int = mTheme.HorizontalPadding
-    Dim titleHeight As Int = 48dip
+    Dim titleHeight As Int = mTheme.DialogTitleHeight
     Dim messageHeight As Int = 0
-    If mMessage.Trim <> "" Then messageHeight = 64dip
+    If mMessage.Trim <> "" Then messageHeight = mTheme.DialogMessageHeight
     Dim contentHeight As Int = 0
-    If mContent <> Null And xui.SubExists(mContent, "GetContentSize", 2) Then
-        Dim contentSize As List = CallSub3(mContent, "GetContentSize", dialogWidth - 2 * horizontal, 180dip)
+    If mContent <> Null And SubExists(mContent, "GetContentSize") Then
+        Dim contentSize As List = CallSub3(mContent, "GetContentSize", dialogWidth - 2 * horizontal, mTheme.DialogMaxContentHeight)
         If contentSize <> Null Then
-            If contentSize.IsInitialized And contentSize.Size >= 2 Then contentHeight = Min(180dip, Max(0, contentSize.Get(1)))
+            If contentSize.IsInitialized And contentSize.Size >= 2 Then contentHeight = Min(mTheme.DialogMaxContentHeight, Max(0, contentSize.Get(1)))
         End If
     End If
     Dim actionHeight As Int = 0
     If mPositiveButton <> Null Or mNegativeButton <> Null Then actionHeight = mTheme.ControlHeight + 8dip
     Dim dialogHeight As Int = titleHeight + messageHeight + contentHeight + actionHeight + 2 * horizontal
-    If dialogHeight > parentHeight - 32dip Then dialogHeight = Max(0, parentHeight - 32dip)
+    If dialogHeight > parentHeight - 2 * mTheme.DialogOuterMargin Then dialogHeight = Max(0, parentHeight - 2 * mTheme.DialogOuterMargin)
 
     mOverlay.SetLayoutAnimated(0, 0, 0, parentWidth, parentHeight)
     mCardView.SetLayoutAnimated(0, (parentWidth - dialogWidth) / 2, (parentHeight - dialogHeight) / 2, dialogWidth, dialogHeight)
@@ -376,12 +376,12 @@ Private Sub LayoutDialog
         If contentHeight > 0 Then
             CallSub3(mContent, "SetPosition", horizontal, y)
             CallSub3(mContent, "SetSize", dialogWidth - 2 * horizontal, contentHeight)
-            If xui.SubExists(mContent, "Render", 0) Then CallSub(mContent, "Render")
+            If SubExists(mContent, "Render") Then CallSub(mContent, "Render")
             y = y + contentHeight
         End If
     End If
-    Dim buttonY As Int = dialogHeight - actionHeight - 4dip
-    Dim buttonWidth As Int = 96dip
+    Dim buttonY As Int = dialogHeight - actionHeight - mTheme.DialogButtonSpacing
+    Dim buttonWidth As Int = mTheme.DialogButtonWidth
     Dim right As Int = dialogWidth - horizontal
     If mPositiveButton <> Null Then
         Dim positive As Button = mPositiveButton
@@ -391,7 +391,7 @@ Private Sub LayoutDialog
         positive.Gravity = Gravity.CENTER
         positive.Tag = Me
         mPositiveButton.SetLayoutAnimated(0, right - buttonWidth, buttonY, buttonWidth, mTheme.ControlHeight)
-        right = right - buttonWidth - 4dip
+        right = right - buttonWidth - mTheme.DialogButtonSpacing
     End If
     If mNegativeButton <> Null Then
         Dim negative As Button = mNegativeButton
@@ -436,7 +436,7 @@ Private Sub DialogPositive_Click
     Dim eventName As String = dialog.mPositiveEventName
     dialog.Dismiss
     If target <> Null And eventName.Trim <> "" Then
-        If xui.SubExists(target, eventName, 0) Then CallSub(target, eventName)
+        If SubExists(target, eventName) Then CallSub(target, eventName)
     End If
 End Sub
 
@@ -448,7 +448,7 @@ Private Sub DialogNegative_Click
     Dim eventName As String = dialog.mNegativeEventName
     dialog.Dismiss
     If target <> Null And eventName.Trim <> "" Then
-        If xui.SubExists(target, eventName, 0) Then CallSub(target, eventName)
+        If SubExists(target, eventName) Then CallSub(target, eventName)
     End If
 End Sub
 
@@ -466,7 +466,7 @@ End Sub
 
 Public Sub Unmount
     mVisible = False
-    If mContent <> Null And xui.SubExists(mContent, "Unmount", 0) Then CallSub(mContent, "Unmount")
+    If mContent <> Null And SubExists(mContent, "Unmount") Then CallSub(mContent, "Unmount")
     RemoveNativeViews
     mParent = Null
 End Sub

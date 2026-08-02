@@ -89,26 +89,31 @@ End Sub
 
 ' Returns the primary readable text color.
 Public Sub PrimaryText As Int
-    If mDark Then Return MixColors(Colors.White, mSeedColor, 0.08)
-    Return MixColors(0xFF132238, mSeedColor, 0.08)
+    If mDark Then Return EnsureContrast(MixColors(Colors.White, mSeedColor, 0.08), Surface, True)
+    Return EnsureContrast(MixColors(0xFF132238, mSeedColor, 0.08), Surface, False)
 End Sub
 
 ' Returns the secondary readable text color.
 Public Sub SecondaryText As Int
-    If mDark Then Return MixColors(0xFFCBD5E1, mSeedColor, 0.12)
-    Return MixColors(0xFF6B7B91, mSeedColor, 0.10)
+    If mDark Then Return EnsureContrast(MixColors(0xFFCBD5E1, mSeedColor, 0.12), Surface, True)
+    Return EnsureContrast(MixColors(0xFF6B7B91, mSeedColor, 0.10), Surface, False)
 End Sub
 
 ' Returns the low-emphasis text color.
 Public Sub MutedText As Int
-    If mDark Then Return MixColors(0xFF94A3B8, mSeedColor, 0.16)
-    Return MixColors(0xFF7D8CA1, mSeedColor, 0.08)
+    If mDark Then Return EnsureContrast(MixColors(0xFF94A3B8, mSeedColor, 0.16), Surface, True)
+    Return EnsureContrast(MixColors(0xFF7D8CA1, mSeedColor, 0.08), Surface, False)
+End Sub
+
+' Returns the default hint/placeholder color for inputs.
+Public Sub HintText As Int
+    Return MutedText
 End Sub
 
 ' Returns the dashboard app bar color.
 Public Sub DashboardBar As Int
-    If mDark Then Return MixColors(mSeedColor, Colors.Black, 0.92)
-    Return MixColors(mSeedColor, Colors.Black, 0.76)
+    If mDark Then Return MixColors(mSeedColor, Colors.Black, 0.55)
+    Return mSeedColor
 End Sub
 
 ' Returns a readable foreground for the dashboard app bar.
@@ -128,9 +133,11 @@ Public Sub DialogOverlay As Int
 End Sub
 
 ' Returns the default snackbar background.
+' Keep light and dark schemes intentionally different, following the
+' Material inverse-surface idea: dark in light mode and light in dark mode.
 Public Sub SnackbarBackground As Int
-    If mDark Then Return MixColors(mSeedColor, Colors.Black, 0.94)
-    Return MixColors(mSeedColor, Colors.Black, 0.82)
+    If mDark Then Return MixColors(0xFFE6E1E9, mSeedColor, 0.08)
+    Return MixColors(0xFF302F33, mSeedColor, 0.10)
 End Sub
 
 ' Returns a readable snackbar message color.
@@ -140,8 +147,9 @@ End Sub
 
 ' Returns a readable snackbar action color.
 Public Sub SnackbarAction As Int
-    If SnackbarText = Colors.White Then Return MixColors(mSeedColor, Colors.White, 0.20)
-    Return MixColors(mSeedColor, Colors.Black, 0.20)
+    ' The action is text on the snackbar surface, so guarantee readable
+    ' contrast independently of the selected seed color.
+    Return EnsureContrast(mSeedColor, SnackbarBackground, Not(mDark))
 End Sub
 
 ' Returns the highlighted dashboard hero surface.
@@ -152,8 +160,10 @@ End Sub
 
 ' Returns the primary teal accent color.
 Public Sub Accent As Int
-    If mDark Then Return MixColors(mSeedColor, Colors.White, 0.08)
-    Return mSeedColor
+    ' Accent is used as a filled background by FABs and progress indicators,
+    ' and as a foreground by navigation. Keep it readable in both roles.
+    If mDark Then Return EnsureContrast(MixColors(mSeedColor, Colors.White, 0.08), Surface, True)
+    Return EnsureContrast(mSeedColor, Surface, False)
 End Sub
 
 ' Returns the blue informational accent color.
@@ -384,6 +394,67 @@ Public Sub SnackbarMargin As Int
     Return 16dip
 End Sub
 
+' Default visual height for determinate and indeterminate progress bars.
+Public Sub ProgressBarHeight As Int
+    Return 6dip
+End Sub
+
+' Default progress-bar corner radius. The widget clamps it to half its height.
+Public Sub ProgressBarRadius As Int
+    Return 3dip
+End Sub
+
+' ===== Dialog layout tokens =====
+Public Sub DialogMaxWidth As Int
+    Return 420dip
+End Sub
+
+Public Sub DialogTitleHeight As Int
+    Return 48dip
+End Sub
+
+Public Sub DialogMessageHeight As Int
+    Return 64dip
+End Sub
+
+Public Sub DialogMaxContentHeight As Int
+    Return 180dip
+End Sub
+
+Public Sub DialogButtonWidth As Int
+    Return 96dip
+End Sub
+
+Public Sub DialogOuterMargin As Int
+    Return 16dip
+End Sub
+
+Public Sub DialogButtonSpacing As Int
+    Return 4dip
+End Sub
+
+' ===== Snackbar layout tokens =====
+Public Sub SnackbarActionWidth As Int
+    Return 88dip
+End Sub
+
+Public Sub SnackbarContentPadding As Int
+    Return 16dip
+End Sub
+
+Public Sub SnackbarActionSpacing As Int
+    Return 8dip
+End Sub
+
+' ===== Navigation layout tokens =====
+Public Sub NavigationIndicatorInset As Int
+    Return 6dip
+End Sub
+
+Public Sub NavigationLabelBottomInset As Int
+    Return 6dip
+End Sub
+
 Public Sub BorderWidth As Int
     Return 1dip
 End Sub
@@ -431,16 +502,45 @@ Private Sub ComposeColor(Alpha As Int, Red As Int, Green As Int, Blue As Int) As
 End Sub
 
 Private Sub RelativeLuminance(Value As Int) As Float
-    Return ChannelRed(Value) * 0.299 + ChannelGreen(Value) * 0.587 + ChannelBlue(Value) * 0.114
+    Return 0.2126 * LinearChannel(ChannelRed(Value)) _
+        + 0.7152 * LinearChannel(ChannelGreen(Value)) _
+        + 0.0722 * LinearChannel(ChannelBlue(Value))
 End Sub
 
-' Compares two foreground colors using their relative luminance over Value.
+Private Sub LinearChannel(Value As Int) As Float
+    Dim normalized As Float = Value / 255.0
+    If normalized <= 0.03928 Then Return normalized / 12.92
+    Return Power((normalized + 0.055) / 1.055, 2.4)
+End Sub
+
+' Compares two colors using WCAG-style relative luminance.
 Private Sub ContrastRatio(Value As Int, Foreground As Int) As Float
-    Dim backgroundLuminance As Float = RelativeLuminance(Value) / 255
-    Dim foregroundLuminance As Float = RelativeLuminance(Foreground) / 255
+    Dim backgroundLuminance As Float = RelativeLuminance(Value)
+    Dim foregroundLuminance As Float = RelativeLuminance(Foreground)
     Dim lighter As Float = Max(backgroundLuminance, foregroundLuminance) + 0.05
     Dim darker As Float = Min(backgroundLuminance, foregroundLuminance) + 0.05
     Return lighter / darker
+End Sub
+
+' Moves a foreground toward white or black until it is readable over Background.
+' This keeps arbitrary Scheme colors safe without changing the public API.
+Private Sub EnsureContrast(Foreground As Int, SurfaceColor As Int, TowardWhite As Boolean) As Int
+    Dim result As Int = Foreground
+    If ContrastRatio(SurfaceColor, result) >= 4.5 Then Return result
+    For i = 1 To 20
+        If TowardWhite Then
+            result = MixColors(result, Colors.White, 0.08)
+        Else
+            result = MixColors(result, Colors.Black, 0.08)
+        End If
+        If ContrastRatio(SurfaceColor, result) >= 4.5 Then Return result
+    Next
+    ' An extreme seed can already be white or black. Choose the better of
+    ' the two deterministic foregrounds instead of returning a failed mix.
+    Dim whiteContrast As Float = ContrastRatio(SurfaceColor, Colors.White)
+    Dim darkContrast As Float = ContrastRatio(SurfaceColor, 0xFF132238)
+    If whiteContrast >= darkContrast Then Return Colors.White
+    Return 0xFF132238
 End Sub
 
 ' Treat colors without an explicit alpha channel as opaque for predictable themes.

@@ -1,4 +1,4 @@
-﻿B4A=true
+B4A=true
 Group=Default Group
 ModulesStructureVersion=1
 Type=Class
@@ -250,7 +250,7 @@ End Sub
 
 Private Sub Notify(Target As Object, EventName As String)
     If Target = Null Or EventName.Trim = "" Then Return
-    If xui.SubExists(Target, EventName, 0) Then CallSub(Target, EventName)
+    If SubExists(Target, EventName) Then CallSub(Target, EventName)
 End Sub
 
 ' Returns the mounted native ImageView for optional animations.

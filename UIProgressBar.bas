@@ -33,13 +33,13 @@ Public Sub Initialize As UIProgressBar
     mTheme = defaultTheme
     mValue = 0
     mIndeterminate = False
-    mHeight = 6dip
+    mHeight = mTheme.ProgressBarHeight
     mHeightOverridden = False
     mTrackColor = mTheme.SurfaceVariant
     mProgressColor = mTheme.Accent
     mTrackColorOverridden = False
     mProgressColorOverridden = False
-    mCornerRadius = 3dip
+    mCornerRadius = mTheme.ProgressBarRadius
     mCornerRadiusOverridden = False
     mParent = Null
     mBaseView = Null
@@ -132,8 +132,8 @@ Public Sub ApplyTheme(Theme As UITheme) As UIProgressBar
     mTheme = Theme
     If mTrackColorOverridden = False Then mTrackColor = mTheme.SurfaceVariant
     If mProgressColorOverridden = False Then mProgressColor = mTheme.Accent
-    If mCornerRadiusOverridden = False Then mCornerRadius = 3dip
-    If mHeightOverridden = False Then mHeight = 6dip
+    If mCornerRadiusOverridden = False Then mCornerRadius = mTheme.ProgressBarRadius
+    If mHeightOverridden = False Then mHeight = mTheme.ProgressBarHeight
     ApplyAppearance
     Return Me
 End Sub

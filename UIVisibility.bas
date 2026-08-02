@@ -1,4 +1,4 @@
-﻿B4A=true
+B4A=true
 Group=Default Group
 ModulesStructureVersion=1
 Type=Class
@@ -84,7 +84,7 @@ Private Sub VisibilityState_Changed(State As UIState)
 	If mParent = Null Then Return
 	If mParent.IsInitialized = False Then Return
 	If mVisibilityTarget = Null Or mVisibilityEventName.Trim = "" Then Return
-	If xui.SubExists(mVisibilityTarget, mVisibilityEventName, 1) Then
+	If SubExists(mVisibilityTarget, mVisibilityEventName) Then
 		CallSub2(mVisibilityTarget, mVisibilityEventName, Me)
 	End If
 End Sub
@@ -94,7 +94,7 @@ Public Sub Child(Widget As Object) As UIVisibility
 	If IsWidgetProtocol(Widget) = False Then Return Me
 	If mChild = Widget Then Return Me
 	If mChild <> Null Then
-		If xui.SubExists(mChild, "Unmount", 0) Then CallSub(mChild, "Unmount")
+		If SubExists(mChild, "Unmount") Then CallSub(mChild, "Unmount")
 	End If
 	If mBaseView <> Null Then
 		If mBaseView.IsInitialized Then mBaseView.RemoveAllViews
@@ -107,7 +107,7 @@ End Sub
 Public Sub ApplyTheme(Theme As UITheme) As UIVisibility
 	If Theme = Null Then Return Me
 	If Theme.IsInitialized = False Then Return Me
-	If mChild <> Null And xui.SubExists(mChild, "ApplyTheme", 1) Then CallSub2(mChild, "ApplyTheme", Theme)
+	If mChild <> Null And SubExists(mChild, "ApplyTheme") Then CallSub2(mChild, "ApplyTheme", Theme)
 	Return Me
 End Sub
 
@@ -151,7 +151,7 @@ Public Sub Render
 
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
 	If mVisible = False Then
-		If mChild <> Null And xui.SubExists(mChild, "Unmount", 0) Then CallSub(mChild, "Unmount")
+		If mChild <> Null And SubExists(mChild, "Unmount") Then CallSub(mChild, "Unmount")
 		mBaseView.RemoveAllViews
 		mBaseView.SetLayoutAnimated(0, mLeft, mTop, 0, 0)
 		Return
@@ -174,7 +174,7 @@ Public Sub Unmount
 	End If
 	' Unmount is temporary during navigation/remounting; preserve the state
 	' binding so the same declarative widget remains reactive when mounted again.
-	If mChild <> Null And xui.SubExists(mChild, "Unmount", 0) Then CallSub(mChild, "Unmount")
+	If mChild <> Null And SubExists(mChild, "Unmount") Then CallSub(mChild, "Unmount")
 	If mBaseView <> Null Then
 		If mBaseView.IsInitialized Then mBaseView.RemoveAllViews
 	End If
@@ -184,9 +184,9 @@ End Sub
 
 Private Sub IsWidgetProtocol(Widget As Object) As Boolean
 	If Widget = Null Then Return False
-	Return xui.SubExists(Widget, "SetParent", 1) And xui.SubExists(Widget, "SetPosition", 2) _
-		And xui.SubExists(Widget, "SetSize", 2) And xui.SubExists(Widget, "Render", 0) _
-		And xui.SubExists(Widget, "GetContentSize", 2)
+	Return SubExists(Widget, "SetParent") And SubExists(Widget, "SetPosition") _
+		And SubExists(Widget, "SetSize") And SubExists(Widget, "Render") _
+		And SubExists(Widget, "GetContentSize")
 End Sub
 
 ' Internal layout hook used by Column and Row to avoid spacing around hidden children.

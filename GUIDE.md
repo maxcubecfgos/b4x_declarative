@@ -133,6 +133,7 @@ The important idea is that `body` describes the child tree. The parent is respon
 | `UIVisibility` | Conditionally includes one child in layout | `Visible`, `BindVisible`, `UnbindVisible`, `OnVisibilityChanged`, `Child` |
 | `UIStack` | Overlapping children on the Z axis | `AddChild`, `Alignment` |
 | `UIScrollView` | Native vertical scroll container | `Child`, `ScrollTo` |
+| `UIListView` | Fixed-height virtualized list | `Items`, `ItemCount`, `ItemHeight`, `CreateItem`, `BindItem`, `NotifyDataSetChanged` |
 | `UIScaffold` | App bar, body, bottom navigation and optional FABs | `AppBar`, `Body`, `BottomNavigationBar`, `FloatingActionButtonLeft`, `FloatingActionButtonRight` |
 | `UIBottomNavigationBar` | Declarative bottom navigation | `AddItem`, `BindSelectedIndex`, `OnSelected`, `ActiveColor`, `InactiveColor`, `IndicatorColor` |
 | `UINavigator` | Virtual screens and safe-area host | `AddScreen`, `NavigateTo` |
@@ -420,7 +421,43 @@ Dim position As Int = scroll.GetScrollPosition
 
 The child content is measured and mounted into the native `ScrollView.Panel`. Re-rendering the same child updates its existing tree and preserves scroll position/native state; replacing the child performs structural cleanup. Do not pass the native panel directly to custom code expecting a `B4XView`; the library handles that conversion internally.
 
-## 9. Lifecycle and rendering
+## 9. UIListView
+
+Use `UIListView` for long vertical collections where each row has the same height. It mounts only the visible window plus the configured overscan rows and reuses declarative item objects when `BindItem` is configured.
+
+```basic
+Dim records As List
+records.Initialize
+For i = 0 To 4999
+    records.Add("Record " & (i + 1))
+Next
+
+Dim recordsList As UIListView
+recordsList.Initialize _
+    .Items(records) _
+    .ItemHeight(68dip) _
+    .Overscan(2) _
+    .CreateItem(Me, "CreateRecordRow") _
+    .BindItem(Me, "BindRecordRow")
+
+Sub CreateRecordRow(Index As Int) As Object
+    Dim row As UIRow
+    row.Initialize
+    Return row.AddChild(UILabel.Initialize.Size(16dip))
+End Sub
+
+Sub BindRecordRow(Index As Int, ItemView As Object)
+    Dim row As UIRow = ItemView
+    Dim label As UILabel = row.GetChild
+    label.Text(recordsList.GetItem(Index))
+End Sub
+```
+
+`CreateItem` has the signature `Sub EventName(Index As Int) As Object`. `BindItem` has the signature `Sub EventName(Index As Int, ItemView As Object)`. The item must implement `SetParent`, `SetPosition`, `SetSize`, `Render` and `GetContentSize`. Call `NotifyDataSetChanged` after changing the data source or any item content. `ItemHeight` is mandatory conceptually: this first implementation does not support variable-height rows. For small or variable-height trees, use `UIScrollView` instead.
+
+The list pools declarative item objects, but it is not a full Android `RecyclerView` wrapper. A recycled widget may recreate its internal native view after it is unmounted; row state should therefore come from the data source or an explicit `UIState`, not from transient native control state.
+
+## 10. Lifecycle and rendering
 
 Every layout-aware widget follows this lifecycle:
 

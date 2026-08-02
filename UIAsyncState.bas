@@ -1,4 +1,4 @@
-﻿B4A=true
+B4A=true
 Group=Default Group
 ModulesStructureVersion=1
 Type=Class
@@ -163,7 +163,7 @@ Private Sub NotifyListeners
 			If mListeners.IndexOf(item) >= 0 Then
 				Dim target As Object = item.Get("Target")
 				Dim eventName As String = item.Get("EventName")
-				If xui.SubExists(target, eventName, 1) Then
+				If SubExists(target, eventName) Then
 					CallSub2(target, eventName, Me)
 				End If
 			End If

@@ -1,4 +1,4 @@
-﻿B4A=true
+B4A=true
 Group=Default Group
 ModulesStructureVersion=1
 Type=Class
@@ -33,7 +33,7 @@ Public Sub ApplyTheme(Theme As UITheme) As UINavigator
 	If Theme.IsInitialized = False Then Return Me
 	For Each key As String In mScreens.Keys
 		Dim screen As Object = mScreens.Get(key)
-		If screen <> Null And xui.SubExists(screen, "ApplyTheme", 1) Then CallSub2(screen, "ApplyTheme", Theme)
+		If screen <> Null And SubExists(screen, "ApplyTheme") Then CallSub2(screen, "ApplyTheme", Theme)
 	Next
 	Return Me
 End Sub
@@ -113,7 +113,7 @@ Public Sub Render
 	End If
 
 	If mMountedScreen <> Null Then
-		If xui.SubExists(mMountedScreen, "Unmount", 0) Then
+		If SubExists(mMountedScreen, "Unmount") Then
 			CallSub(mMountedScreen, "Unmount")
 		End If
 	End If
@@ -134,9 +134,9 @@ End Sub
 
 Private Sub IsWidgetProtocol(Widget As Object) As Boolean
 	If Widget = Null Then Return False
-	Return xui.SubExists(Widget, "SetParent", 1) And xui.SubExists(Widget, "SetPosition", 2) _
-		And xui.SubExists(Widget, "SetSize", 2) And xui.SubExists(Widget, "Render", 0) _
-		And xui.SubExists(Widget, "GetContentSize", 2)
+	Return SubExists(Widget, "SetParent") And SubExists(Widget, "SetPosition") _
+		And SubExists(Widget, "SetSize") And SubExists(Widget, "Render") _
+		And SubExists(Widget, "GetContentSize")
 End Sub
 
 ' Re-measure the safe area and remount only when an inset changes.
@@ -170,7 +170,7 @@ End Sub
 
 Public Sub Unmount
 	If mMountedScreen <> Null Then
-		If xui.SubExists(mMountedScreen, "Unmount", 0) Then CallSub(mMountedScreen, "Unmount")
+		If SubExists(mMountedScreen, "Unmount") Then CallSub(mMountedScreen, "Unmount")
 	End If
 	If mHost <> Null Then
 		If mHost.IsInitialized Then

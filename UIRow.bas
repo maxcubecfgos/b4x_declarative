@@ -1,4 +1,4 @@
-﻿B4A=true
+B4A=true
 Group=Default Group
 ModulesStructureVersion=1
 Type=Class
@@ -30,7 +30,7 @@ Public Sub ApplyTheme(Theme As UITheme) As UIRow
 	If Theme = Null Then Return Me
 	If Theme.IsInitialized = False Then Return Me
 	For Each child As Object In mChildren
-		If child <> Null And xui.SubExists(child, "ApplyTheme", 1) Then CallSub2(child, "ApplyTheme", Theme)
+		If child <> Null And SubExists(child, "ApplyTheme") Then CallSub2(child, "ApplyTheme", Theme)
 	Next
 	Return Me
 End Sub
@@ -207,7 +207,7 @@ Public Sub Render
 		Else If hasNaturalSize Then
 			currentWidth = size.Get(0) ' Ancho natural
 		Else
-			currentWidth = expandedWidth ' También se expande
+			currentWidth = expandedWidth ' TambiÃ©n se expande
 			If expandedRemainder > 0 Then
 				currentWidth = currentWidth + 1
 				expandedRemainder = expandedRemainder - 1
@@ -244,7 +244,7 @@ End Sub
 
 Public Sub Unmount
 	For Each child As Object In mChildren
-		If child <> Null And xui.SubExists(child, "Unmount", 0) Then CallSub(child, "Unmount")
+		If child <> Null And SubExists(child, "Unmount") Then CallSub(child, "Unmount")
 	Next
 	mBaseView = Null
 	mParent = Null
@@ -304,14 +304,14 @@ End Sub
 
 Private Sub IsWidgetProtocol(Widget As Object) As Boolean
 	If Widget = Null Then Return False
-	Return xui.SubExists(Widget, "SetParent", 1) And xui.SubExists(Widget, "SetPosition", 2) _
-		And xui.SubExists(Widget, "SetSize", 2) And xui.SubExists(Widget, "Render", 0) _
-		And xui.SubExists(Widget, "GetContentSize", 2)
+	Return SubExists(Widget, "SetParent") And SubExists(Widget, "SetPosition") _
+		And SubExists(Widget, "SetSize") And SubExists(Widget, "Render") _
+		And SubExists(Widget, "GetContentSize")
 End Sub
 
 Private Sub IsLayoutParticipant(Child As Object) As Boolean
 	If Child = Null Then Return False
-	If xui.SubExists(Child, "ParticipatesInLayout", 0) Then
+	If SubExists(Child, "ParticipatesInLayout") Then
 		Dim result As Boolean = CallSub(Child, "ParticipatesInLayout")
 		Return result
 	End If

@@ -1,4 +1,4 @@
-﻿B4A=true
+B4A=true
 Group=Default Group
 ModulesStructureVersion=1
 Type=Class
@@ -118,5 +118,5 @@ Private Sub WaitForCompletion(RunId As Int)
 	If RunId <> mRunId Or mRunning = False Then Return
 	mRunning = False
 	If mCallbackTarget = Null Or mCallbackName.Trim = "" Then Return
-	If xui.SubExists(mCallbackTarget, mCallbackName, 0) Then CallSub(mCallbackTarget, mCallbackName)
+	If SubExists(mCallbackTarget, mCallbackName) Then CallSub(mCallbackTarget, mCallbackName)
 End Sub

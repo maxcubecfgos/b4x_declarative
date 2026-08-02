@@ -1,4 +1,4 @@
-﻿B4A=true
+B4A=true
 Group=Default Group
 ModulesStructureVersion=1
 Type=Class
@@ -41,7 +41,7 @@ End Sub
 Public Sub ApplyTheme(Theme As UITheme) As UIScrollView
     If Theme = Null Then Return Me
     If Theme.IsInitialized = False Then Return Me
-    If mChild <> Null And xui.SubExists(mChild, "ApplyTheme", 1) Then CallSub2(mChild, "ApplyTheme", Theme)
+    If mChild <> Null And SubExists(mChild, "ApplyTheme") Then CallSub2(mChild, "ApplyTheme", Theme)
     Return Me
 End Sub
 
@@ -87,7 +87,7 @@ Public Sub Render
     ' ordinary updates. This preserves scroll position, focus and native state.
     ' A replaced child is structural, so remove only the previous content tree.
     If mMountedChild <> Null And mMountedChild <> mChild Then
-        If xui.SubExists(mMountedChild, "Unmount", 0) Then CallSub(mMountedChild, "Unmount")
+        If SubExists(mMountedChild, "Unmount") Then CallSub(mMountedChild, "Unmount")
         mScrollView.Panel.RemoveAllViews
         mMountedChild = Null
     End If
@@ -113,7 +113,7 @@ Public Sub Render
         mMountedChild = mChild
     Else
         If mMountedChild <> Null Then
-            If xui.SubExists(mMountedChild, "Unmount", 0) Then CallSub(mMountedChild, "Unmount")
+            If SubExists(mMountedChild, "Unmount") Then CallSub(mMountedChild, "Unmount")
             mScrollView.Panel.RemoveAllViews
             mMountedChild = Null
         End If
@@ -139,7 +139,7 @@ End Sub
 
 ' Removes the native view and releases child mounting references.
 Public Sub Unmount
-    If mChild <> Null And xui.SubExists(mChild, "Unmount", 0) Then CallSub(mChild, "Unmount")
+    If mChild <> Null And SubExists(mChild, "Unmount") Then CallSub(mChild, "Unmount")
     If mBaseView <> Null Then
         If mBaseView.IsInitialized Then mBaseView.RemoveViewFromParent
     End If
@@ -152,9 +152,9 @@ End Sub
 
 Private Sub IsWidgetProtocol(Widget As Object) As Boolean
     If Widget = Null Then Return False
-    Return xui.SubExists(Widget, "SetParent", 1) And xui.SubExists(Widget, "SetPosition", 2) _
-        And xui.SubExists(Widget, "SetSize", 2) And xui.SubExists(Widget, "Render", 0) _
-        And xui.SubExists(Widget, "GetContentSize", 2)
+    Return SubExists(Widget, "SetParent") And SubExists(Widget, "SetPosition") _
+        And SubExists(Widget, "SetSize") And SubExists(Widget, "Render") _
+        And SubExists(Widget, "GetContentSize")
 End Sub
 
 ' Returns the child's natural size when it can be measured.

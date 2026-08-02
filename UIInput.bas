@@ -1,4 +1,4 @@
-﻿B4A=true
+B4A=true
 Group=Default Group
 ModulesStructureVersion=1
 Type=Class
@@ -12,9 +12,11 @@ Sub Class_Globals
 	Private mTextTarget As Object
 	Private mTextEventName As String
 	Private mTextColor As Int
+	Private mHintColor As Int
 	Private mBackgroundColor As Int
 	Private mBorderColor As Int
 	Private mTextColorOverridden As Boolean
+	Private mHintColorOverridden As Boolean
 	Private mBackgroundColorOverridden As Boolean
 	Private mBorderColorOverridden As Boolean
 	Private mTheme As UITheme
@@ -39,10 +41,12 @@ Public Sub Initialize As UIInput
 	defaultTheme.Initialize
 	mTheme = defaultTheme
 	mTextColor = mTheme.PrimaryText
+	mHintColor = mTheme.HintText
 	mTextSize = mTheme.InputTextSize
 	mTextSizeOverridden = False
 	mBackgroundColor = mTheme.Surface
 	mTextColorOverridden = False
+	mHintColorOverridden = False
 	mBackgroundColorOverridden = False
 	mBorderColorOverridden = False
 	mCornerRadius = mTheme.InputRadius
@@ -118,12 +122,23 @@ Public Sub BackgroundColor(Color As Int) As UIInput
 	Return Me
 End Sub
 
+' Sets the hint color explicitly. The theme value is used by default.
+Public Sub HintColor(Color As Int) As UIInput
+	mHintColor = Color
+	mHintColorOverridden = True
+	If mEditText <> Null Then
+		If mEditText.IsInitialized Then mEditText.HintColor = mHintColor
+	End If
+	Return Me
+End Sub
+
 ' Applies theme defaults without replacing explicit color overrides.
 Public Sub ApplyTheme(Theme As UITheme) As UIInput
 	If Theme = Null Then Return Me
 	If Theme.IsInitialized = False Then Return Me
 	mTheme = Theme
 	If mTextColorOverridden = False Then mTextColor = mTheme.PrimaryText
+	If mHintColorOverridden = False Then mHintColor = mTheme.HintText
 	If mTextSizeOverridden = False Then mTextSize = mTheme.InputTextSize
 	If mBackgroundColorOverridden = False Then mBackgroundColor = mTheme.Surface
 	If mCornerRadiusOverridden = False Then mCornerRadius = mTheme.InputRadius
@@ -214,6 +229,7 @@ Public Sub Render
 
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
 	mEditText.TextColor = mTextColor
+	mEditText.HintColor = mHintColor
 	mEditText.TextSize = mTextSize
 	If mCornerRadius > 0 Or mBorderWidth > 0 Then
 		Dim inputBackground As ColorDrawable
@@ -252,7 +268,7 @@ Private Sub NativeInput_TextChanged(Old As String, New As String)
 	mText = New
 	If mApplyingState Then Return
 	If mTextTarget = Null Or mTextEventName.Trim = "" Then Return
-	If xui.SubExists(mTextTarget, mTextEventName, 1) Then CallSub2(mTextTarget, mTextEventName, New)
+	If SubExists(mTextTarget, mTextEventName) Then CallSub2(mTextTarget, mTextEventName, New)
 End Sub
 
 Public Sub Unmount

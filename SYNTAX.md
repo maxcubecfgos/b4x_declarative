@@ -100,6 +100,7 @@ This is the API application code is expected to use:
 - event registration through `OnClick` and `OnTextChanged`;
 - navigation methods such as `AddScreen` and `NavigateTo`;
 - `ScrollTo` and other explicitly documented control methods;
+- `UIListView` data and item callbacks (`Items`, `ItemCount`, `ItemHeight`, `CreateItem`, `BindItem`, `NotifyDataSetChanged`);
 - transient feedback through `UISnackBar`;
 - opt-in bounds animation through `UIAnimation`.
 
@@ -674,6 +675,7 @@ Before merging a library change:
 The following are intentionally outside the contract for now:
 
 - automatic virtual-DOM diffing;
+- variable-height or full `RecyclerView` semantics in `UIListView`;
 - automatic two-way data binding;
 - implicit parent rendering for `UIVisibility` (use explicit `BindVisible` and `OnVisibilityChanged` instead);
 - automatic animations or positioning transitions for `UIStack` children; `UIAnimation` remains explicit and opt-in;
