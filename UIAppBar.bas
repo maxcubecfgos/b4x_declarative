@@ -9,6 +9,8 @@ Sub Class_Globals
 	Private mTitleState As UIState
 	Private mColor As Int
 	Private mTitleColor As Int
+	Private mTitleSize As Int
+	Private mTitleSizeOverridden As Boolean
 	Private mColorOverridden As Boolean
 	Private mTitleColorOverridden As Boolean
 	Private mTheme As UITheme
@@ -25,6 +27,8 @@ Public Sub Initialize As UIAppBar
 	mTheme = defaultTheme
 	mColor = mTheme.DashboardBar
 	mTitleColor = mTheme.DashboardBarText
+	mTitleSize = mTheme.AppBarTitleSize
+	mTitleSizeOverridden = False
 	mColorOverridden = False
 	mTitleColorOverridden = False
 	Return Me
@@ -86,6 +90,7 @@ Public Sub ApplyTheme(Theme As UITheme) As UIAppBar
 	If Theme = Null Then Return Me
 	If Theme.IsInitialized = False Then Return Me
 	mTheme = Theme
+	If mTitleSizeOverridden = False Then mTitleSize = mTheme.AppBarTitleSize
 	If mColorOverridden = False Then mColor = mTheme.DashboardBar
 	If mTitleColorOverridden = False Then mTitleColor = mTheme.DashboardBarText
 	If mParent <> Null Then
@@ -98,6 +103,13 @@ End Sub
 Public Sub TitleColor(c As Int) As UIAppBar
 	mTitleColor = c
 	mTitleColorOverridden = True
+	Return Me
+End Sub
+
+' Sets the app bar title size explicitly, in scaled pixels.
+Public Sub TitleSize(Size As Int) As UIAppBar
+	mTitleSize = Max(1, Size)
+	mTitleSizeOverridden = True
 	Return Me
 End Sub
 
@@ -151,8 +163,8 @@ Public Sub Render
 		mTitleLabel = titleLabel
 		Dim xLbl As B4XView = mTitleLabel
 		xLbl.TextColor = mTitleColor
-		xLbl.TextSize = 18
-		mBaseView.AddView(xLbl, 16dip, 0, mWidth - 32dip, mHeight)
+		xLbl.TextSize = mTitleSize
+		mBaseView.AddView(xLbl, mTheme.HorizontalPadding, 0, mWidth - 2 * mTheme.HorizontalPadding, mHeight)
 	End If
 	
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
@@ -162,6 +174,7 @@ Public Sub Render
 	mTitleLabel.Gravity = Gravity.CENTER_VERTICAL
 	' Refresh themeable title properties on every render.
 	mTitleLabel.TextColor = mTitleColor
+	mTitleLabel.TextSize = mTitleSize
 	mTitleLabel.Text = mTitle
 End Sub
 
@@ -186,6 +199,6 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	If safeMaxHeight <= 0 Then safeMaxHeight = 10000
 	
 	result.Add(safeMaxWidth) ' Ancho completo disponible
-	result.Add(Min(56dip, safeMaxHeight)) ' Altura fija Material Design
+	result.Add(Min(mTheme.AppBarHeight, safeMaxHeight)) ' Theme-driven Material bar height
 	Return result
 End Sub

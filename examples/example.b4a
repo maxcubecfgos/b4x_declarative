@@ -12,7 +12,7 @@ NumberOfModules=0
 Version=13.62
 @EndOfDesignText@
 #Region  Project Attributes
-    #ApplicationLabel: Canary Journal
+    #ApplicationLabel: NOVA UI Lab
     #VersionCode: 1
     #VersionName: 1.0
     #SupportedOrientations: portrait
@@ -24,15 +24,15 @@ Version=13.62
     #IncludeTitle: False
 #End Region
 
-' Canary Journal is a small educational app built in one Activity.
-' The screen builders describe the result; the library mounts the native views.
+' NOVA UI Lab is intentionally small: one Activity, three declarative screens.
+' It is an offline showcase so the first run does not depend on network access.
 
 Sub Process_Globals
     Private NavigationState As UIState
-    Private ImageStatusState As UIState
-    Private TipsVisibleState As UIState
+    Private CounterState As UIState
+    Private CounterTextState As UIState
     Private NameState As UIState
-    Private ImageAsyncState As UIAsyncState
+    Private GreetingState As UIState
 End Sub
 
 Sub Globals
@@ -41,45 +41,39 @@ Sub Globals
     Private AppTheme As UITheme
     Private Snack As UISnackBar
     Private HeroCard As UICard
-    Private VarietyCards As List
-    Private HeroImage As ImageView
-    Private VarietyImages As List
-    Private YellowBitmap, RedBitmap, WhiteBitmap As Bitmap
-    Private FallbackBitmap As Bitmap
     Private HeroAnimation As UIAnimation
-    Private ActiveRoute As String
     Private UiMounted As Boolean
     Private LastWidth, LastHeight As Int
-    Private ImagesStarted As Boolean
-    Private YellowUrl As String
-    Private RedUrl As String
-    Private WhiteUrl As String
-    Private Const ImageUserAgent As String = "CanaryJournal/1.0 (educational B4A demo)"
+    Private ActiveScreen As String
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
     Root = Activity
     If NavigationState.IsInitialized = False Then NavigationState.Initialize(0)
-    If ImageStatusState.IsInitialized = False Then ImageStatusState.Initialize("Preparing the aviary...")
-    If TipsVisibleState.IsInitialized = False Then TipsVisibleState.Initialize(True)
+    If CounterState.IsInitialized = False Then CounterState.Initialize(0)
+    If CounterTextState.IsInitialized = False Then CounterTextState.Initialize("00")
     If NameState.IsInitialized = False Then NameState.Initialize("")
-    If ImageAsyncState.IsInitialized = False Then ImageAsyncState.Initialize
-    ImageAsyncState.Subscribe(Me, "ImageAsyncState_Changed")
+    If GreetingState.IsInitialized = False Then GreetingState.Initialize("Type a name to update this message.")
+    ActiveScreen = "Home"
 
-    YellowUrl = "https://upload.wikimedia.org/wikipedia/commons/e/ec/A_yellow_domestic_canary_on_a_stick.jpg"
-    RedUrl = "https://upload.wikimedia.org/wikipedia/commons/e/ea/Serinus_canaria_Rosso_Intenso.jpg"
-    WhiteUrl = "https://upload.wikimedia.org/wikipedia/commons/3/36/White_canary.jpg"
-
-    AppTheme.Initialize.Scheme(0xFFD98B2B)
-    FallbackBitmap = CreateFallbackCanary
+    AppTheme.Initialize.Scheme(0xFF6558D3)
     Root.Color = AppTheme.Background
-    Snack.Initialize.ApplyTheme(AppTheme).CornerRadius(14dip)
-    ActiveRoute = "Canaries"
+    Snack.Initialize.ApplyTheme(AppTheme).CornerRadius(AppTheme.SnackbarRadius)
+    RebuildScreens
+End Sub
 
+' Recreates only the virtual screen tree. The native Activity remains untouched.
+Private Sub RebuildScreens
+    If Navigator <> Null Then
+        If Navigator.IsInitialized Then Navigator.Unmount
+    End If
     Navigator.Initialize
-    Navigator.AddScreen("Canaries", BuildCanaries)
-    Navigator.AddScreen("Varieties", BuildVarieties)
-    Navigator.AddScreen("Care", BuildCare)
+    Navigator.AddScreen("Home", BuildHome)
+    Navigator.AddScreen("Components", BuildComponents)
+    Navigator.AddScreen("Playground", BuildPlayground)
+    UiMounted = False
+    LastWidth = 0
+    LastHeight = 0
     BuildUI
 End Sub
 
@@ -87,117 +81,234 @@ End Sub
 ' Screens
 ' ============================================================================
 
-Private Sub BuildCanaries As UIScaffold
-    HeroImage = Null
-    Dim title As UILabel = TextLabel("CANARY JOURNAL", 12, AppTheme.Accent)
-    Dim heading As UILabel = TextLabel("A tiny guide to bright voices.", 28, AppTheme.PrimaryText)
-    Dim intro As UILabel = TextLabel("Learn the main varieties, colors and daily habits of a domestic canary.", 15, AppTheme.SecondaryText)
-    Dim imageStatus As UILabel
-    imageStatus.Initialize.BindText(ImageStatusState).Size(12).Color(AppTheme.SecondaryText)
+Private Sub BuildHome As UIScaffold
+    Dim eyebrow As UILabel = TextLabel("DECLARATIVE UI FOR B4A", 12, AppTheme.Accent)
+    Dim heading As UILabel = TextLabel("Build interfaces\nthat feel alive.", 30, AppTheme.PrimaryText)
+    Dim intro As UILabel = TextLabel("A compact, Flutter-inspired layer for composing native Android screens with readable B4A code.", 15, AppTheme.SecondaryText)
 
-    Dim heroBody As UIColumn
-    heroBody.Initialize.Spacing(6dip).AddChild(BuildImageSpace).AddChild(title).AddChild(heading) _
-        .AddChild(intro).AddChild(imageStatus)
-    HeroCard.Initialize.BackgroundColor(AppTheme.HeroSurface).BorderColor(AppTheme.Border) _
-        .CornerRadius(20dip).Child(BuildPadding(heroBody, 16dip))
+    Dim titleBlock As UIColumn
+    titleBlock.Initialize.Spacing(7dip).AddChild(eyebrow).AddChild(heading).AddChild(intro)
+
+    Dim placeholder As UIPlaceholder
+    placeholder.Initialize.FallbackSize(260dip, 150dip).Color(AppTheme.Accent).StrokeWidth(2dip) _
+        .ApplyTheme(AppTheme)
+    Dim visualCard As UICard
+    visualCard.Initialize.BackgroundColor(AppTheme.HeroSurface).BorderColor(AppTheme.Border) _
+        .CornerRadius(AppTheme.RadiusLarge).Child(BuildPadding(placeholder, 14dip)).ApplyTheme(AppTheme)
 
     Dim badge As UICard
-    badge.Initialize.BackgroundColor(AppTheme.Accent).CornerRadius(12dip) _
-        .Child(BuildPadding(TextLabel("BIRD NOTES", 11, AppTheme.AccentText), 8dip))
-    Dim hero As UIStack
-    hero.Initialize.Alignment("topRight").AddChild(HeroCard).AddChild(badge)
+    badge.Initialize.BackgroundColor(AppTheme.Accent).CornerRadius(AppTheme.RadiusSmall) _
+        .Child(BuildPadding(TextLabel("ONE ACTIVITY · THREE SCREENS", 11, AppTheme.AccentText), 8dip))
+    Dim heroStack As UIStack
+    heroStack.Initialize.Alignment("topRight").AddChild(visualCard).AddChild(badge)
 
-    Dim varieties As UIButton
-    varieties.Initialize.Text("EXPLORE VARIETIES").BackgroundColor(AppTheme.Accent) _
-        .TextColor(AppTheme.AccentText).CornerRadius(14dip).OnClick(Me, "OpenVarieties_Click")
-    Dim care As UIButton
-    care.Initialize.Text("DAILY CARE").BackgroundColor(AppTheme.SurfaceVariant) _
-        .TextColor(AppTheme.ButtonText).CornerRadius(14dip).OnClick(Me, "OpenCare_Click")
+    HeroCard.Initialize.BackgroundColor(AppTheme.Surface).BorderColor(AppTheme.Border) _
+        .CornerRadius(AppTheme.RadiusLarge).Child(BuildPadding(BuildColumn2(titleBlock, heroStack), 16dip)) _
+        .ApplyTheme(AppTheme)
+
+    Dim explore As UIButton
+    explore.Initialize.Text("EXPLORE COMPONENTS").BackgroundColor(AppTheme.Accent) _
+        .TextColor(AppTheme.AccentText).CornerRadius(AppTheme.ButtonRadius) _
+        .OnClick(Me, "OpenComponents_Click")
+    Dim tryIt As UIButton
+    tryIt.Initialize.Text("TRY THE PLAYGROUND").BackgroundColor(AppTheme.SurfaceVariant) _
+        .TextColor(AppTheme.ButtonText).CornerRadius(AppTheme.ButtonRadius) _
+        .OnClick(Me, "OpenPlayground_Click")
     Dim actions As UIRow
-    actions.Initialize.Spacing(10dip).CrossAxisAlignment("center").AddChild(varieties).AddChild(care)
+    actions.Initialize.Spacing(10dip).CrossAxisAlignment("center").AddChild(explore).AddChild(tryIt)
 
-    Dim overview As UICard = InfoCard("Why canaries?", "They are small, social songbirds. Color, song and temperament vary with the variety and the individual bird.")
-    Dim declarativeNote As UICard = InfoCard("What this demo shows", "The app uses a Scaffold, virtual navigation, measured cards, UIState, UIAsyncState, UIAnimation, UIScrollView and UISnackBar in one readable Activity.")
+    Dim stateCard As UICard = FeatureCard("State-driven", "Change a value and let the bound widgets update themselves.", Chr(61664), AppTheme.Info)
+    Dim layoutCard As UICard = FeatureCard("Measured layout", "Column, Row, Center, Stack and Card compose naturally without manual coordinates.", Chr(61695), AppTheme.Accent)
+    Dim polishCard As UICard = FeatureCard("Native polish", "Themes, rounded controls, navigation, snackbars and animations stay close to native Android.", Chr(61473), AppTheme.Negative)
+
+    Dim features As UIColumn
+    features.Initialize.Spacing(10dip).AddChild(stateCard).AddChild(layoutCard).AddChild(polishCard)
 
     Dim content As UIColumn
-    content.Initialize.Spacing(12dip).AddChild(hero).AddChild(actions).AddChild(overview).AddChild(declarativeNote)
-    Dim scroll As UIScrollView
-    scroll.Initialize.Child(BuildPadding(content, 16dip))
-
-    Dim screen As UIScaffold
-    screen.Initialize.AppBar(BuildBar("CANARY JOURNAL")) _
-        .Body(scroll).BottomNavigationBar(BuildNavigation).ApplyTheme(AppTheme)
-    Return screen
+    content.Initialize.Spacing(14dip).AddChild(HeroCard).AddChild(actions) _
+        .AddChild(TextLabel("WHY THIS APPROACH", 12, AppTheme.MutedText)).AddChild(features)
+    Return Screen("NOVA UI LAB", content)
 End Sub
 
-Private Sub BuildVarieties As UIScaffold
-    VarietyCards.Initialize
-    VarietyImages.Initialize
+Private Sub BuildComponents As UIScaffold
+    Dim title As UILabel = TextLabel("A small design system,\ncomposed in code.", 27, AppTheme.PrimaryText)
+    Dim intro As UILabel = TextLabel("The same theme flows through every component. Explicit overrides are still available when a screen needs a distinct accent.", 15, AppTheme.SecondaryText)
 
-    Dim title As UILabel = TextLabel("Varieties & colors", 27, AppTheme.PrimaryText)
-    Dim intro As UILabel = TextLabel("Three familiar color directions. The bird's health and character matter more than the plumage.", 15, AppTheme.SecondaryText)
+    Dim palette As UICard
+    palette.Initialize.BackgroundColor(AppTheme.HeroSurface).BorderColor(AppTheme.Border) _
+        .CornerRadius(AppTheme.RadiusLarge).Child(BuildPadding(BuildPalette, 14dip)).ApplyTheme(AppTheme)
 
-    Dim yellow As UICard = ImageCard("Yellow canary", "The classic bright yellow companion, often associated with a clear, lively song.", AppTheme.Accent)
-    Dim red As UICard = ImageCard("Red factor", "A warm red-orange variety whose color is supported by the right diet and care.", AppTheme.Negative)
-    Dim white As UICard = ImageCard("White canary", "A pale variety that makes a calm, high-contrast subject for a small indoor aviary.", AppTheme.Info)
-    VarietyCards.Add(yellow)
-    VarietyCards.Add(red)
-    VarietyCards.Add(white)
+    Dim placeholder As UIPlaceholder
+    placeholder.Initialize.FallbackSize(320dip, 90dip).StrokeWidth(2dip).Color(AppTheme.Info) _
+        .ApplyTheme(AppTheme)
+    Dim placeholderCard As UICard
+    placeholderCard.Initialize.CornerRadius(AppTheme.CardRadius).BorderColor(AppTheme.Info) _
+        .Child(BuildPadding(BuildColumn3(TextLabel("Flutter-like Placeholder", 16, AppTheme.PrimaryText), _
+        TextLabel("A visual layout marker, useful while designing a screen.", 14, AppTheme.SecondaryText), placeholder), 14dip)) _
+        .ApplyTheme(AppTheme)
 
-    Dim source As UICard = InfoCard("Image sources", "Photos are loaded from Wikimedia Commons at runtime. The yellow and white images are public domain; the red image is CC BY-SA and should be attributed when reused.")
+    Dim divider As UIDivider
+    divider.Initialize.ApplyTheme(AppTheme)
+    Dim button As UIButton
+    button.Initialize.Text("SHOW SNACKBAR").BackgroundColor(AppTheme.Accent) _
+        .TextColor(AppTheme.AccentText).CornerRadius(AppTheme.ButtonRadius) _
+        .OnClick(Me, "ShowComponentsSnack_Click")
+    Dim buttonCard As UICard
+    buttonCard.Initialize.CornerRadius(AppTheme.CardRadius)        .Child(BuildPadding(BuildColumn3( _
+        TextLabel("Interactive controls", 16, AppTheme.PrimaryText), button, divider), 14dip)).ApplyTheme(AppTheme)
+
     Dim content As UIColumn
-    content.Initialize.Spacing(12dip).AddChild(title).AddChild(intro).AddChild(yellow) _
-        .AddChild(red).AddChild(white).AddChild(source)
-
-    Dim scroll As UIScrollView
-    scroll.Initialize.Child(BuildPadding(content, 16dip))
-    Dim screen As UIScaffold
-    screen.Initialize.AppBar(BuildBar("VARIETIES")) _
-        .Body(scroll).BottomNavigationBar(BuildNavigation).ApplyTheme(AppTheme)
-    Return screen
+    content.Initialize.Spacing(12dip).AddChild(title).AddChild(intro).AddChild(palette) _
+        .AddChild(placeholderCard).AddChild(buttonCard)
+    Return Screen("COMPONENTS", content)
 End Sub
 
-Private Sub BuildCare As UIScaffold
-    Dim title As UILabel = TextLabel("Simple daily care", 27, AppTheme.PrimaryText)
-    Dim intro As UILabel = TextLabel("A healthy routine is more important than an elaborate cage or a complicated menu.", 15, AppTheme.SecondaryText)
+Private Sub BuildPlayground As UIScaffold
+    Dim title As UILabel = TextLabel("A living screen,\nnot a static mockup.", 27, AppTheme.PrimaryText)
+    Dim intro As UILabel = TextLabel("UIState keeps the counter and the input synchronized while the same Activity handles navigation and feedback.", 15, AppTheme.SecondaryText)
+
+    Dim counterText As UILabel
+    counterText.Initialize.BindText(CounterTextState).Size(52).Color(AppTheme.PrimaryText).ApplyTheme(AppTheme)
+    Dim counterCaption As UILabel = TextLabel("CURRENT VALUE", 11, AppTheme.MutedText)
+    Dim minus As UIButton
+    minus.Initialize.Text("−").BackgroundColor(AppTheme.SurfaceVariant).TextColor(AppTheme.ButtonText) _
+        .CornerRadius(AppTheme.RadiusMedium).OnClick(Me, "Decrement_Click")
+    Dim plus As UIButton
+    plus.Initialize.Text("+").BackgroundColor(AppTheme.Accent).TextColor(AppTheme.AccentText) _
+        .CornerRadius(AppTheme.RadiusMedium).OnClick(Me, "Increment_Click")
+    Dim counterActions As UIRow
+    counterActions.Initialize.Spacing(10dip).MainAxisAlignment("center").AddChild(minus).AddChild(plus)
+    Dim counterCard As UICard
+    counterCard.Initialize.BackgroundColor(AppTheme.HeroSurface).CornerRadius(AppTheme.RadiusLarge) _
+        .Child(BuildPadding(BuildColumn3(counterCaption, counterText, counterActions), 16dip)).ApplyTheme(AppTheme)
 
     Dim nameInput As UIInput
-    nameInput.Initialize.Hint("Your bird's name").BindText(NameState) _
-        .OnTextChanged(Me, "Name_Changed").CornerRadius(12dip).Border(1dip, AppTheme.Border) _
+    nameInput.Initialize.Hint("Your name").BindText(NameState).OnTextChanged(Me, "Name_Changed") _
+        .CornerRadius(AppTheme.InputRadius).Border(AppTheme.BorderWidth, AppTheme.Border).ApplyTheme(AppTheme)
+    Dim greeting As UILabel
+    greeting.Initialize.BindText(GreetingState).Size(16).ApplyTheme(AppTheme).Color(AppTheme.PrimaryText)
+    Dim greetButton As UIButton
+    greetButton.Initialize.Text("SAY HELLO").BackgroundColor(AppTheme.SurfaceVariant) _
+        .TextColor(AppTheme.ButtonText).CornerRadius(AppTheme.ButtonRadius).OnClick(Me, "Greeting_Click")
+    Dim inputCard As UICard
+    inputCard.Initialize.CornerRadius(AppTheme.CardRadius)        .Child(BuildPadding(BuildColumn4( _
+        TextLabel("Bound input", 16, AppTheme.PrimaryText), nameInput, greeting, greetButton), 14dip)) _
         .ApplyTheme(AppTheme)
-    Dim nameCard As UICard
-    nameCard.Initialize.CornerRadius(16dip).Child(BuildBox(BuildLabeledInput("Personalize the notes", nameInput), 14dip)) _
-        .ApplyTheme(AppTheme)
 
-    Dim tips As UIColumn
-    tips.Initialize.Spacing(8dip).AddChild(CareCard("Fresh water", "Replace drinking water daily and clean the container regularly.", AppTheme.Info)) _
-        .AddChild(CareCard("Balanced food", "Use a suitable seed mix and ask an avian professional about supplements.", AppTheme.Accent)) _
-        .AddChild(CareCard("Light & rest", "Give a predictable day/night rhythm and keep the cage away from drafts.", AppTheme.Negative)) _
-        .AddChild(CareCard("Gentle enrichment", "Offer safe perches, room to move and calm interaction without forcing contact.", AppTheme.Accent))
-
-    Dim visibleTips As UIVisibility
-    visibleTips.Initialize.BindVisible(TipsVisibleState).OnVisibilityChanged(Me, "Tips_VisibilityChanged").Child(tips)
-    Dim toggle As UIButton
-    toggle.Initialize.Text(TipsButtonText).BackgroundColor(AppTheme.SurfaceVariant) _
-        .TextColor(AppTheme.ButtonText).CornerRadius(12dip).OnClick(Me, "ToggleTips_Click")
-
-    Dim save As UIButton
-    save.Initialize.Text("SAVE NOTE").BackgroundColor(AppTheme.Accent).TextColor(AppTheme.AccentText) _
-        .CornerRadius(14dip).OnClick(Me, "SaveNote_Click")
+    Dim themeButton As UIButton
+    themeButton.Initialize.Text(ThemeButtonText).BackgroundColor(AppTheme.ThemeAction) _
+        .TextColor(AppTheme.ThemeActionText).CornerRadius(AppTheme.ButtonRadius) _
+        .OnClick(Me, "ToggleTheme_Click")
+    Dim note As UILabel = TextLabel("Toggle the theme to rebuild the same declarative tree with a new palette.", 13, AppTheme.SecondaryText)
+    Dim themeCard As UICard
+    themeCard.Initialize.BorderColor(AppTheme.Border).CornerRadius(AppTheme.CardRadius) _
+        .Child(BuildPadding(BuildColumn2(themeButton, note), 14dip)).ApplyTheme(AppTheme)
 
     Dim content As UIColumn
-    content.Initialize.Spacing(12dip).AddChild(title).AddChild(intro).AddChild(nameCard) _
-        .AddChild(toggle).AddChild(visibleTips).AddChild(save)
-    Dim scroll As UIScrollView
-    scroll.Initialize.Child(BuildPadding(content, 16dip))
-    Dim screen As UIScaffold
-    screen.Initialize.AppBar(BuildBar("DAILY CARE")) _
-        .Body(scroll).BottomNavigationBar(BuildNavigation).ApplyTheme(AppTheme)
-    Return screen
+    content.Initialize.Spacing(12dip).AddChild(title).AddChild(intro).AddChild(counterCard) _
+        .AddChild(inputCard).AddChild(themeCard)
+    Return Screen("PLAYGROUND", content)
 End Sub
 
 ' ============================================================================
-' Declarative builders
+' Reusable declarative builders
+' ============================================================================
+
+Private Sub Screen(Title As String, Content As Object) As UIScaffold
+    Dim scroll As UIScrollView
+    scroll.Initialize.Child(BuildPadding(Content, 16dip)).ApplyTheme(AppTheme)
+    Dim result As UIScaffold
+    result.Initialize.AppBar(BuildBar(Title)).Body(scroll).BottomNavigationBar(BuildNavigation) _
+        .ApplyTheme(AppTheme)
+    Return result
+End Sub
+
+Private Sub BuildBar(Title As String) As UIAppBar
+    Dim result As UIAppBar
+    result.Initialize.Title(Title).ApplyTheme(AppTheme)
+    Return result
+End Sub
+
+Private Sub BuildNavigation As UIBottomNavigationBar
+    Dim result As UIBottomNavigationBar
+    result.Initialize.AddItem("Home", Chr(61461), "Home").AddItem("Components", Chr(61502), "Components") _
+        .AddItem("Playground", Chr(61452), "Playground").BindSelectedIndex(NavigationState) _
+        .OnSelected(Me, "Navigation_Changed").UseFontAwesome(True).ApplyTheme(AppTheme)
+    Return result
+End Sub
+
+Private Sub BuildPadding(Child As Object, Amount As Int) As UIPadding
+    Dim result As UIPadding
+    result.Initialize.All(Amount).Child(Child)
+    Return result
+End Sub
+
+Private Sub BuildColumn2(First As Object, Second As Object) As UIColumn
+    Dim result As UIColumn
+    result.Initialize.Spacing(7dip).AddChild(First).AddChild(Second)
+    Return result
+End Sub
+
+Private Sub BuildColumn3(First As Object, Second As Object, Third As Object) As UIColumn
+    Dim result As UIColumn
+    result.Initialize.Spacing(7dip).AddChild(First).AddChild(Second).AddChild(Third)
+    Return result
+End Sub
+
+Private Sub BuildColumn4(First As Object, Second As Object, Third As Object, Fourth As Object) As UIColumn
+    Dim result As UIColumn
+    result.Initialize.Spacing(7dip).AddChild(First).AddChild(Second).AddChild(Third).AddChild(Fourth)
+    Return result
+End Sub
+
+Private Sub TextLabel(Value As String, Size As Int, Color As Int) As UILabel
+    Dim result As UILabel
+    result.Initialize.Text(Value).Size(Size).ApplyTheme(AppTheme).Color(Color)
+    Return result
+End Sub
+
+Private Sub FeatureCard(Title As String, Description As String, Icon As String, Accent As Int) As UICard
+    Dim iconLabel As UILabel = TextLabel(Icon, 22, Accent)
+    Dim body As UIColumn
+    body.Initialize.Spacing(3dip).AddChild(iconLabel).AddChild(TextLabel(Title, 16, AppTheme.PrimaryText)) _
+        .AddChild(TextLabel(Description, 14, AppTheme.SecondaryText))
+    Dim result As UICard
+    result.Initialize.BorderColor(Accent).CornerRadius(AppTheme.CardRadius) _
+        .Child(BuildPadding(body, 13dip)).ApplyTheme(AppTheme)
+    Return result
+End Sub
+
+Private Sub BuildPalette As UIColumn
+    Dim row As UIRow
+    row.Initialize.Spacing(8dip).AddChild(ColorSwatch(AppTheme.Accent, "Primary", AppTheme.AccentText)) _
+        .AddChild(ColorSwatch(AppTheme.Info, "Info", AppTheme.InfoText)).AddChild(ColorSwatch(AppTheme.Negative, "Action", AppTheme.NegativeText))
+    Dim result As UIColumn
+    result.Initialize.Spacing(8dip).AddChild(TextLabel("Theme tokens", 16, AppTheme.PrimaryText)) _
+        .AddChild(TextLabel("One seed color generates a consistent visual language.", 14, AppTheme.SecondaryText)) _
+        .AddChild(row)
+    Return result
+End Sub
+
+Private Sub ColorSwatch(Color As Int, Caption As String, Foreground As Int) As UICard
+    Dim sample As UICard
+    sample.Initialize.BackgroundColor(Color).CornerRadius(AppTheme.RadiusSmall) _
+        .Child(BuildPadding(TextLabel(Caption, 12, Foreground), 8dip))
+    Return sample
+End Sub
+
+Private Sub ThemeButtonText As String
+    If AppTheme.IsDark Then Return "USE LIGHT THEME"
+    Return "USE DARK THEME"
+End Sub
+
+Private Sub GreetingText As String
+    Dim name As String = "" & NameState.GetState
+    If name.Trim = "" Then Return "Type a name to update this message."
+    Return "Hello, " & name & "!"
+End Sub
+
+' ============================================================================
+' Mounting, navigation and interaction
 ' ============================================================================
 
 Private Sub BuildUI
@@ -210,283 +321,82 @@ Private Sub BuildUI
         UiMounted = True
         LastWidth = Root.Width
         LastHeight = Root.Height
-        MountVisibleImages
+        If ActiveScreen = "Home" Then AnimateHero
     End If
     Navigator.RefreshInsets
-    If ImagesStarted = False Then
-        ImagesStarted = True
-        LoadCanaryImages
-    End If
 End Sub
 
-Private Sub GoTo(Route As String)
-    ActiveRoute = Route
-    Navigator.NavigateTo(Route)
-    MountVisibleImages
+Sub Navigation_Changed(Index As Int, Id As String)
+    NavigationState.SetState(Index)
+    ActiveScreen = Id
+    Navigator.NavigateTo(Id)
 End Sub
 
-Private Sub BuildBar(Title As String) As UIAppBar
-    Dim bar As UIAppBar
-    bar.Initialize.Title(Title).ApplyTheme(AppTheme)
-    Return bar
+Sub OpenComponents_Click
+    NavigationState.SetState(1)
+    ActiveScreen = "Components"
+    Navigator.NavigateTo("Components")
 End Sub
 
-Private Sub BuildNavigation As UIBottomNavigationBar
-    Dim nav As UIBottomNavigationBar
-    nav.Initialize.AddItem("Canaries", Chr(61461), "Canaries").AddItem("Varieties", Chr(61502), "Varieties") _
-        .AddItem("Care", Chr(61452), "Care").BindSelectedIndex(NavigationState) _
-        .OnSelected(Me, "Navigation_Changed").UseFontAwesome(True).ApplyTheme(AppTheme) _
-        .IconSize(21).TextSize(10)
-    Return nav
+Sub OpenPlayground_Click
+    NavigationState.SetState(2)
+    ActiveScreen = "Playground"
+    Navigator.NavigateTo("Playground")
 End Sub
 
-Private Sub BuildPadding(Child As Object, Amount As Int) As UIPadding
-    Dim result As UIPadding
-    result.Initialize.All(Amount).Child(Child)
-    Return result
+Sub Increment_Click
+    Dim value As Int = CounterState.GetState
+    CounterState.SetState(value + 1)
+    CounterTextState.SetState(NumberFormat2(value + 1, 2, 0, 0, False))
 End Sub
 
-Private Sub BuildBox(Child As Object, Amount As Int) As UIBox
-    Dim result As UIBox
-    result.Initialize(Child, Amount)
-    Return result
+Sub Decrement_Click
+    Dim value As Int = CounterState.GetState
+    CounterState.SetState(Max(0, value - 1))
+    CounterTextState.SetState(NumberFormat2(Max(0, value - 1), 2, 0, 0, False))
 End Sub
 
-Private Sub BuildImageSpace As UISpace
-    Dim result As UISpace
-    result.Initialize.Size(150dip)
-    Return result
-End Sub
-
-Private Sub TextLabel(Value As String, Size As Int, Color As Int) As UILabel
-    Dim result As UILabel
-    result.Initialize.Text(Value).Size(Size).ApplyTheme(AppTheme).Color(Color)
-    Return result
-End Sub
-
-Private Sub InfoCard(Title As String, Description As String) As UICard
-    Dim body As UIColumn
-    body.Initialize.Spacing(4dip).AddChild(TextLabel(Title, 16, AppTheme.PrimaryText)) _
-        .AddChild(TextLabel(Description, 14, AppTheme.SecondaryText))
-    Dim result As UICard
-    result.Initialize.CornerRadius(16dip).Child(BuildPadding(body, 14dip)).ApplyTheme(AppTheme)
-    Return result
-End Sub
-
-Private Sub CareCard(Title As String, Description As String, Accent As Int) As UICard
-    Dim body As UIColumn
-    body.Initialize.Spacing(4dip).AddChild(TextLabel(Title, 16, AppTheme.PrimaryText)) _
-        .AddChild(TextLabel(Description, 14, AppTheme.SecondaryText))
-    Dim result As UICard
-    result.Initialize.BorderColor(Accent).CornerRadius(15dip) _
-        .Child(BuildPadding(body, 14dip)).ApplyTheme(AppTheme)
-    Return result
-End Sub
-
-Private Sub ImageCard(Title As String, Description As String, Accent As Int) As UICard
-    Dim body As UIColumn
-    body.Initialize.Spacing(5dip).AddChild(BuildImageSpace) _
-        .AddChild(TextLabel(Title, 17, AppTheme.PrimaryText)) _
-        .AddChild(TextLabel(Description, 14, AppTheme.SecondaryText))
-    Dim result As UICard
-    result.Initialize.BorderColor(Accent).CornerRadius(17dip) _
-        .Child(BuildPadding(body, 14dip)).ApplyTheme(AppTheme)
-    Return result
-End Sub
-
-Private Sub BuildLabeledInput(Caption As String, Input As UIInput) As UIColumn
-    Dim result As UIColumn
-    result.Initialize.Spacing(5dip).AddChild(TextLabel(Caption, 12, AppTheme.SecondaryText)).AddChild(Input)
-    Return result
-End Sub
-
-Private Sub TipsButtonText As String
-    If ("" & TipsVisibleState.GetState).ToLowerCase = "true" Then Return "HIDE CARE TIPS"
-    Return "SHOW CARE TIPS"
-End Sub
-
-' ============================================================================
-' Remote images and native image bridge
-' ============================================================================
-
-Private Sub MountVisibleImages
-    If ActiveRoute = "Canaries" Then
-        If HeroCard <> Null Then
-            Dim heroView As B4XView = HeroCard.GetView
-            If heroView <> Null And HeroImage = Null Then
-                HeroImage = AddImageView(heroView, 150dip)
-                ApplyBitmap(HeroImage, YellowBitmap)
-                AnimateHero
-            End If
-        End If
-    Else If ActiveRoute = "Varieties" Then
-        If VarietyCards.IsInitialized Then
-            If VarietyImages.IsInitialized = False Then VarietyImages.Initialize
-            If VarietyImages.Size = 0 Then
-                For Each card As UICard In VarietyCards
-                    Dim cardView As B4XView = card.GetView
-                    If cardView <> Null Then VarietyImages.Add(AddImageView(cardView, 150dip))
-                Next
-            End If
-            If VarietyImages.Size >= 3 Then
-                ApplyBitmap(VarietyImages.Get(0), YellowBitmap)
-                ApplyBitmap(VarietyImages.Get(1), RedBitmap)
-                ApplyBitmap(VarietyImages.Get(2), WhiteBitmap)
-            End If
-        End If
-    End If
-End Sub
-
-Private Sub AddImageView(Host As B4XView, Height As Int) As ImageView
-    Dim image As ImageView
-    image.Initialize("")
-    image.Gravity = Gravity.FILL
-    image.Color = AppTheme.SurfaceVariant
-    Host.AddView(image, 0, 0, Max(0, Host.Width), Height)
-    ApplyBitmap(image, FallbackBitmap)
-    Return image
-End Sub
-
-Private Sub CreateFallbackCanary As Bitmap
-    Dim bmp As Bitmap
-    bmp.InitializeMutable(900dip, 300dip)
-    Dim cvs As Canvas
-    cvs.Initialize2(bmp)
-    cvs.DrawColor(AppTheme.SurfaceVariant)
-    cvs.DrawCircle(450dip, 145dip, 72dip, 0xFFFFD166, True, 0)
-    cvs.DrawCircle(415dip, 135dip, 34dip, 0xFFFFE08A, True, 0)
-    cvs.DrawCircle(505dip, 128dip, 24dip, 0xFFE9B949, True, 0)
-    cvs.DrawCircle(475dip, 118dip, 8dip, 0xFF172033, True, 0)
-    cvs.DrawCircle(478dip, 115dip, 3dip, Colors.White, True, 0)
-    cvs.DrawLine(520dip, 146dip, 550dip, 155dip, 0xFFE89B2B, 7dip)
-    cvs.DrawLine(375dip, 218dip, 535dip, 218dip, 0xFF8B5E3C, 8dip)
-    cvs.DrawLine(430dip, 194dip, 420dip, 218dip, 0xFF8B5E3C, 5dip)
-    cvs.DrawLine(470dip, 194dip, 480dip, 218dip, 0xFF8B5E3C, 5dip)
-    Return bmp
-End Sub
-
-Private Sub ApplyBitmap(Target As ImageView, Value As Bitmap)
-    If Target = Null Or Value = Null Then Return
-    If Target.IsInitialized = False Then Return
-    If Value.IsInitialized = False Then Return
-    Target.Bitmap = Value
-End Sub
-
-Private Sub LoadCanaryImages
-    ImageAsyncState.SetLoading
-    ImageStatusState.SetState("Loading three reference photos...")
-
-    Dim job As HttpJob
-    job.Initialize("", Me)
-    job.Download(YellowUrl)
-    job.GetRequest.SetHeader("User-Agent", ImageUserAgent)
-    Wait For (job) JobDone(job As HttpJob)
-    If job.Success Then
-        YellowBitmap = job.GetBitmapResize(900dip, 300dip, True)
-        ImageStatusState.SetState("Photos loaded from Wikimedia Commons")
+Sub Name_Changed(NewText As String)
+    NameState.SetState(NewText)
+    If NewText.Trim = "" Then
+        GreetingState.SetState("Type a name to update this message.")
     Else
-        ImageStatusState.SetState("Some photos could not be loaded")
+        GreetingState.SetState("Hello, " & NewText & "!")
     End If
-    job.Release
-    MountVisibleImages
-
-    Dim redJob As HttpJob
-    redJob.Initialize("", Me)
-    redJob.Download(RedUrl)
-    redJob.GetRequest.SetHeader("User-Agent", ImageUserAgent)
-    Wait For (redJob) JobDone(redJob As HttpJob)
-    If redJob.Success Then RedBitmap = redJob.GetBitmapResize(900dip, 300dip, True)
-    redJob.Release
-    MountVisibleImages
-
-    Dim whiteJob As HttpJob
-    whiteJob.Initialize("", Me)
-    whiteJob.Download(WhiteUrl)
-    whiteJob.GetRequest.SetHeader("User-Agent", ImageUserAgent)
-    Wait For (whiteJob) JobDone(whiteJob As HttpJob)
-    If whiteJob.Success Then WhiteBitmap = whiteJob.GetBitmapResize(900dip, 300dip, True)
-    whiteJob.Release
-
-    If HasLoadedImage(YellowBitmap) Or HasLoadedImage(RedBitmap) Or HasLoadedImage(WhiteBitmap) Then
-        ImageAsyncState.SetSuccess("images")
-        ImageStatusState.SetState("Reference photos ready")
-    Else
-        ImageAsyncState.SetError("No image could be downloaded")
-        ImageStatusState.SetState("Photos unavailable; check the network connection")
-    End If
-    MountVisibleImages
 End Sub
 
-Private Sub HasLoadedImage(Value As Bitmap) As Boolean
-    If Value = Null Then Return False
-    Return Value.IsInitialized
+Sub Greeting_Click
+    Snack.Message(GreetingText).Action("OK", Me, "CloseSnack_Click").Show(Root)
+End Sub
+
+Sub ShowComponentsSnack_Click
+    Snack.Message("Every surface is declared in B4A.").Action("OK", Me, "CloseSnack_Click").Show(Root)
+End Sub
+
+Sub CloseSnack_Click
+    Snack.Dismiss
+End Sub
+
+Sub ToggleTheme_Click
+    AppTheme.Toggle
+    Root.Color = AppTheme.Background
+    RebuildScreens
 End Sub
 
 Private Sub AnimateHero
     If HeroCard = Null Then Return
     Dim cardView As B4XView = HeroCard.GetView
-    If cardView = Null Then Return
-    If cardView.IsInitialized = False Then Return
-    HeroAnimation.Initialize.TargetView(cardView).MoveTo(cardView.Left, cardView.Top - 5dip) _
-        .Duration(140).OnCompleted(Me, "HeroAnimationBack").Start
+    If cardView = Null Or cardView.IsInitialized = False Then Return
+    HeroAnimation.Initialize.TargetView(cardView).MoveTo(cardView.Left, cardView.Top - 6dip) _
+        .Duration(180).OnCompleted(Me, "HeroAnimationBack").Start
 End Sub
 
-Sub HeroAnimationBack
+Sub HeroAnimationBack 'ignore
     If HeroCard = Null Then Return
     Dim cardView As B4XView = HeroCard.GetView
-    If cardView = Null Then Return
-    HeroAnimation.Initialize.TargetView(cardView).MoveTo(cardView.Left, cardView.Top + 5dip).Duration(180).Start
-End Sub
-
-' ============================================================================
-' Events
-' ============================================================================
-
-Sub Navigation_Changed(Index As Int, Id As String)
-    NavigationState.SetState(Index)
-    GoTo(Id)
-End Sub
-
-Sub OpenVarieties_Click
-    NavigationState.SetState(1)
-    GoTo("Varieties")
-End Sub
-
-Sub OpenCare_Click
-    NavigationState.SetState(2)
-    GoTo("Care")
-End Sub
-
-Sub ToggleTips_Click
-    TipsVisibleState.SetState(Not(("" & TipsVisibleState.GetState).ToLowerCase = "true"))
-End Sub
-
-Sub Tips_VisibilityChanged(Visibility As UIVisibility)
-    If Visibility = Null Then Return
-    Navigator.AddScreen("Care", BuildCare)
-End Sub
-
-Sub ImageAsyncState_Changed(State As UIAsyncState)
-    If State = Null Then Return
-    If State.IsLoading Then
-        ImageStatusState.SetState("Loading three reference photos...")
-    Else If State.IsSuccess Then
-        ImageStatusState.SetState("Reference photos ready")
-    Else If State.IsError Then
-        ImageStatusState.SetState("Photos unavailable; check the network connection")
-    End If
-End Sub
-
-Sub Name_Changed(NewText As String)
-    NameState.SetState(NewText)
-End Sub
-
-Sub SaveNote_Click
-    Snack.Message("Note saved for " & NameState.GetState).Action("OK", Me, "CloseSnack_Click").Show(Root)
-End Sub
-
-Sub CloseSnack_Click
-    Snack.Dismiss
+    If cardView = Null Or cardView.IsInitialized = False Then Return
+    HeroAnimation.Initialize.TargetView(cardView).MoveTo(cardView.Left, cardView.Top + 6dip) _
+        .Duration(220).Start
 End Sub
 
 Sub Activity_Resume
@@ -496,11 +406,10 @@ End Sub
 Sub Activity_Pause (UserClosed As Boolean)
 End Sub
 
-' The demo intentionally keeps normal B4A code visible:
-' - builders describe the screen tree;
-' - UIState updates bound labels and controls;
+' The demo intentionally keeps the usage visible:
+' - screen builders describe the UI tree;
+' - UIState updates bound widgets;
 ' - UIScrollView handles measured content;
 ' - UIAnimation adds one opt-in transition;
-' - HttpJob + Wait For loads real images without hiding the platform;
+' - UIPlaceholder demonstrates a Flutter-like design marker;
 ' - UISnackBar provides transient feedback without another Activity.
-' ============================================================================

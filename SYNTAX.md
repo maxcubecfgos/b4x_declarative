@@ -549,11 +549,13 @@ Rules:
 
 ## 13. Themes
 
-`UITheme` is a palette value provider, not a global renderer:
+`UITheme` is a Material 3-like design-token provider, not a global renderer. It supplies default colors, typography sizes, corner radii and common control metrics:
 
 ```basic
 Dim theme As UITheme
-theme.Initialize.Scheme(0xFF6750A4)
+theme.Initialize
+' theme.InitializeDark
+' theme.InitializeWithSchemeAndMode(0xFF6750A4, False)
 If theme.IsDark Then
     ' Use the dark palette values.
 End If
@@ -564,13 +566,18 @@ Rules:
 
 - `Scheme(seedColor)` accepts a normal B4A ARGB `Int` and returns the same `UITheme` instance for fluent composition.
 - `InitializeWithScheme(seedColor)` is the equivalent one-call initialization form.
-- `Initialize` remains valid and uses the default teal seed for backward compatibility.
+- `Initialize` remains valid and provides complete light defaults with the default teal seed for backward compatibility.
+- `InitializeDark` provides complete dark defaults.
+- `InitializeWithSchemeAndMode(seedColor, dark)` combines a custom seed and explicit mode.
 - A theme derives semantic color values through properties such as `Background`, `Surface`, `PrimaryText` and `Accent`.
+- Typography, shape and layout tokens provide defaults for labels, buttons, cards, inputs, navigation, FABs and snackbars.
 - Matching foreground properties such as `AccentText`, `InfoText`, `NegativeText` and `ThemeActionText` provide readable button text for the corresponding action colors.
 - The host applies those values to its widgets.
 - `UITheme` does not discover widgets or repaint the application automatically.
 - Theme changes must not silently change application state or navigation.
 - New palette values may be added; existing property meanings must remain stable.
+- Calling a widget setter such as `Size`, `TextSize`, `CornerRadius`, `BackgroundColor` or `Color` marks only that property as overridden.
+- `ApplyTheme` updates all non-overridden properties, so custom widgets can mix theme defaults with local design decisions.
 
 ## 14. Navigation and safe area
 

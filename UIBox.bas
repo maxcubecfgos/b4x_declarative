@@ -13,8 +13,8 @@ Sub Class_Globals
 End Sub
 
 Public Sub Initialize(child As Object, padding As Int) As UIBox
-	mChild = child
-	mPadding = padding
+	If IsWidgetProtocol(child) Then mChild = child
+	mPadding = Max(0, padding)
 	Return Me
 End Sub
 
@@ -59,6 +59,13 @@ End Sub
 
 ' Natural measurement used by parent layout containers.
 ' UIBox measures its child and adds the configured padding.
+Private Sub IsWidgetProtocol(Widget As Object) As Boolean
+	If Widget = Null Then Return False
+	Return xui.SubExists(Widget, "SetParent", 1) And xui.SubExists(Widget, "SetPosition", 2) _
+		And xui.SubExists(Widget, "SetSize", 2) And xui.SubExists(Widget, "Render", 0) _
+		And xui.SubExists(Widget, "GetContentSize", 2)
+End Sub
+
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim result As List
 	result.Initialize

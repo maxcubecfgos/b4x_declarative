@@ -23,9 +23,16 @@ Sub Class_Globals
 	Private mTextColorOverridden As Boolean
 	Private mActionColorOverridden As Boolean
 	Private mTheme As UITheme
+	Private mTextSize As Int
+	Private mTextSizeOverridden As Boolean
+	Private mActionTextSize As Int
+	Private mActionTextSizeOverridden As Boolean
 	Private mCornerRadius As Int
+	Private mCornerRadiusOverridden As Boolean
 	Private mMargin As Int
+	Private mMarginOverridden As Boolean
 	Private mHeight As Int
+	Private mHeightOverridden As Boolean
 	Private mRunId As Int
 	Private mVisible As Boolean
 End Sub
@@ -44,12 +51,19 @@ Public Sub Initialize As UISnackBar
 	mBackgroundColor = mTheme.SnackbarBackground
 	mTextColor = mTheme.SnackbarText
 	mActionColor = mTheme.SnackbarAction
+	mTextSize = mTheme.SnackbarTextSize
+	mTextSizeOverridden = False
+	mActionTextSize = mTheme.SnackbarActionTextSize
+	mActionTextSizeOverridden = False
 	mBackgroundColorOverridden = False
 	mTextColorOverridden = False
 	mActionColorOverridden = False
-	mCornerRadius = 10dip
-	mMargin = 16dip
-	mHeight = 56dip
+	mCornerRadius = mTheme.SnackbarRadius
+	mCornerRadiusOverridden = False
+	mMargin = mTheme.SnackbarMargin
+	mMarginOverridden = False
+	mHeight = mTheme.SnackbarHeight
+	mHeightOverridden = False
 	mRunId = 0
 	mVisible = False
 	Return Me
@@ -117,12 +131,33 @@ Public Sub ApplyTheme(Theme As UITheme) As UISnackBar
 	If mBackgroundColorOverridden = False Then mBackgroundColor = mTheme.SnackbarBackground
 	If mTextColorOverridden = False Then mTextColor = mTheme.SnackbarText
 	If mActionColorOverridden = False Then mActionColor = mTheme.SnackbarAction
+	If mTextSizeOverridden = False Then mTextSize = mTheme.SnackbarTextSize
+	If mActionTextSizeOverridden = False Then mActionTextSize = mTheme.SnackbarActionTextSize
+	If mCornerRadiusOverridden = False Then mCornerRadius = mTheme.SnackbarRadius
+	If mMarginOverridden = False Then mMargin = mTheme.SnackbarMargin
+	If mHeightOverridden = False Then mHeight = mTheme.SnackbarHeight
 	ApplyAppearance
+	If mVisible Then LayoutVisible
 	Return Me
 End Sub
 
 Public Sub CornerRadius(Radius As Int) As UISnackBar
 	mCornerRadius = Max(0, Radius)
+	mCornerRadiusOverridden = True
+	ApplyAppearance
+	Return Me
+End Sub
+
+Public Sub TextSize(Size As Int) As UISnackBar
+	mTextSize = Max(1, Size)
+	mTextSizeOverridden = True
+	ApplyAppearance
+	Return Me
+End Sub
+
+Public Sub ActionTextSize(Size As Int) As UISnackBar
+	mActionTextSize = Max(1, Size)
+	mActionTextSizeOverridden = True
 	ApplyAppearance
 	Return Me
 End Sub
@@ -130,6 +165,7 @@ End Sub
 ' Sets the horizontal distance from the parent edges.
 Public Sub Margin(Value As Int) As UISnackBar
 	mMargin = Max(0, Value)
+	mMarginOverridden = True
 	If mVisible Then LayoutVisible
 	Return Me
 End Sub
@@ -231,7 +267,7 @@ Private Sub ApplyAppearance
 			Dim nativeLabel As Label = mMessageLabel
 			nativeLabel.Text = mMessage
 			nativeLabel.TextColor = mTextColor
-			nativeLabel.TextSize = 14
+			nativeLabel.TextSize = mTextSize
 			nativeLabel.Gravity = Bit.Or(Gravity.CENTER_VERTICAL, Gravity.LEFT)
 		End If
 	End If
@@ -240,7 +276,7 @@ Private Sub ApplyAppearance
 			Dim nativeButton As Button = mActionButton
 			nativeButton.Text = mActionText
 			nativeButton.TextColor = mActionColor
-			nativeButton.TextSize = 13
+			nativeButton.TextSize = mActionTextSize
 			nativeButton.Gravity = Gravity.CENTER
 			nativeButton.Color = Colors.Transparent
 			nativeButton.Tag = Me
@@ -260,7 +296,9 @@ Private Sub LayoutVisible
 		If mActionButton.IsInitialized Then actionWidth = 88dip
 	End If
 	Dim messageWidth As Int = Max(0, width - 32dip - actionWidth)
-	mMessageLabel.SetLayoutAnimated(0, 16dip, 0, messageWidth, mHeight)
+	If mMessageLabel <> Null Then
+		If mMessageLabel.IsInitialized Then mMessageLabel.SetLayoutAnimated(0, 16dip, 0, messageWidth, mHeight)
+	End If
 	If mActionButton <> Null Then
 		If mActionButton.IsInitialized Then mActionButton.SetLayoutAnimated(0, width - actionWidth - 8dip, 0, actionWidth, mHeight)
 	End If

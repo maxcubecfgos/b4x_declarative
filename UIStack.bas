@@ -32,7 +32,7 @@ End Sub
 
 ' Adds one child. Later children are rendered above earlier children.
 Public Sub AddChild(Child As Object) As UIStack
-	If Child <> Null Then mChildren.Add(Child)
+	If IsWidgetProtocol(Child) Then mChildren.Add(Child)
 	Return Me
 End Sub
 
@@ -193,6 +193,13 @@ Private Sub IsValidAlignment(Value As String) As Boolean
 	Return Value = "topleft" Or Value = "topcenter" Or Value = "topright" _
 		Or Value = "centerleft" Or Value = "center" Or Value = "centerright" _
 		Or Value = "bottomleft" Or Value = "bottomcenter" Or Value = "bottomright"
+End Sub
+
+Private Sub IsWidgetProtocol(Widget As Object) As Boolean
+	If Widget = Null Then Return False
+	Return xui.SubExists(Widget, "SetParent", 1) And xui.SubExists(Widget, "SetPosition", 2) _
+		And xui.SubExists(Widget, "SetSize", 2) And xui.SubExists(Widget, "Render", 0) _
+		And xui.SubExists(Widget, "GetContentSize", 2)
 End Sub
 
 Private Sub IsLayoutParticipant(Child As Object) As Boolean

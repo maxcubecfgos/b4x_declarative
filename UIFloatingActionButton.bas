@@ -13,6 +13,10 @@ Sub Class_Globals
 	Private mBgColorOverridden As Boolean
 	Private mTextColorOverridden As Boolean
 	Private mTheme As UITheme
+	Private mTextSize As Int
+	Private mTextSizeOverridden As Boolean
+	Private mRadius As Int
+	Private mRadiusOverridden As Boolean
 	Private mTarget As Object
 	Private mEventName As String
 	Private mBaseView As B4XView
@@ -27,6 +31,10 @@ Public Sub Initialize As UIFloatingActionButton
 	mTheme = defaultTheme
 	mBgColor = mTheme.Accent
 	mTextColor = mTheme.AccentText
+	mTextSize = mTheme.FabTextSize
+	mTextSizeOverridden = False
+	mRadius = mTheme.FabRadius
+	mRadiusOverridden = False
 	mBgColorOverridden = False
 	mTextColorOverridden = False
 	' Clear the callback target so a new instance starts in a predictable state.
@@ -98,9 +106,25 @@ Public Sub ApplyTheme(Theme As UITheme) As UIFloatingActionButton
 	mTheme = Theme
 	If mBgColorOverridden = False Then mBgColor = mTheme.Accent
 	If mTextColorOverridden = False Then mTextColor = mTheme.AccentText
+	If mTextSizeOverridden = False Then mTextSize = mTheme.FabTextSize
+	If mRadiusOverridden = False Then mRadius = mTheme.FabRadius
 	If mParent <> Null Then
 		If mParent.IsInitialized Then Render
 	End If
+	Return Me
+End Sub
+
+' Sets the floating action button text size explicitly, in scaled pixels.
+Public Sub TextSize(Size As Int) As UIFloatingActionButton
+	mTextSize = Max(1, Size)
+	mTextSizeOverridden = True
+	Return Me
+End Sub
+
+' Sets the floating action button corner radius explicitly.
+Public Sub CornerRadius(Radius As Int) As UIFloatingActionButton
+	mRadius = Max(0, Radius)
+	mRadiusOverridden = True
 	Return Me
 End Sub
 
@@ -156,11 +180,11 @@ Public Sub Render
     
 	Dim btn As Button = mBaseView
 	btn.Text = mText
-	btn.TextSize = 24
+	btn.TextSize = mTextSize
 	btn.TextColor = mTextColor
     
 	Dim cd As ColorDrawable
-	cd.Initialize2(mBgColor, mWidth / 2, 0, 0)
+	cd.Initialize2(mBgColor, mRadius, 0, 0)
 	btn.Background = cd
 End Sub
 
@@ -186,12 +210,12 @@ Private Sub DispatchClick
 End Sub
 
 ' Natural measurement used by parent layout containers.
-' Use the Material Design 56dip floating action button size.
+' Use the active theme's floating action button size.
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim result As List
 	result.Initialize
 	
-	Dim fabSize As Int = 56dip
+	Dim fabSize As Int = mTheme.FabSize
 	
 	Dim safeMaxWidth As Int = MaxWidth
 	Dim safeMaxHeight As Int = MaxHeight

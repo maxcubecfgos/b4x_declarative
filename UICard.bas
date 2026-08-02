@@ -14,6 +14,7 @@ Sub Class_Globals
 	Private mBorderColorOverridden As Boolean
 	Private mTheme As UITheme
 	Private mRadius As Int
+	Private mRadiusOverridden As Boolean
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
 End Sub
@@ -26,7 +27,8 @@ Public Sub Initialize As UICard
 	mBorderColor = mTheme.Border
 	mBgColorOverridden = False
 	mBorderColorOverridden = False
-	mRadius = 12dip
+	mRadius = mTheme.CardRadius
+	mRadiusOverridden = False
 	mChild = Null
 	Return Me
 End Sub
@@ -50,6 +52,7 @@ Public Sub ApplyTheme(Theme As UITheme) As UICard
 	mTheme = Theme
 	If mBgColorOverridden = False Then mBgColor = mTheme.Surface
 	If mBorderColorOverridden = False Then mBorderColor = mTheme.Border
+	If mRadiusOverridden = False Then mRadius = mTheme.CardRadius
 	' A card is a composition boundary: theme its nested content as well.
 	If mChild <> Null And xui.SubExists(mChild, "ApplyTheme", 1) Then CallSub2(mChild, "ApplyTheme", Theme)
 	If mParent <> Null Then
@@ -59,12 +62,13 @@ Public Sub ApplyTheme(Theme As UITheme) As UICard
 End Sub
 
 Public Sub CornerRadius(r As Int) As UICard
-	mRadius = r
+	mRadius = Max(0, r)
+	mRadiusOverridden = True
 	Return Me
 End Sub
 
 Public Sub Child(c As Object) As UICard
-	mChild = c
+	If IsWidgetProtocol(c) Then mChild = c
 	Return Me
 End Sub
 
@@ -102,7 +106,7 @@ Public Sub Render
     
 	Dim NativePanel As Panel = mBaseView
 	Dim cd As ColorDrawable
-	cd.Initialize2(mBgColor, mRadius, 1dip, mBorderColor)
+	cd.Initialize2(mBgColor, mRadius, mTheme.BorderWidth, mBorderColor)
 	NativePanel.Background = cd
     
 	If mChild <> Null Then
@@ -129,6 +133,13 @@ End Sub
 
 ' Natural measurement used by parent layout containers.
 ' UICard measures its child and reserves its internal margin.
+Private Sub IsWidgetProtocol(Widget As Object) As Boolean
+	If Widget = Null Then Return False
+	Return xui.SubExists(Widget, "SetParent", 1) And xui.SubExists(Widget, "SetPosition", 2) _
+		And xui.SubExists(Widget, "SetSize", 2) And xui.SubExists(Widget, "Render", 0) _
+		And xui.SubExists(Widget, "GetContentSize", 2)
+End Sub
+
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim result As List
 	result.Initialize
@@ -140,7 +151,7 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	
 	If mChild <> Null Then
 		' Measure the child with space reserved for the card margin.
-		Dim childMargin As Int = 16dip
+		Dim childMargin As Int = mTheme.CardPadding
 		Dim childMaxW As Int = Max(0, safeMaxWidth - 2 * childMargin)
 		Dim childMaxH As Int = Max(0, safeMaxHeight - 2 * childMargin)
 		

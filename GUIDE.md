@@ -661,13 +661,18 @@ This separation is deliberate: `UIAsyncState` is reusable for HTTP, database, fi
 
 ## 15. UITheme
 
-`UITheme` is a reusable palette provider. It does not know which widgets your application owns, but every visual widget exposes `ApplyTheme` and declarative containers forward the theme to their descendants.
+`UITheme` is a reusable Material 3-like design-token provider. It supplies light/dark defaults for colors, typography, shapes and common control metrics. It does not know which widgets your application owns, but every visual widget exposes `ApplyTheme` and declarative containers forward the theme to their descendants.
 
 ```basic
 Private AppTheme As UITheme
 
-' Scheme is a seed color from which the semantic palette is derived.
-AppTheme.Initialize.Scheme(0xFF00A896)
+' Complete light defaults: colors, typography, shapes and control metrics.
+AppTheme.Initialize
+
+' Alternatives:
+' AppTheme.InitializeDark
+' AppTheme.InitializeWithSchemeAndMode(0xFF6750A4, False)
+' AppTheme.Initialize.Scheme(0xFF00A896)
 Dim surface As Int = AppTheme.Surface
 Dim primaryText As Int = AppTheme.PrimaryText
 Dim accentText As Int = AppTheme.AccentText
@@ -689,7 +694,7 @@ Choose a different brand seed without changing the rest of the application:
 AppTheme.Scheme(0xFF6750A4)
 ```
 
-`Scheme` accepts a normal B4A ARGB `Int`. The same theme object derives `Background`, `Surface`, `SurfaceVariant`, app bars, `Accent`, borders and dividers from that seed. Use `InitializeWithScheme` when you prefer a single initialization call:
+`Scheme` accepts a normal B4A ARGB `Int`. The same theme object derives `Background`, `Surface`, `SurfaceVariant`, app bars, `Accent`, borders and dividers from that seed. It also exposes typography tokens (`BodyLarge`, `BodyMedium`, `TitleLarge`, `ButtonTextSize`), shape tokens (`ButtonRadius`, `CardRadius`, `InputRadius`, `FabRadius`) and layout tokens (`ControlHeight`, `FabSize`, `AppBarHeight`). Use `InitializeWithScheme` when you prefer a single light initialization call:
 
 ```basic
 Dim AppTheme As UITheme
@@ -745,7 +750,18 @@ Sub ApplyTheme
 End Sub
 ```
 
-This keeps palette policy in `UITheme` instead of repeating color literals in every widget builder.
+This keeps design-token policy in `UITheme` instead of repeating color, size and radius literals in every widget builder.
+
+Widgets consume the defaults automatically. A property setter is an intentional per-property override and remains stable across theme changes:
+
+```basic
+Dim button As UIButton
+button.Initialize.Text("Continue")
+button.CornerRadius(6dip).TextSize(16)
+button.ApplyTheme(AppTheme)
+```
+
+Only the corner radius and text size above are customized; the button colors, border and other metrics still follow the active theme.
 
 ## 16. UINavigator and safe area
 

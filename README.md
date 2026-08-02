@@ -322,13 +322,18 @@ emailInput.Initialize _
 
 ## UITheme
 
-`UITheme` centralizes palette decisions without coupling the framework widgets to one application. Visual widgets read these semantic defaults through `ApplyTheme`; container widgets forward the same theme to their descendants:
+`UITheme` centralizes palette decisions without coupling the framework widgets to one application. It provides Material 3-like light/dark defaults for colors, typography, shapes and common control metrics. Visual widgets read these semantic defaults through `ApplyTheme`; container widgets forward the same theme to their descendants:
 
 ```basic
 Private AppTheme As UITheme
 
-' Scheme is a seed color; the remaining semantic colors are derived from it.
-AppTheme.Initialize.Scheme(0xFF00A896)
+' Complete light defaults: colors, typography, shapes and control metrics.
+AppTheme.Initialize
+
+' Other initialization options:
+' AppTheme.InitializeDark
+' AppTheme.InitializeWithSchemeAndMode(0xFF6750A4, False)
+' AppTheme.Initialize.Scheme(0xFF00A896)
 Dim background As Int = AppTheme.Background
 Dim cardSurface As Int = AppTheme.Surface
 Dim primaryText As Int = AppTheme.PrimaryText
@@ -368,7 +373,22 @@ Available palette groups include:
 - `NegativeText`
 - `ThemeActionText`
 
-`Scheme(seedColor)` changes the seed while keeping the same semantic property names. `InitializeWithScheme(seedColor)` is the one-call alternative. Foreground properties such as `AccentText` and `ThemeActionText` choose a readable light or dark text color for their corresponding background.
+`Scheme(seedColor)` changes the seed while keeping the same semantic property names. `InitializeWithScheme(seedColor)` is the one-call light initialization form, while `InitializeDark` and `InitializeWithSchemeAndMode(seedColor, dark)` provide explicit dark initialization. Foreground properties such as `AccentText` and `ThemeActionText` choose a readable light or dark text color for their corresponding background.
+
+Typography tokens include `DisplayLarge`, `HeadlineSmall`, `TitleLarge`, `BodyLarge`, `BodyMedium`, `BodySmall`, `LabelLarge`, `ButtonTextSize`, `InputTextSize` and `NavigationTextSize`. Shape tokens include `RadiusSmall`, `RadiusMedium`, `RadiusLarge`, `ButtonRadius`, `CardRadius`, `InputRadius`, `FabRadius` and `SnackbarRadius`. Layout tokens include app-bar, navigation, FAB, input and touch-target metrics.
+
+A widget uses these defaults automatically. Explicit properties remain possible and override only that property:
+
+```basic
+Dim primary As UIButton
+primary.Initialize.Text("Continue")
+
+' Only these two properties stop following the theme:
+primary.CornerRadius(6dip).TextSize(16)
+
+' Other values still come from UITheme when ApplyTheme is called.
+primary.ApplyTheme(AppTheme)
+```
 
 The demo applies the theme to the scaffold and navigator. The palette remains reusable because `UITheme` only provides values; it does not know about screens or controls. Widgets use semantic defaults until the host intentionally overrides one of them.
 

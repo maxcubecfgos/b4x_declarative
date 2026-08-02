@@ -36,7 +36,7 @@ Public Sub ApplyTheme(Theme As UITheme) As UIRow
 End Sub
 
 Public Sub AddChild(Component As Object) As UIRow
-	If Component <> Null Then mChildren.Add(Component)
+	If IsWidgetProtocol(Component) Then mChildren.Add(Component)
 	Return Me
 End Sub
 
@@ -300,6 +300,13 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	result.Add(Min(totalNaturalWidth, safeMaxWidth))
 	result.Add(Min(maxChildHeight, safeMaxHeight))
 	Return result
+End Sub
+
+Private Sub IsWidgetProtocol(Widget As Object) As Boolean
+	If Widget = Null Then Return False
+	Return xui.SubExists(Widget, "SetParent", 1) And xui.SubExists(Widget, "SetPosition", 2) _
+		And xui.SubExists(Widget, "SetSize", 2) And xui.SubExists(Widget, "Render", 0) _
+		And xui.SubExists(Widget, "GetContentSize", 2)
 End Sub
 
 Private Sub IsLayoutParticipant(Child As Object) As Boolean

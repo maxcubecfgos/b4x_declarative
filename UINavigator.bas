@@ -39,7 +39,7 @@ Public Sub ApplyTheme(Theme As UITheme) As UINavigator
 End Sub
 
 Public Sub AddScreen(Name As String, Screen As Object) As UINavigator
-	If Name.Trim = "" Or Screen = Null Then Return Me
+	If Name.Trim = "" Or IsWidgetProtocol(Screen) = False Then Return Me
 	mScreens.Put(Name, Screen)
 	If mCurrentScreen = "" Then mCurrentScreen = Name
 	If mHost <> Null Then
@@ -130,6 +130,13 @@ Public Sub Render
 	Else
 	End If
 	mIsMounted = mHost.IsInitialized
+End Sub
+
+Private Sub IsWidgetProtocol(Widget As Object) As Boolean
+	If Widget = Null Then Return False
+	Return xui.SubExists(Widget, "SetParent", 1) And xui.SubExists(Widget, "SetPosition", 2) _
+		And xui.SubExists(Widget, "SetSize", 2) And xui.SubExists(Widget, "Render", 0) _
+		And xui.SubExists(Widget, "GetContentSize", 2)
 End Sub
 
 ' Re-measure the safe area and remount only when an inset changes.

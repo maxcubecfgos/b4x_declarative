@@ -18,7 +18,7 @@ Public Sub Initialize As UICenter
 End Sub
 
 Public Sub Child(c As Object) As UICenter
-	mChild = c
+	If IsWidgetProtocol(c) Then mChild = c
 	Return Me
 End Sub
 
@@ -103,6 +103,13 @@ End Sub
 
 ' Natural measurement used by parent layout containers.
 ' UICenter delegates natural measurement to its child.
+Private Sub IsWidgetProtocol(Widget As Object) As Boolean
+	If Widget = Null Then Return False
+	Return xui.SubExists(Widget, "SetParent", 1) And xui.SubExists(Widget, "SetPosition", 2) _
+		And xui.SubExists(Widget, "SetSize", 2) And xui.SubExists(Widget, "Render", 0) _
+		And xui.SubExists(Widget, "GetContentSize", 2)
+End Sub
+
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	If mChild <> Null Then
 		Dim result As List = CallSub3(mChild, "GetContentSize", MaxWidth, MaxHeight)

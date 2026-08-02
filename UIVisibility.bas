@@ -91,6 +91,8 @@ End Sub
 
 ' Replaces the single child managed by this wrapper.
 Public Sub Child(Widget As Object) As UIVisibility
+	If IsWidgetProtocol(Widget) = False Then Return Me
+	If mChild = Widget Then Return Me
 	If mChild <> Null Then
 		If xui.SubExists(mChild, "Unmount", 0) Then CallSub(mChild, "Unmount")
 	End If
@@ -178,6 +180,13 @@ Public Sub Unmount
 	End If
 	mBaseView = Null
 	mParent = Null
+End Sub
+
+Private Sub IsWidgetProtocol(Widget As Object) As Boolean
+	If Widget = Null Then Return False
+	Return xui.SubExists(Widget, "SetParent", 1) And xui.SubExists(Widget, "SetPosition", 2) _
+		And xui.SubExists(Widget, "SetSize", 2) And xui.SubExists(Widget, "Render", 0) _
+		And xui.SubExists(Widget, "GetContentSize", 2)
 End Sub
 
 ' Internal layout hook used by Column and Row to avoid spacing around hidden children.

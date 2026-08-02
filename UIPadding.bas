@@ -48,7 +48,7 @@ Public Sub Only(Left As Int, Top As Int, Right As Int, Bottom As Int) As UIPaddi
 End Sub
 
 Public Sub Child(c As Object) As UIPadding
-	mChild = c
+	If IsWidgetProtocol(c) Then mChild = c
 	Return Me
 End Sub
 
@@ -118,6 +118,13 @@ End Sub
 
 ' Natural measurement used by parent layout containers.
 ' Measure the child and add padding to obtain the total size.
+Private Sub IsWidgetProtocol(Widget As Object) As Boolean
+	If Widget = Null Then Return False
+	Return xui.SubExists(Widget, "SetParent", 1) And xui.SubExists(Widget, "SetPosition", 2) _
+		And xui.SubExists(Widget, "SetSize", 2) And xui.SubExists(Widget, "Render", 0) _
+		And xui.SubExists(Widget, "GetContentSize", 2)
+End Sub
+
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim result As List
 	result.Initialize

@@ -24,6 +24,22 @@ Public Sub InitializeWithScheme(SeedColor As Int) As UITheme
     Return Me
 End Sub
 
+' Creates a dark theme with the default teal seed color.
+' This is the explicit counterpart to Initialize for callers that prefer
+' declaring the mode at construction time.
+Public Sub InitializeDark As UITheme
+    mDark = True
+    mSeedColor = 0xFF00A896
+    Return Me
+End Sub
+
+' Creates a theme from a seed color and an explicit light/dark mode.
+Public Sub InitializeWithSchemeAndMode(SeedColor As Int, Dark As Boolean) As UITheme
+    mDark = Dark
+    mSeedColor = NormalizeColor(SeedColor)
+    Return Me
+End Sub
+
 ' Selects the seed color used to derive the active palette.
 ' This is the library equivalent of a Flutter ColorScheme seed color.
 Public Sub Scheme(SeedColor As Int) As UITheme
@@ -106,6 +122,11 @@ Public Sub SecondaryBar As Int
     Return MixColors(mSeedColor, Colors.Black, 0.64)
 End Sub
 
+' Returns the scrim color used behind modal dialogs.
+Public Sub DialogOverlay As Int
+    Return 0x66000000
+End Sub
+
 ' Returns the default snackbar background.
 Public Sub SnackbarBackground As Int
     If mDark Then Return MixColors(mSeedColor, Colors.Black, 0.94)
@@ -185,6 +206,186 @@ End Sub
 ' Returns a readable foreground for the destructive accent.
 Public Sub NegativeText As Int
     Return OnColor(Negative)
+End Sub
+
+' ===== Material 3-like typography tokens =====
+' These values are defaults. Individual widgets can override them explicitly.
+Public Sub DisplayLarge As Int
+    Return 32
+End Sub
+
+Public Sub HeadlineSmall As Int
+    Return 24
+End Sub
+
+Public Sub TitleLarge As Int
+    Return 22
+End Sub
+
+Public Sub TitleMedium As Int
+    Return 16
+End Sub
+
+Public Sub BodyLarge As Int
+    Return 16
+End Sub
+
+Public Sub BodyMedium As Int
+    Return 14
+End Sub
+
+Public Sub BodySmall As Int
+    Return 12
+End Sub
+
+Public Sub LabelLarge As Int
+    Return 14
+End Sub
+
+Public Sub LabelMedium As Int
+    Return 12
+End Sub
+
+Public Sub AppBarTitleSize As Int
+    Return 20
+End Sub
+
+Public Sub ButtonTextSize As Int
+    Return LabelLarge
+End Sub
+
+Public Sub InputTextSize As Int
+    Return BodyLarge
+End Sub
+
+Public Sub NavigationIconSize As Int
+    Return 24
+End Sub
+
+Public Sub NavigationTextSize As Int
+    Return LabelMedium
+End Sub
+
+Public Sub FabTextSize As Int
+    Return 24
+End Sub
+
+Public Sub SnackbarTextSize As Int
+    Return BodyMedium
+End Sub
+
+Public Sub SnackbarActionTextSize As Int
+    Return LabelLarge
+End Sub
+
+' ===== Material 3-like shape tokens =====
+Public Sub RadiusNone As Int
+    Return 0
+End Sub
+
+Public Sub RadiusSmall As Int
+    Return 8dip
+End Sub
+
+Public Sub RadiusMedium As Int
+    Return 12dip
+End Sub
+
+Public Sub RadiusLarge As Int
+    Return 16dip
+End Sub
+
+Public Sub RadiusExtraLarge As Int
+    Return 28dip
+End Sub
+
+Public Sub ButtonRadius As Int
+    Return 20dip
+End Sub
+
+Public Sub CardRadius As Int
+    Return RadiusMedium
+End Sub
+
+Public Sub InputRadius As Int
+    Return RadiusMedium
+End Sub
+
+Public Sub FabRadius As Int
+    Return RadiusExtraLarge
+End Sub
+
+Public Sub SnackbarRadius As Int
+    Return RadiusSmall
+End Sub
+
+' ===== Material 3-like layout tokens =====
+Public Sub AppBarHeight As Int
+    Return 56dip
+End Sub
+
+Public Sub BottomNavigationHeight As Int
+    Return 64dip
+End Sub
+
+Public Sub FabSize As Int
+    Return 56dip
+End Sub
+
+Public Sub ControlHeight As Int
+    Return 48dip
+End Sub
+
+Public Sub HorizontalPadding As Int
+    Return 16dip
+End Sub
+
+Public Sub CardPadding As Int
+    Return 16dip
+End Sub
+
+Public Sub ButtonHorizontalPadding As Int
+    Return 32dip
+End Sub
+
+Public Sub InputHorizontalPadding As Int
+    Return 12dip
+End Sub
+
+Public Sub InputVerticalPadding As Int
+    Return 8dip
+End Sub
+
+Public Sub NavigationIconHeight As Int
+    Return 30dip
+End Sub
+
+Public Sub NavigationCaptionTop As Int
+    Return 34dip
+End Sub
+
+Public Sub NavigationIndicatorHeight As Int
+    Return 3dip
+End Sub
+
+Public Sub NavigationHorizontalPadding As Int
+    Return 4dip
+End Sub
+
+Public Sub NavigationDividerHeight As Int
+    Return 1dip
+End Sub
+
+Public Sub SnackbarHeight As Int
+    Return 56dip
+End Sub
+
+Public Sub SnackbarMargin As Int
+    Return 16dip
+End Sub
+
+Public Sub BorderWidth As Int
+    Return 1dip
 End Sub
 
 ' Returns either a dark or light foreground with useful contrast against Value.

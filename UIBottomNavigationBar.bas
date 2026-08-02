@@ -27,7 +27,9 @@ Sub Class_Globals
     Private mDividerColorOverridden As Boolean
     Private mTheme As UITheme
     Private mIconSize As Int
+    Private mIconSizeOverridden As Boolean
     Private mTextSize As Int
+    Private mTextSizeOverridden As Boolean
     Private mUseFontAwesome As Boolean
     Private mShowInactiveLabels As Boolean
     Private mSelectedIndex As Int
@@ -64,8 +66,10 @@ Public Sub Initialize As UIBottomNavigationBar
     mInactiveColorOverridden = False
     mIndicatorColorOverridden = False
     mDividerColorOverridden = False
-    mIconSize = 24
-    mTextSize = 11
+    mIconSize = mTheme.NavigationIconSize
+    mIconSizeOverridden = False
+    mTextSize = mTheme.NavigationTextSize
+    mTextSizeOverridden = False
     mUseFontAwesome = False
     mShowInactiveLabels = False
     mSelectedIndex = 0
@@ -180,6 +184,8 @@ Public Sub ApplyTheme(Theme As UITheme) As UIBottomNavigationBar
     If mInactiveColorOverridden = False Then mInactiveColor = mTheme.MutedText
     If mIndicatorColorOverridden = False Then mIndicatorColor = mTheme.Accent
     If mDividerColorOverridden = False Then mDividerColor = mTheme.Divider
+    If mIconSizeOverridden = False Then mIconSize = mTheme.NavigationIconSize
+    If mTextSizeOverridden = False Then mTextSize = mTheme.NavigationTextSize
     ' The divider is created during BuildNativeItems, so invalidate the native
     ' item tree to ensure a runtime theme change reaches it as well.
     mBuilt = False
@@ -189,6 +195,7 @@ End Sub
 
 Public Sub IconSize(Size As Int) As UIBottomNavigationBar
     mIconSize = Max(1, Size)
+    mIconSizeOverridden = True
     mBuilt = False
     RefreshIfMounted
     Return Me
@@ -196,6 +203,7 @@ End Sub
 
 Public Sub TextSize(Size As Int) As UIBottomNavigationBar
     mTextSize = Max(1, Size)
+    mTextSizeOverridden = True
     mBuilt = False
     RefreshIfMounted
     Return Me
@@ -291,7 +299,7 @@ Private Sub BuildNativeItems
     Dim divider As Panel
     divider.Initialize("")
     divider.Color = mDividerColor
-    mBaseView.AddView(divider, 0, 0, mWidth, 1dip)
+    mBaseView.AddView(divider, 0, 0, mWidth, mTheme.NavigationDividerHeight)
 
     Dim itemWidth As Int = mWidth / mItems.Size
     Dim currentLeft As Int = 0
@@ -304,7 +312,7 @@ Private Sub BuildNativeItems
         tabPanel.Initialize("")
         Dim tabView As B4XView = tabPanel
         tabView.Color = Colors.Transparent
-        mBaseView.AddView(tabView, currentLeft, 1dip, currentWidth, Max(0, mHeight - 1dip))
+        mBaseView.AddView(tabView, currentLeft, mTheme.NavigationDividerHeight, currentWidth, Max(0, mHeight - mTheme.NavigationDividerHeight))
 
         Dim icon As Label
         icon.Initialize("")
@@ -313,7 +321,8 @@ Private Sub BuildNativeItems
         icon.TextSize = mIconSize
         icon.TextColor = mInactiveColor
         If mUseFontAwesome Then icon.Typeface = Typeface.FONTAWESOME
-        tabView.AddView(icon, 4dip, 4dip, Max(0, currentWidth - 8dip), 30dip)
+        Dim navPadding As Int = mTheme.NavigationHorizontalPadding
+        tabView.AddView(icon, navPadding, navPadding, Max(0, currentWidth - 2 * navPadding), mTheme.NavigationIconHeight)
         mIconLabels.Add(icon)
 
         Dim caption As Label
@@ -322,14 +331,14 @@ Private Sub BuildNativeItems
         caption.Gravity = Gravity.CENTER
         caption.TextSize = mTextSize
         caption.TextColor = mInactiveColor
-        tabView.AddView(caption, 4dip, 34dip, Max(0, currentWidth - 8dip), Max(0, mHeight - 40dip))
+        tabView.AddView(caption, navPadding, mTheme.NavigationCaptionTop, Max(0, currentWidth - 2 * navPadding), Max(0, mHeight - mTheme.NavigationCaptionTop - 6dip))
         mTextLabels.Add(caption)
 
         Dim indicator As Panel
         indicator.Initialize("")
         indicator.Color = mIndicatorColor
         Dim indicatorView As B4XView = indicator
-        tabView.AddView(indicatorView, 6dip, Max(0, mHeight - 3dip), Max(0, currentWidth - 12dip), 3dip)
+        tabView.AddView(indicatorView, 6dip, Max(0, mHeight - mTheme.NavigationIndicatorHeight), Max(0, currentWidth - 12dip), mTheme.NavigationIndicatorHeight)
         mIndicatorViews.Add(indicatorView)
 
         Dim clickSurface As Panel
@@ -337,7 +346,7 @@ Private Sub BuildNativeItems
         Dim clickView As B4XView = clickSurface
         clickView.Color = Colors.Transparent
         clickView.Tag = i
-        tabView.AddView(clickView, 0, 0, currentWidth, Max(0, mHeight - 1dip))
+        tabView.AddView(clickView, 0, 0, currentWidth, Max(0, mHeight - mTheme.NavigationDividerHeight))
         currentLeft = currentLeft + currentWidth
     Next
     mBuiltItemCount = mItems.Size
@@ -445,6 +454,6 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
     If safeMaxWidth <= 0 Then safeMaxWidth = 10000
     If safeMaxHeight <= 0 Then safeMaxHeight = 10000
     result.Add(safeMaxWidth)
-    result.Add(Min(64dip, safeMaxHeight))
+    result.Add(Min(mTheme.BottomNavigationHeight, safeMaxHeight))
     Return result
 End Sub

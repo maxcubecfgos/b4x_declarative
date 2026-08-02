@@ -8,6 +8,7 @@ Sub Class_Globals
 	Private mText As String
 	Private mTextState As UIState
 	Public mSize As Int
+	Private mSizeOverridden As Boolean
 	Private mTextColor As Int
 	Private mTextColorOverridden As Boolean
 	Private mTheme As UITheme
@@ -19,10 +20,11 @@ End Sub
 
 Public Sub Initialize As UILabel
 	mText = ""
-	mSize = 14
 	Dim defaultTheme As UITheme
 	defaultTheme.Initialize
 	mTheme = defaultTheme
+	mSize = mTheme.BodyMedium
+	mSizeOverridden = False
 	mTextColor = mTheme.PrimaryText
 	mTextColorOverridden = False
 	mGravityValue = Bit.Or(Gravity.CENTER_HORIZONTAL, Gravity.CENTER_VERTICAL)
@@ -69,7 +71,8 @@ Private Sub TextState_Changed(State As UIState)
 End Sub
 
 Public Sub Size(s As Int) As UILabel
-	mSize = s
+	mSize = Max(1, s)
+	mSizeOverridden = True
 	Return Me
 End Sub
 
@@ -84,6 +87,7 @@ Public Sub ApplyTheme(Theme As UITheme) As UILabel
 	If Theme = Null Then Return Me
 	If Theme.IsInitialized = False Then Return Me
 	mTheme = Theme
+	If mSizeOverridden = False Then mSize = mTheme.BodyMedium
 	If mTextColorOverridden = False Then mTextColor = mTheme.PrimaryText
 	If mParent <> Null Then
 		If mParent.IsInitialized Then Render

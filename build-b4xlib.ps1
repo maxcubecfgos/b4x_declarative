@@ -6,6 +6,7 @@ $stage = Join-Path ([IO.Path]::GetTempPath()) ('DeclarativeUI_b4xlib_' + [Guid]:
 $tempZip = Join-Path ([IO.Path]::GetTempPath()) ('DeclarativeUI_b4xlib_' + [Guid]::NewGuid().ToString('N') + '.zip')
 
 $expectedModules = @(
+    'UIAlertDialog.bas'
     'UIAnimation.bas'
     'UIAppBar.bas'
     'UIBottomNavigationBar.bas'
@@ -18,9 +19,13 @@ $expectedModules = @(
     'UIExpanded.bas'
     'UIFloatingActionButton.bas'
     'UIInput.bas'
+    'UIImage.bas'
     'UILabel.bas'
+    'UINative.bas'
     'UINavigator.bas'
     'UIPadding.bas'
+    'UIPlaceholder.bas'
+    'UIProgressBar.bas'
     'UIRow.bas'
     'UIScaffold.bas'
     'UIScrollView.bas'
@@ -54,7 +59,7 @@ try {
         'Version=0.1'
         'Title=Declarative UI for B4A'
         'Author=Declarative UI project'
-        'DependsOn=XUI, IME'
+        'DependsOn=XUI, IME, OkHttpUtils2'
     ) -join [Environment]::NewLine
     [IO.File]::WriteAllText((Join-Path $stage 'manifest.txt'), $manifest, $utf8NoBom)
 
@@ -69,7 +74,7 @@ try {
         $actualEntries = @($entries | ForEach-Object FullName)
         $missingEntries = @($expectedEntries | Where-Object { $_ -notin $actualEntries })
         $unexpectedEntries = @($actualEntries | Where-Object { $_ -notin $expectedEntries })
-        if ($entries.Count -ne 26 -or $missingEntries.Count -gt 0 -or $unexpectedEntries.Count -gt 0) {
+        if ($entries.Count -ne 31 -or $missingEntries.Count -gt 0 -or $unexpectedEntries.Count -gt 0) {
             throw ('Package entry mismatch. Missing: ' + ($missingEntries -join ', ') + '; unexpected: ' + ($unexpectedEntries -join ', '))
         }
 
@@ -102,7 +107,7 @@ try {
     Write-Host ('File: ' + $output)
     Write-Host ('Size: ' + $fileInfo.Length + ' bytes')
     Write-Host ('SHA-256: ' + $hash)
-    Write-Host 'Contents: 25 UI modules + manifest.txt'
+    Write-Host 'Contents: 30 UI modules + manifest.txt'
 }
 catch {
     Write-Error ('The b4xlib could not be created or validated: ' + $_.Exception.Message)

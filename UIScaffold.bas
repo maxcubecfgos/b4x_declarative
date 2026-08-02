@@ -16,6 +16,7 @@ Sub Class_Globals
 	Private mTheme As UITheme
 	Private mBaseView As B4XView
 	Private mParent As B4XView
+	Private mMounted As Boolean
 	Private mLeft, mTop, mWidth, mHeight As Int
 End Sub
 
@@ -31,32 +32,93 @@ Public Sub Initialize As UIScaffold
 	mTheme = defaultTheme
 	mBackgroundColor = mTheme.Background
 	mBackgroundColorOverridden = False
+	mMounted = False
 	Return Me
 End Sub
 
 Public Sub AppBar(bar As Object) As UIScaffold
+	If IsWidgetProtocol(bar) = False Then Return Me
+	If mAppBar = bar Then Return Me
+	Dim wasMounted As Boolean = PrepareForStructureChange
 	mAppBar = bar
+	If wasMounted Then Render
+	Return Me
+End Sub
+
+' Removes the current app bar explicitly and safely.
+Public Sub ClearAppBar As UIScaffold
+	Dim wasMounted As Boolean = PrepareForStructureChange
+	mAppBar = Null
+	If wasMounted Then Render
 	Return Me
 End Sub
 
 Public Sub Body(b As Object) As UIScaffold
+	If IsWidgetProtocol(b) = False Then Return Me
+	If mBody = b Then Return Me
+	Dim wasMounted As Boolean = PrepareForStructureChange
 	mBody = b
+	If wasMounted Then Render
+	Return Me
+End Sub
+
+' Removes the current body explicitly and safely.
+Public Sub ClearBody As UIScaffold
+	Dim wasMounted As Boolean = PrepareForStructureChange
+	mBody = Null
+	If wasMounted Then Render
 	Return Me
 End Sub
 
 Public Sub FloatingActionButtonLeft(fab As Object) As UIScaffold
+	If IsWidgetProtocol(fab) = False Then Return Me
+	If mFabLeft = fab Then Return Me
+	Dim wasMounted As Boolean = PrepareForStructureChange
 	mFabLeft = fab
+	If wasMounted Then Render
+	Return Me
+End Sub
+
+' Removes the left floating action button explicitly and safely.
+Public Sub ClearFloatingActionButtonLeft As UIScaffold
+	Dim wasMounted As Boolean = PrepareForStructureChange
+	mFabLeft = Null
+	If wasMounted Then Render
 	Return Me
 End Sub
 
 Public Sub FloatingActionButtonRight(fab As Object) As UIScaffold
+	If IsWidgetProtocol(fab) = False Then Return Me
+	If mFabRight = fab Then Return Me
+	Dim wasMounted As Boolean = PrepareForStructureChange
 	mFabRight = fab
+	If wasMounted Then Render
+	Return Me
+End Sub
+
+' Removes the right floating action button explicitly and safely.
+Public Sub ClearFloatingActionButtonRight As UIScaffold
+	Dim wasMounted As Boolean = PrepareForStructureChange
+	mFabRight = Null
+	If wasMounted Then Render
 	Return Me
 End Sub
 
 ' Adds an optional persistent bottom navigation slot.
 Public Sub BottomNavigationBar(bar As Object) As UIScaffold
+	If IsWidgetProtocol(bar) = False Then Return Me
+	If mBottomNavigationBar = bar Then Return Me
+	Dim wasMounted As Boolean = PrepareForStructureChange
 	mBottomNavigationBar = bar
+	If wasMounted Then Render
+	Return Me
+End Sub
+
+' Removes the bottom navigation bar explicitly and safely.
+Public Sub ClearBottomNavigationBar As UIScaffold
+	Dim wasMounted As Boolean = PrepareForStructureChange
+	mBottomNavigationBar = Null
+	If wasMounted Then Render
 	Return Me
 End Sub
 
@@ -119,6 +181,7 @@ Public Sub Render
 		pnl.Initialize("")
 		mBaseView = pnl
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
+		mMounted = True
 	End If
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
 	mBaseView.Color = mBackgroundColor
@@ -126,9 +189,10 @@ Public Sub Render
 	' Calculate offsets for the app bar, body, and floating action buttons.
 	Dim topOffset As Int = 0
 	Dim bottomOffset As Int = 0
-	Dim appBarHeight As Int = 56dip
-	Dim bottomNavigationHeight As Int = 64dip
-	Dim fabSpace As Int = 80dip ' Espacio total reservado para la zona de FABs
+	Dim appBarHeight As Int = mTheme.AppBarHeight
+	Dim bottomNavigationHeight As Int = mTheme.BottomNavigationHeight
+	Dim fabSize As Int = mTheme.FabSize
+	Dim fabSpace As Int = fabSize + 24dip ' Breathing room below the FAB
 	If mBottomNavigationBar <> Null Then bottomOffset = bottomNavigationHeight
     
 	' Render the app bar first.
@@ -158,7 +222,6 @@ Public Sub Render
 	End If
     
 	' Render the floating action buttons above the body layer.
-	Dim fabSize As Int = 56dip
 	If mFabRight <> Null Then
 		CallSub2(mFabRight, "SetParent", mBaseView)
 		CallSub3(mFabRight, "SetPosition", mWidth - fabSize - 16dip, mHeight - fabSize - 16dip - IfBottomBarOffset(mBottomNavigationBar, bottomNavigationHeight))
@@ -181,18 +244,47 @@ Public Sub Render
 	End If
 End Sub
 
+Private Sub IsWidgetProtocol(Widget As Object) As Boolean
+	If Widget = Null Then Return False
+	Return xui.SubExists(Widget, "SetParent", 1) And xui.SubExists(Widget, "SetPosition", 2) _
+		And xui.SubExists(Widget, "SetSize", 2) And xui.SubExists(Widget, "Render", 0) _
+		And xui.SubExists(Widget, "GetContentSize", 2)
+End Sub
+
+Private Sub PrepareForStructureChange As Boolean
+	If mBaseView = Null Or mMounted = False Then Return False
+	If mBaseView.IsInitialized = False Then
+		mBaseView = Null
+		mMounted = False
+		Return False
+	End If
+	UnmountChildren
+	mBaseView.RemoveViewFromParent
+	mBaseView = Null
+	mMounted = False
+	Return True
+End Sub
+
+Private Sub UnmountChildren
+	If mAppBar <> Null And xui.SubExists(mAppBar, "Unmount", 0) Then CallSub(mAppBar, "Unmount")
+	If mBody <> Null And xui.SubExists(mBody, "Unmount", 0) Then CallSub(mBody, "Unmount")
+	If mFabLeft <> Null And xui.SubExists(mFabLeft, "Unmount", 0) Then CallSub(mFabLeft, "Unmount")
+	If mFabRight <> Null And xui.SubExists(mFabRight, "Unmount", 0) Then CallSub(mFabRight, "Unmount")
+	If mBottomNavigationBar <> Null And xui.SubExists(mBottomNavigationBar, "Unmount", 0) Then CallSub(mBottomNavigationBar, "Unmount")
+End Sub
+
 Private Sub IfBottomBarOffset(Bar As Object, Height As Int) As Int
 	If Bar <> Null Then Return Height
 	Return 0
 End Sub
 
 Public Sub Unmount
-	If mAppBar <> Null And xui.SubExists(mAppBar, "Unmount", 0) Then CallSub(mAppBar, "Unmount")
-	If mBody <> Null And xui.SubExists(mBody, "Unmount", 0) Then CallSub(mBody, "Unmount")
-	If mFabLeft <> Null And xui.SubExists(mFabLeft, "Unmount", 0) Then CallSub(mFabLeft, "Unmount")
-	If mFabRight <> Null And xui.SubExists(mFabRight, "Unmount", 0) Then CallSub(mFabRight, "Unmount")
-	If mBottomNavigationBar <> Null And xui.SubExists(mBottomNavigationBar, "Unmount", 0) Then CallSub(mBottomNavigationBar, "Unmount")
+	UnmountChildren
+	If mBaseView <> Null And mMounted Then
+		If mBaseView.IsInitialized Then mBaseView.RemoveViewFromParent
+	End If
 	mBaseView = Null
+	mMounted = False
 	mParent = Null
 End Sub
 

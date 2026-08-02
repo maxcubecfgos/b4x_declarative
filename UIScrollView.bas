@@ -28,7 +28,7 @@ End Sub
 
 ' Sets the single child rendered inside the scrollable content panel.
 Public Sub Child(Component As Object) As UIScrollView
-    mChild = Component
+    If IsWidgetProtocol(Component) Then mChild = Component
     Return Me
 End Sub
 
@@ -148,6 +148,13 @@ Public Sub Unmount
     mParent = Null
     mMountedChild = Null
     mContentHeight = 0
+End Sub
+
+Private Sub IsWidgetProtocol(Widget As Object) As Boolean
+    If Widget = Null Then Return False
+    Return xui.SubExists(Widget, "SetParent", 1) And xui.SubExists(Widget, "SetPosition", 2) _
+        And xui.SubExists(Widget, "SetSize", 2) And xui.SubExists(Widget, "Render", 0) _
+        And xui.SubExists(Widget, "GetContentSize", 2)
 End Sub
 
 ' Returns the child's natural size when it can be measured.

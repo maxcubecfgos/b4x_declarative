@@ -15,7 +15,10 @@ Sub Class_Globals
 	Private mTextColorOverridden As Boolean
 	Private mBorderColorOverridden As Boolean
 	Private mTheme As UITheme
+	Private mTextSize As Int
+	Private mTextSizeOverridden As Boolean
 	Private mCornerRadius As Int
+	Private mCornerRadiusOverridden As Boolean
 	Private mBorderWidth As Int
 	Private mCustomBackgroundApplied As Boolean
 	Private mTarget As Object
@@ -32,10 +35,13 @@ Public Sub Initialize As UIButton
 	mTheme = defaultTheme
 	mColor = mTheme.SurfaceVariant
 	mTextColor = mTheme.ButtonText
+	mTextSize = mTheme.ButtonTextSize
+	mTextSizeOverridden = False
 	mColorOverridden = False
 	mTextColorOverridden = False
 	mBorderColorOverridden = False
-	mCornerRadius = 0
+	mCornerRadius = mTheme.ButtonRadius
+	mCornerRadiusOverridden = False
 	mBorderWidth = 0
 	mBorderColor = mTheme.Border
 	mCustomBackgroundApplied = False
@@ -108,6 +114,8 @@ Public Sub ApplyTheme(Theme As UITheme) As UIButton
 	mTheme = Theme
 	If mColorOverridden = False Then mColor = mTheme.SurfaceVariant
 	If mTextColorOverridden = False Then mTextColor = mTheme.ButtonText
+	If mTextSizeOverridden = False Then mTextSize = mTheme.ButtonTextSize
+	If mCornerRadiusOverridden = False Then mCornerRadius = mTheme.ButtonRadius
 	If mBorderColorOverridden = False Then mBorderColor = mTheme.Border
 	If mParent <> Null Then
 		If mParent.IsInitialized Then Render
@@ -118,6 +126,14 @@ End Sub
 ' Sets the corner radius in pixels. Zero preserves the native button background.
 Public Sub CornerRadius(Radius As Int) As UIButton
 	mCornerRadius = Max(0, Radius)
+	mCornerRadiusOverridden = True
+	Return Me
+End Sub
+
+' Sets the button text size explicitly, in scaled pixels.
+Public Sub TextSize(Size As Int) As UIButton
+	mTextSize = Max(1, Size)
+	mTextSizeOverridden = True
 	Return Me
 End Sub
 
@@ -191,6 +207,7 @@ Public Sub Render
 	mBaseView.BringToFront
     
 	If mBaseView.Text <> mText Then mBaseView.Text = mText
+	mBaseView.TextSize = mTextSize
 	If mCornerRadius > 0 Or mBorderWidth > 0 Then
 		Dim buttonBackground As ColorDrawable
 		buttonBackground.Initialize2(mColor, mCornerRadius, mBorderWidth, mBorderColor)
@@ -238,12 +255,12 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	bmp.InitializeMutable(1dip, 1dip)
 	Dim cvs As Canvas
 	cvs.Initialize2(bmp)
-	Dim textWidth As Float = cvs.MeasureStringWidth(mText, Typeface.DEFAULT, 14)
+	Dim textWidth As Float = cvs.MeasureStringWidth(mText, Typeface.DEFAULT, mTextSize)
 	
-	' Use a Material-style horizontal padding and minimum height.
-	Dim btnPadding As Int = 32dip
+	' Use the theme's touch target and horizontal padding tokens.
+	Dim btnPadding As Int = mTheme.ButtonHorizontalPadding
 	Dim naturalWidth As Int = textWidth + btnPadding
-	Dim naturalHeight As Int = 48dip
+	Dim naturalHeight As Int = mTheme.ControlHeight
 	
 	Dim safeMaxWidth As Int = MaxWidth
 	Dim safeMaxHeight As Int = MaxHeight

@@ -18,7 +18,10 @@ Sub Class_Globals
 	Private mBackgroundColorOverridden As Boolean
 	Private mBorderColorOverridden As Boolean
 	Private mTheme As UITheme
+	Private mTextSize As Int
+	Private mTextSizeOverridden As Boolean
 	Private mCornerRadius As Int
+	Private mCornerRadiusOverridden As Boolean
 	Private mBorderWidth As Int
 	Private mCustomBackgroundApplied As Boolean
 	Private mEditText As EditText
@@ -36,11 +39,14 @@ Public Sub Initialize As UIInput
 	defaultTheme.Initialize
 	mTheme = defaultTheme
 	mTextColor = mTheme.PrimaryText
+	mTextSize = mTheme.InputTextSize
+	mTextSizeOverridden = False
 	mBackgroundColor = mTheme.Surface
 	mTextColorOverridden = False
 	mBackgroundColorOverridden = False
 	mBorderColorOverridden = False
-	mCornerRadius = 0
+	mCornerRadius = mTheme.InputRadius
+	mCornerRadiusOverridden = False
 	mBorderWidth = 0
 	mBorderColor = mTheme.Border
 	mCustomBackgroundApplied = False
@@ -118,7 +124,9 @@ Public Sub ApplyTheme(Theme As UITheme) As UIInput
 	If Theme.IsInitialized = False Then Return Me
 	mTheme = Theme
 	If mTextColorOverridden = False Then mTextColor = mTheme.PrimaryText
+	If mTextSizeOverridden = False Then mTextSize = mTheme.InputTextSize
 	If mBackgroundColorOverridden = False Then mBackgroundColor = mTheme.Surface
+	If mCornerRadiusOverridden = False Then mCornerRadius = mTheme.InputRadius
 	If mBorderColorOverridden = False Then mBorderColor = mTheme.Border
 	If mParent <> Null Then
 		If mParent.IsInitialized Then Render
@@ -129,6 +137,14 @@ End Sub
 ' Sets the corner radius in pixels. Zero preserves the native EditText background.
 Public Sub CornerRadius(Radius As Int) As UIInput
 	mCornerRadius = Max(0, Radius)
+	mCornerRadiusOverridden = True
+	Return Me
+End Sub
+
+' Sets the input text size explicitly, in scaled pixels.
+Public Sub TextSize(Size As Int) As UIInput
+	mTextSize = Max(1, Size)
+	mTextSizeOverridden = True
 	Return Me
 End Sub
 
@@ -198,13 +214,14 @@ Public Sub Render
 
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
 	mEditText.TextColor = mTextColor
+	mEditText.TextSize = mTextSize
 	If mCornerRadius > 0 Or mBorderWidth > 0 Then
 		Dim inputBackground As ColorDrawable
 		inputBackground.Initialize2(mBackgroundColor, mCornerRadius, mBorderWidth, mBorderColor)
 		mEditText.Background = inputBackground
 		mCustomBackgroundApplied = True
 		' A custom background can replace the native EditText inset.
-		mEditText.Padding = Array As Int(12dip, 8dip, 12dip, 8dip)
+		mEditText.Padding = Array As Int(mTheme.InputHorizontalPadding, mTheme.InputVerticalPadding, mTheme.InputHorizontalPadding, mTheme.InputVerticalPadding)
 	Else
 		mEditText.Color = mBackgroundColor
 	End If
@@ -262,9 +279,9 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	bmp.InitializeMutable(1dip, 1dip)
 	Dim cvs As Canvas
 	cvs.Initialize2(bmp)
-	Dim textWidth As Float = cvs.MeasureStringWidth(measureText, Typeface.DEFAULT, 16)
-	Dim naturalWidth As Int = textWidth + 32dip
-	Dim naturalHeight As Int = 48dip
+	Dim textWidth As Float = cvs.MeasureStringWidth(measureText, Typeface.DEFAULT, mTextSize)
+	Dim naturalWidth As Int = textWidth + 2 * mTheme.InputHorizontalPadding
+	Dim naturalHeight As Int = mTheme.ControlHeight
 
 	Dim safeMaxWidth As Int = MaxWidth
 	Dim safeMaxHeight As Int = MaxHeight
