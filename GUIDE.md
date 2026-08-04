@@ -25,7 +25,15 @@ The framework then measures children, assigns layout bounds, creates native view
 
 It is inspired by declarative UI systems such as Flutter, but it is intentionally smaller. It does not attempt to reproduce Flutter's complete widget catalog, renderer or state system.
 
-## 2. Installation
+## 2. License and permitted use
+
+This is a public development/demo release shared to invite testing, ideas, bug reports and feedback. The complete plain-language notice is in [`LICENSE.txt`](LICENSE.txt) and the same file is included inside the `.b4xlib` package.
+
+Use the demo freely in personal, educational, client, employer, internal-business, commercial and monetized applications. You may inspect, debug and modify the source while developing, and publish applications built with it as your own work. No payment or commercial license is required for this development/demo release.
+
+The only community boundary is about source authorship: please do not copy the implementation into another library, framework, toolkit or standalone source project and publish it under your own name. This does not restrict applications, original code built around the API, tutorials, reviews, small credited snippets or local experiments. The copyright holder and contact are listed in `LICENSE.txt`.
+
+## 3. Installation
 
 ### Using the preliminary `.b4xlib`
 
@@ -37,15 +45,11 @@ It is inspired by declarative UI systems such as Flutter, but it is intentionall
    - `IME`
 5. Create or open a B4A Activity project and use the classes from the package.
 
-The package contains only the reusable `.bas` UI classes and `manifest.txt`. Project documentation such as `README.md`, `GUIDE.md` and `SYNTAX.md` remains in the source repository and is not copied into the `.b4xlib`. The package intentionally excludes the NOVA demo Activity and `Starter.bas`.
+The package contains only the reusable `.bas` UI classes, `manifest.txt` and `LICENSE.txt`. Project documentation such as `README.md`, `GUIDE.md` and `SYNTAX.md` remains in the source repository and is not copied into the `.b4xlib`. The package intentionally excludes the NOVA demo Activity and `Starter.bas`.
 
-### Using the source modules
+The host project should use the installed library through normal B4A library usage. Local source changes and adapted components are welcome for personal, educational, client, employer, internal-business and commercial projects. Please do not publish the implementation itself as another library or standalone source project under your own name. Publishing an application that uses or adapts the library as your own work is allowed. Keep the notice and original copyright information with any shared library source or modified package.
 
-Alternatively, copy the required `.bas` modules into the B4A project. This is useful while developing or debugging the framework.
-
-The host project must include the modules used by its UI tree. For example, a screen using `UIColumn`, `UILabel` and `UIButton` needs those three classes and their dependencies.
-
-## 3. Minimal working example
+## 4. Minimal working example
 
 The following example mounts one declarative label directly into a B4A Activity. It does not require `UINavigator` or `UIScaffold`.
 
@@ -69,7 +73,7 @@ End Sub
 
 For a real application, a layout container such as `UIColumn` or `UIPadding` is usually preferable to positioning every root child manually.
 
-## 4. Composing a screen
+## 5. Composing a screen
 
 Widgets are configured first and mounted by a root container:
 
@@ -101,7 +105,7 @@ End Sub
 
 The important idea is that `body` describes the child tree. The parent is responsible for passing layout information to each child during `Render`.
 
-## 5. Public widget reference
+## 6. Public widget reference
 
 ### Text and content widgets
 
@@ -138,9 +142,9 @@ The important idea is that `body` describes the child tree. The parent is respon
 | `UIBottomNavigationBar` | Declarative bottom navigation | `AddItem`, `BindSelectedIndex`, `OnSelected`, `ActiveColor`, `InactiveColor`, `IndicatorColor` |
 | `UINavigator` | Virtual screens and safe-area host | `AddScreen`, `NavigateTo` |
 
-All widget classes expose the internal layout lifecycle methods described in [Lifecycle and rendering](#9-lifecycle-and-rendering). Application code normally configures the tree and calls `Render` only on its root.
+All widget classes expose the internal layout lifecycle methods described in [Lifecycle and rendering](#12-lifecycle-and-rendering). Application code normally configures the tree and calls `Render` only on its root.
 
-## 6. Rounded controls
+## 7. Rounded controls
 
 `UIButton` and `UIInput` preserve the native Android background unless a custom shape is requested. Use `CornerRadius` for rounded corners and `Border` for an optional outline:
 
@@ -162,7 +166,24 @@ input.Initialize _
 
 Both methods return the same widget for fluent chaining. `CornerRadius(0)` and `Border(0, color)` leave the control in its default unshaped mode. A custom `UIInput` background receives library-managed internal padding so its text does not touch the border.
 
-## 7. Layout and natural measurement
+## 8. Icons and icon fonts
+
+`UIIcon` accepts the glyph itself, so the application can use the icon codepoints documented by the selected font without a second icon syntax:
+
+```basic
+Dim moon As UIIcon
+moon.Initialize _
+    .FontAwesome(Chr(0xF186)) _
+    .Size(24) _
+    .Color(theme.PrimaryText)
+
+Dim settings As UIIcon
+settings.Initialize.Material(Chr(0xE8B8))
+```
+
+Use `FontAwesome(Chr(codePoint))` for a FontAwesome glyph and `Material(Chr(codePoint))` for a Material Icons glyph. `FontAwesomeCode(codePoint)` and `MaterialCode(codePoint)` are convenience alternatives when the codepoint is stored as an integer. `Unicode(glyph)` selects the platform default typeface for regular Unicode symbols and emoji. The exact codepoint-to-icon mapping depends on the font version installed by B4A/Android.
+
+## 9. Layout and natural measurement
 
 The layout engine uses a small measurement protocol:
 
@@ -319,7 +340,7 @@ End Sub
 
 `Visible(True)` is the default. `BindVisible` reads the current Boolean state and observes later replacements. Calling `Visible(...)` or `UnbindVisible` removes the binding. `OnVisibilityChanged` receives the changed wrapper and lets the host choose whether to render a `UIColumn`, `UIRow`, `UIScrollView` or another affected parent. When hidden, `UIVisibility` reports a natural size of `0, 0`, removes the child's native views and lets containers reflow the remaining children without a gap. The wrapper preserves the declarative child, so it can be mounted again when visibility returns.
 
-The compact examples project uses this pattern to hide and show the gallery details card without rebuilding or navigating the entire screen.
+The included example intentionally keeps its UI small; this guide documents the visibility API independently so it can be used in larger applications.
 
 ### UIStack
 
@@ -380,7 +401,7 @@ card.Initialize _
     .Child(cardPadding)
 ```
 
-## 8. UIScrollView
+## 10. UIScrollView
 
 `UIScrollView` wraps the native B4A `ScrollView` and accepts one declarative child, usually a `UIColumn` containing the complete scrollable content.
 
@@ -421,7 +442,7 @@ Dim position As Int = scroll.GetScrollPosition
 
 The child content is measured and mounted into the native `ScrollView.Panel`. Re-rendering the same child updates its existing tree and preserves scroll position/native state; replacing the child performs structural cleanup. Do not pass the native panel directly to custom code expecting a `B4XView`; the library handles that conversion internally.
 
-## 9. UIListView
+## 11. UIListView
 
 Use `UIListView` for long vertical collections where each row has the same height. It mounts only the visible window plus the configured overscan rows and reuses declarative item objects when `BindItem` is configured.
 
@@ -457,7 +478,7 @@ End Sub
 
 The list pools declarative item objects, but it is not a full Android `RecyclerView` wrapper. A recycled widget may recreate its internal native view after it is unmounted; row state should therefore come from the data source or an explicit `UIState`, not from transient native control state.
 
-## 10. Lifecycle and rendering
+## 12. Lifecycle and rendering
 
 Every layout-aware widget follows this lifecycle:
 
@@ -489,7 +510,7 @@ rootWidget.Render
 
 When a property changes after mounting, call `Render` on the affected widget or rebuild the root tree when the structure itself changes. The current project uses targeted label renders for simple state changes and a controlled remount for navigation and theme changes.
 
-## 10. Events and callbacks
+## 13. Events and callbacks
 
 `UIButton` and `UIFloatingActionButton` use a target object and a callback name:
 
@@ -514,7 +535,7 @@ Use normal B4A event-style names such as `Save_Click`, `Increment_Click` or `Nav
 
 `UIButton.TriggerClick` is also available when an application needs to dispatch the configured action programmatically. It uses the same safe callback validation.
 
-## 11. UISnackBar
+## 14. UISnackBar
 
 `UISnackBar` is a transient overlay for short feedback messages. It attaches directly to a `B4XView` root, so it stays above the current declarative screen without becoming a permanent layout child.
 
@@ -538,7 +559,7 @@ The snackbar uses a generation token for delayed work. Calling `Show`, `Dismiss`
 
 `UISnackBar` is an overlay API rather than a replacement for `UIColumn`, `UIRow` or `UIScaffold`; use the Activity/content root or another non-clipping host view when the notification must appear above the complete screen.
 
-## 12. UIAnimation
+## 15. UIAnimation
 
 `UIAnimation` adds a small, explicit animation layer without changing the composition syntax. It animates the bounds of an already-mounted `B4XView` using the native B4A layout animation:
 
@@ -562,7 +583,7 @@ Use `SizeTo(width, height)` for size-only changes and `MoveAndResize(...)` for b
 
 Keep animations opt-in and local. The declarative tree still owns layout; after a parent re-render, the next animation should target the resulting native view. `UIAnimation` currently animates bounds only and does not promise automatic interpolation of colors, text, opacity or arbitrary widget properties.
 
-## 13. State and UI updates
+## 16. State and UI updates
 
 `UIState` is an observable value holder for application state. It keeps the value outside widgets and notifies only the callbacks subscribed to that state instance.
 
@@ -634,15 +655,11 @@ The binding is intentionally one-way. `BindText` applies state values to the nat
 
 `SetState` is a replacement operation. It compares the assigned value using B4A's normal equality semantics, which is appropriate for simple values such as numbers and strings. It does not observe mutations made inside an existing `Map` or `List`; assign a new value when you want to notify listeners. A callback may perform one follow-up state change, but callbacks should not continuously mutate the same state or create an update cycle.
 
-The NOVA example demonstrates this with:
-
-- `CounterState` and the two floating action buttons;
-- `ActivityRefreshState` and `REFRESH STREAM`;
-- `UITheme` for palette state.
+The included example demonstrates the same principle with a single `CounterState`, a bound label and a floating action button. Larger applications can keep additional state in separate `UIState` instances.
 
 Keep state explicit and keep rendering predictable.
 
-## 14. UIAsyncState
+## 17. UIAsyncState
 
 `UIAsyncState` represents the lifecycle of an asynchronous operation without executing the operation itself. It is intentionally independent of `HttpJob`, `OkHttpUtils2`, databases and file APIs. The application still uses normal B4A resumable subs and `Wait For`; the state object exposes the result declaratively to the UI.
 
@@ -696,7 +713,7 @@ End Sub
 
 This separation is deliberate: `UIAsyncState` is reusable for HTTP, database, file and authentication operations, while `HttpJob` and `Wait For` remain visible and testable in the application layer. `Reset` is an alias for `SetIdle`; repeated identical snapshots do not notify listeners. Call `Unsubscribe`, `UnsubscribeTarget` or `ClearListeners` when the owner no longer needs updates.
 
-## 15. UITheme
+## 18. UITheme
 
 `UITheme` is a reusable Material 3-like design-token provider. It supplies light/dark defaults for colors, typography, shapes and common control metrics. It does not know which widgets your application owns, but every visual widget exposes `ApplyTheme` and declarative containers forward the theme to their descendants.
 
@@ -800,7 +817,7 @@ button.ApplyTheme(AppTheme)
 
 Only the corner radius and text size above are customized; the button colors, border and other metrics still follow the active theme.
 
-## 16. UINavigator and safe area
+## 19. UINavigator and safe area
 
 `UINavigator` manages virtual screens inside one real B4A Activity:
 
@@ -880,7 +897,7 @@ screen.Initialize _
 
 The scaffold reserves space for its app bar and FAB area before rendering the body.
 
-## 17. Common problems
+## 20. Common problems
 
 ### A text input does not update my state
 
@@ -936,25 +953,24 @@ A virtual screen name must match the registered name exactly.
 
 `UITheme` only changes the values returned by its color properties. The host must assign those values to the widgets and call `Render` where needed.
 
-## 18. NOVA Control Center example
+## 21. Minimal counter example
 
-The included demo is organized into three virtual screens:
+The included example is intentionally small and focuses on the library's core promise:
 
-- **Dashboard:** live counter, metrics, cards, navigation buttons and two FABs.
-- **Activity:** measured event cards inside a native scroll view and a refresh counter.
-- **Settings:** runtime light/dark palette switching.
+- one real B4A Activity;
+- one `UIState` value bound to a `UILabel`;
+- one `UIAppBar` action that toggles the theme;
+- one `UIFloatingActionButton` that increments the counter;
+- native views composed through declarative widgets rather than manual `AddView` layout code.
 
 Suggested demonstration flow:
 
-1. Tap `+` and `-` on Dashboard.
-2. Open `VIEW ACTIVITY`.
-3. Scroll through the event stream.
-4. Tap `REFRESH STREAM`.
-5. Return to Dashboard.
-6. Open Settings and toggle the theme.
-7. Navigate again to verify that state and mounting remain stable.
+1. Run the example and observe the initial counter.
+2. Tap the `+` floating action button and verify the bound label updates.
+3. Tap the app-bar theme icon and verify the palette changes without resetting the counter.
+4. Read `examples/example.b4a` as the minimal starting point before exploring the other widgets documented in this guide.
 
-## 19. Stable syntax and compatibility
+## 22. Stable syntax and compatibility
 
 The library's public syntax is defined in [SYNTAX.md](SYNTAX.md). Treat that file as the contract for examples, forum releases and future contributions.
 
@@ -969,7 +985,7 @@ The most important compatibility rules are:
 
 If an implementation idea cannot be explained by these rules, it should not be added to the public API yet.
 
-## 20. Design boundaries and roadmap
+## 23. Design boundaries and roadmap
 
 The project intentionally keeps its first release small:
 

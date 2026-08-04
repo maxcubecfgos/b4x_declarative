@@ -201,7 +201,7 @@ Public Sub Render
 		CallSub3(mAppBar, "SetPosition", 0, 0)
 		CallSub3(mAppBar, "SetSize", mWidth, appBarHeight)
 		CallSub(mAppBar, "Render")
-		topOffset = appBarHeight ' El body empezarÃ¡ debajo de la AppBar
+		topOffset = appBarHeight ' The body starts below the app bar
 	End If
     
 	' Reserve bottom space when one or more floating action buttons are present.

@@ -6,26 +6,21 @@ A small, code-first declarative UI layer for native B4A applications.
 
 This project explores a Flutter-inspired way to compose Android interfaces in B4A while keeping the result native, lightweight, and understandable. It does not try to recreate Flutter internally. Instead, it provides a focused set of composable widgets with a predictable mount, measure, layout, render, and unmount lifecycle.
 
-The included **NOVA Control Center** is a demonstration application designed to show the framework's capabilities in a practical interface:
+The included example is intentionally a **minimal Flutter-style counter** designed to make the core benefit readable at a glance:
 
-- Declarative screen composition
-- Natural child measurement
-- Vertical and horizontal layout
-- Flexible children through `UIExpanded`
-- Conditional composition through `UIVisibility`
-- Z-axis composition through `UIStack`
-- A native `ScrollView` wrapped as `UIScrollView`
-- Virtual navigation inside one real B4A Activity
-- Automatic safe-area handling below the Android status area
-- Observable runtime state updates for counters and activity refreshes
-- Reusable light and dark palettes through `UITheme`
-- Native B4A buttons, floating action buttons, bottom navigation, and text inputs with declarative callbacks and optional rounded shapes
+- one real B4A Activity;
+- one `UIState` bound to a `UILabel`;
+- one `UIAppBar` theme action;
+- one `UIFloatingActionButton` increment action;
+- native views composed through declarative widgets and natural layout.
+
+The repository documentation also covers the complete widget set, including natural measurement, `UIExpanded`, `UIVisibility`, `UIStack`, `UIScrollView`, virtual navigation, safe-area handling, themes, snackbars, animations, native inputs, bottom navigation and asynchronous state. Those capabilities are documented separately so the minimal example remains a credible code-size demonstration.
 
 ## Project structure
 
 | File | Responsibility |
 | --- | --- |
-| `Declarative UI.b4a` | NOVA demo Activity and screen composition |
+| `examples/example.b4a` | Minimal counter demonstration Activity |
 | `UITheme.bas` | Reusable light/dark seed-color scheme and semantic palette |
 | `UIState.bas` | Observable state holder with selective callbacks |
 | `UIAsyncState.bas` | Observable idle/loading/success/error state for asynchronous operations |
@@ -482,31 +477,18 @@ End Sub
 
 `UIScaffold` reserves the bottom-navigation area before measuring the body. Selection changes update only the existing native labels and indicator; the bar does not rebuild its native children for ordinary tab changes. `ShowInactiveLabels(True)` displays every caption, while the default shows the active caption and keeps the inactive tabs compact. Use Unicode strings for icons so the component does not require an extra icon-font dependency.
 
-## NOVA Control Center demo
+## Minimal counter demonstration
 
-The example contains three virtual screens:
+The example contains one intentionally small screen:
 
-### Dashboard
+- `UIState` drives the counter value;
+- `UILabel.BindText` updates the displayed value;
+- `UIAppBar` exposes the theme action through a direct FontAwesome glyph;
+- `UIFloatingActionButton` increments state through a normal B4A callback;
+- `UITheme` changes the palette without resetting the counter;
+- `UIScaffold`, `UICenter` and the safe-area-aware root keep composition concise.
 
-- Live counter controlled by the two floating action buttons
-- Hero status card
-- Active-user and uptime metrics
-- Navigation buttons for Activity and Settings
-
-### Activity
-
-- A six-item event stream
-- Natural card measurement
-- A real scrollable content area
-- Refresh state updated at runtime
-- Navigation back to Dashboard
-
-### Settings
-
-- Runtime theme switch
-- Explicit light/dark status text
-- Theme-aware cards, bars, labels, borders, dividers, and buttons
-- Navigation back to Dashboard
+The remaining widgets are documented in `GUIDE.md` and can be explored without making the public counter example carry showcase-only navigation and business logic.
 
 ## Building
 
@@ -527,18 +509,23 @@ The project currently uses the following B4A libraries:
 
 For a forum presentation, use this sequence:
 
-1. Start on the Dashboard and tap `+` to show state-driven updates.
-2. Open `VIEW ACTIVITY` and scroll through the event stream.
-3. Tap `REFRESH STREAM` and show the refresh counter changing.
-4. Return to Dashboard and open `SETTINGS`.
-5. Toggle the theme and show the complete palette transition.
-6. Return to Dashboard and verify that navigation and state remain intact.
+1. Run the example and observe the initial counter.
+2. Tap `+` and show that `UIState` updates the bound label.
+3. Tap the app-bar theme icon and show that the palette changes without resetting state.
+4. Open `examples/example.b4a` and compare the small declarative tree with an equivalent manual `AddView` implementation.
+5. Use `GUIDE.md` as the extended API tour for scroll views, snackbars, animations, themes, inputs and other widgets.
 
 The most important comparison with imperative UI code is that the demo describes a reusable tree of widgets. Native views are still used underneath, but screen composition, measurement, and mounting are handled consistently by the declarative layer.
 
 ## Stable syntax contract
 
 The public syntax and compatibility rules are maintained in [SYNTAX.md](SYNTAX.md). New releases should preserve the documented fluent API, callback conventions, state-binding precedence, layout values and lifecycle protocol. If a future change breaks one of those rules, it must include a migration note and a contract-version update.
+
+## License and usage
+
+This project is shared under the friendly public development/demo notice in [`LICENSE.txt`](LICENSE.txt). It is open for testing and feedback: use it freely in personal, client, employer, internal-business, commercial and monetized applications; inspect and modify the source while developing; and publish applications built with it as your own work.
+
+The only community boundary is about source authorship: please do not copy the implementation into another library, framework, toolkit or standalone source project and publish it under your own name. This does not restrict applications, original code built around the API, tutorials, reviews, small credited snippets or local experiments. A future Pro version may have separate terms, but those terms do not retroactively restrict this demo. The copyright holder and contact are listed in `LICENSE.txt`.
 
 ## Design principles
 

@@ -45,7 +45,7 @@ Public Sub BindText(State As UIState) As UILabel
 	mTextState = State
 	If mTextState <> Null Then
 		If mTextState.IsInitialized Then
-			mText = "" & mTextState.GetState
+			mText = StateText(mTextState.GetState)
 			mTextState.Subscribe(Me, "TextState_Changed")
 			If mParent <> Null Then
 				If mParent.IsInitialized Then Render
@@ -66,8 +66,22 @@ End Sub
 
 Private Sub TextState_Changed(State As UIState)
 	If State = Null Then Return
-	mText = "" & State.GetState
+	mText = StateText(State.GetState)
 	Render
+End Sub
+
+' Converts any state value to display text without relying on B4A type tests.
+' UIState commonly contains Int values, which must not be parsed as Boolean.
+Private Sub StateText(Value As Object) As String
+	Dim valueText As String = ("" & Value).Trim
+	If IsNumber(valueText) Then
+		Dim number As Double = valueText
+		Dim groupingUsed As Boolean = False
+		If number = Floor(number) And Abs(number) < 1000000000000 Then
+			Return NumberFormat2(number, 0, 12, 0, groupingUsed)
+		End If
+	End If
+	Return valueText
 End Sub
 
 Public Sub Size(s As Int) As UILabel
@@ -114,7 +128,7 @@ Public Sub Render
 	If mParent.IsInitialized = False Then Return
 	If mTextState <> Null Then
 		If mTextState.IsInitialized Then
-			mText = "" & mTextState.GetState
+			mText = StateText(mTextState.GetState)
 			mTextState.Subscribe(Me, "TextState_Changed")
 		End If
 	End If

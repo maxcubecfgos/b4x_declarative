@@ -4,6 +4,7 @@ $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $output = Join-Path $root 'DeclarativeUI.b4xlib'
 $stage = Join-Path ([IO.Path]::GetTempPath()) ('DeclarativeUI_b4xlib_' + [Guid]::NewGuid().ToString('N'))
 $tempZip = Join-Path ([IO.Path]::GetTempPath()) ('DeclarativeUI_b4xlib_' + [Guid]::NewGuid().ToString('N') + '.zip')
+$licenseFile = Join-Path $root 'LICENSE.txt'
 
 $expectedModules = @(
     'UIAlertDialog.bas'
@@ -55,12 +56,23 @@ try {
     foreach ($module in $modules) {
         Copy-Item -LiteralPath $module.FullName -Destination (Join-Path $stage $module.Name)
     }
+    if (-not (Test-Path -LiteralPath $licenseFile)) {
+        throw 'Missing LICENSE.txt. The package must include the license.'
+    }
+    Copy-Item -LiteralPath $licenseFile -Destination (Join-Path $stage 'LICENSE.txt')
 
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
     $manifest = @(
         'Version=0.1'
         'Title=Declarative UI for B4A'
-        'Author=Declarative UI project'
+        'Author=Maxel Chark Guzm' + [char]0xE1 + 'n'
+        'Contact=maxelcfgos@gmail.com'
+        'License=Public Development Demo - see LICENSE.txt'
+        'Usage=Free personal and commercial application use; testing and local modification welcome'
+        'CommercialUse=Permitted for this demo; please respect source authorship'
+        'Modification=Testing and local project modifications welcome'
+        'ReverseEngineering=Study, debugging and experimentation welcome'
+        'Redistribution=Please do not repackage the implementation as your own library'
         'DependsOn=XUI, IME, OkHttpUtils2'
     ) -join [Environment]::NewLine
     [IO.File]::WriteAllText((Join-Path $stage 'manifest.txt'), $manifest, $utf8NoBom)
@@ -72,11 +84,11 @@ try {
     $zip = [IO.Compression.ZipFile]::OpenRead($tempZip)
     try {
         $entries = @($zip.Entries)
-        $expectedEntries = @('manifest.txt') + $expectedModules
+        $expectedEntries = @('manifest.txt', 'LICENSE.txt') + $expectedModules
         $actualEntries = @($entries | ForEach-Object FullName)
         $missingEntries = @($expectedEntries | Where-Object { $_ -notin $actualEntries })
         $unexpectedEntries = @($actualEntries | Where-Object { $_ -notin $expectedEntries })
-        if ($entries.Count -ne 33 -or $missingEntries.Count -gt 0 -or $unexpectedEntries.Count -gt 0) {
+        if ($entries.Count -ne 34 -or $missingEntries.Count -gt 0 -or $unexpectedEntries.Count -gt 0) {
             throw ('Package entry mismatch. Missing: ' + ($missingEntries -join ', ') + '; unexpected: ' + ($unexpectedEntries -join ', '))
         }
 
@@ -109,7 +121,7 @@ try {
     Write-Host ('File: ' + $output)
     Write-Host ('Size: ' + $fileInfo.Length + ' bytes')
     Write-Host ('SHA-256: ' + $hash)
-    Write-Host 'Contents: 32 UI modules + manifest.txt'
+    Write-Host 'Contents: 32 UI modules + manifest.txt + LICENSE.txt'
 }
 catch {
     Write-Error ('The b4xlib could not be created or validated: ' + $_.Exception.Message)

@@ -1,0 +1,6 @@
+
+Declarative UI library created successfully.
+File: D:\Projects\Declarative UI\DeclarativeUI-0.1.b4xlib
+Size: 20510 bytes
+SHA-256: FA66C55DA4103A40FCA8763176974AA5D875192A63DD99DEF97C4F3080DAB928
+Contents: 17 UI modules + manifest.txt + README.txt

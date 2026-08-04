@@ -51,6 +51,14 @@ Public Sub FontAwesome(Glyph As String) As UIIcon
     Return Me
 End Sub
 
+' Selects a regular Unicode glyph, including symbols outside the Material font.
+' This is useful for platform-supported symbols such as U+1F318 (🌘).
+Public Sub Unicode(Glyph As String) As UIIcon
+    mGlyph = Glyph
+    mTypeface = Typeface.DEFAULT
+    Return Me
+End Sub
+
 ' Selects a Material Icons code point without requiring Chr at the call site.
 Public Sub MaterialCode(CodePoint As Int) As UIIcon
     Return Material(Chr(CodePoint))

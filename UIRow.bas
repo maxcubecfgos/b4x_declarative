@@ -205,9 +205,9 @@ Public Sub Render
 		If participates = False Then
 			currentWidth = 0
 		Else If hasNaturalSize Then
-			currentWidth = size.Get(0) ' Ancho natural
+			currentWidth = size.Get(0) ' Natural width
 		Else
-			currentWidth = expandedWidth ' TambiÃ©n se expande
+			currentWidth = expandedWidth ' Expanded children share the remaining width
 			If expandedRemainder > 0 Then
 				currentWidth = currentWidth + 1
 				expandedRemainder = expandedRemainder - 1

@@ -14,7 +14,7 @@ End Sub
 
 ' Creates an observable state holder.
 Public Sub Initialize(InitialValue As Object) As UIState
-	mValue = InitialValue
+	mValue = NormalizeValue(InitialValue)
 	mListeners.Initialize
 	mIsNotifying = False
 	mPendingNotification = False
@@ -26,11 +26,22 @@ Public Sub GetState As Object
 	Return mValue
 End Sub
 
+' Stores numeric values as Double so consumers always see a consistent type.
+' B4X promotes Object arithmetic to Double, which used to leave states holding
+' a mix of Int and Double values that rendered as "0" and "1.0".
+Private Sub NormalizeValue(Value As Object) As Object
+	If Value Is Int Or Value Is Long Or Value Is Float Or Value Is Double Then
+		Return Value + 0.0
+	End If
+	Return Value
+End Sub
+
 ' Replaces the current value and notifies subscribed listeners.
 ' A listener receives this UIState instance as its only argument.
 Public Sub SetState(NewValue As Object)
-	If mValue = NewValue Then Return
-	mValue = NewValue
+	Dim normalized As Object = NormalizeValue(NewValue)
+	If mValue = normalized Then Return
+	mValue = normalized
 	' Defer one additional notification pass when a callback changes this state.
 	If mIsNotifying Then
 		mPendingNotification = True

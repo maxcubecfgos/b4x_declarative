@@ -30,7 +30,13 @@ It is not:
 
 When ordinary B4A is the clearest solution, application code may use ordinary B4A. The library adds composition; it does not hide the platform.
 
-## 2. The canonical composition syntax
+## 2. License boundary
+
+This project and its `.b4xlib` package are shared under the Public Development Demo Notice. Use the demo freely in personal, educational, client, employer, internal-business, commercial and monetized applications. Source inspection, debugging and local modification are welcome, and resulting applications may be published as the user's own work.
+
+The only community boundary is about source authorship: please do not copy the implementation into another library, framework, toolkit or standalone source project and publish it under your own name. This does not restrict applications, original code built around the API, tutorials, reviews, small credited snippets or local experiments. The complete notice is in [`LICENSE.txt`](LICENSE.txt), which is included inside the `.b4xlib`.
+
+## 3. The canonical composition syntax
 
 The only recommended composition syntax is normal B4A object creation followed by optional fluent configuration:
 
@@ -70,7 +76,7 @@ title.Color(0xFF132238)
 
 The fluent form is a convenience, not a separate language feature.
 
-## 3. Naming rules
+## 4. Naming rules
 
 These rules apply to all new public API:
 
@@ -84,7 +90,7 @@ These rules apply to all new public API:
 
 The library will not introduce lower-case, Dart-style, JavaScript-style or operator-based alternatives to these conventions.
 
-## 4. Public API tiers
+## 5. Public API tiers
 
 Every public method belongs to one of three tiers.
 
@@ -128,7 +134,7 @@ Custom widgets that want to participate in a `UIColumn`, `UIRow`, `UIPadding`, `
 
 Native view references, callback dispatch helpers, internal fields and private subs are implementation details. They are not part of the user-facing contract and may change without a syntax migration.
 
-## 5. Widget initialization and configuration
+## 6. Widget initialization and configuration
 
 Every widget must be initialized before it is configured or mounted:
 
@@ -149,7 +155,7 @@ The normal order is:
 
 Configuration methods change the declarative object. They do not promise to create a native view immediately. If a widget is already mounted, methods documented as reactive bindings update it immediately; ordinary property changes become visible after the next `Render`.
 
-## 6. Shape configuration
+## 7. Shape configuration
 
 `UIButton` and `UIInput` expose the same optional shape configuration:
 
@@ -170,7 +176,7 @@ Rules:
 - Custom button backgrounds can replace the platform ripple drawable; this is an explicit trade-off of custom shaping.
 - Shape properties affect the next `Render` and do not change event or state-binding behavior.
 
-## 7. Composition and children
+## 8. Composition and children
 
 A container owns a tree of child objects:
 
@@ -200,7 +206,7 @@ Rules:
 
 The current library uses `Object` for child parameters so different widget classes can participate without inheritance. A custom child must satisfy the composition protocol; otherwise the parent cannot measure or render it safely.
 
-## 8. Layout and measurement contract
+## 9. Layout and measurement contract
 
 `GetContentSize(maxWidth, maxHeight)` returns a `List` with two values:
 
@@ -255,7 +261,7 @@ Rules:
 
 `UIStack` follows the same lifecycle and composition protocol as the other containers. Structural changes require rendering the affected parent; no implicit tree diff is introduced.
 
-## 9. Rendering and lifecycle
+## 10. Rendering and lifecycle
 
 The stable lifecycle is:
 
@@ -414,7 +420,7 @@ Rules:
 - The current release animates bounds only; it does not imply color, opacity, text or arbitrary-property animation.
 - Animations are opt-in and do not replace the normal parent layout/render protocol.
 
-## 10. Events and callbacks
+## 11. Events and callbacks
 
 Events use normal B4A target-plus-sub-name callbacks:
 
@@ -438,7 +444,7 @@ Rules:
 
 `UIInput.OnTextChanged(Target, EventName)` uses the callback signature `Sub EventName(NewText As String)`. It reports user edits only; programmatic changes through `Text` or `BindText` do not invoke the callback. Future widgets may expose additional callbacks, but they must use normal B4A callback conventions and document their parameter signature explicitly.
 
-## 11. State and bindings
+## 12. State and bindings
 
 `UIState` is the standard explicit state primitive:
 
@@ -497,7 +503,7 @@ End Sub
 
 `Text(String)` cancels `BindText(UIState)`. `GetText` returns the current text. The native field is preserved during ordinary `Render` calls so focus and keyboard state are not discarded. `GetContentSize` reports a natural 48dip height and a width based on the current text or hint.
 
-## 12. Async operation state
+## 13. Async operation state
 
 `UIAsyncState` is the stable state model for operations that complete later. It does not make HTTP requests and does not replace B4A `Wait For` or `ResumableSub`.
 
@@ -548,7 +554,7 @@ Rules:
 - A callback may request one follow-up transition; notification passes are bounded like `UIState`.
 - `Reset` is an alias for `SetIdle`.
 
-## 13. Themes
+## 14. Themes
 
 `UITheme` is a Material 3-like design-token provider, not a global renderer. It supplies default colors, typography sizes, corner radii and common control metrics:
 
@@ -580,7 +586,7 @@ Rules:
 - Calling a widget setter such as `Size`, `TextSize`, `CornerRadius`, `BackgroundColor` or `Color` marks only that property as overridden.
 - `ApplyTheme` updates all non-overridden properties, so custom widgets can mix theme defaults with local design decisions.
 
-## 14. Navigation and safe area
+## 15. Navigation and safe area
 
 `UINavigator` manages virtual screens inside one real B4A Activity:
 
@@ -603,7 +609,7 @@ Rules:
 
 A future native multi-Activity integration must be additive and must not redefine virtual screens as Activities.
 
-## 15. Compatibility and versioning
+## 16. Compatibility and versioning
 
 The syntax contract is more important than internal implementation details.
 
@@ -655,7 +661,7 @@ New widgets and optional methods may be added without changing existing syntax. 
 4. does not require a global state manager or hidden lifecycle;
 5. can be documented with a stable compatibility rule.
 
-## 16. Rules for future contributors
+## 17. Rules for future contributors
 
 Before merging a library change:
 
@@ -670,7 +676,7 @@ Before merging a library change:
 9. Test runtime changes through **IDE focus → F5 → Ctrl+R → bundle inspection**.
 10. Do not publish a new syntax convention only in an example or in a private implementation comment.
 
-## 17. Current deliberate boundaries
+## 18. Current deliberate boundaries
 
 The following are intentionally outside the contract for now:
 
