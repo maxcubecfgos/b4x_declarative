@@ -1,4 +1,4 @@
-B4A=true
+﻿B4A=true
 Group=Default Group
 ModulesStructureVersion=1
 Type=Class
@@ -8,6 +8,7 @@ Sub Class_Globals
 	Private xui As XUI
 	Private mText As String
 	Private mHint As String
+	Private mPasswordMode As Boolean
 	Private mTextState As UIState
 	Private mTextTarget As Object
 	Private mTextEventName As String
@@ -37,6 +38,7 @@ End Sub
 Public Sub Initialize As UIInput
 	mText = ""
 	mHint = ""
+	mPasswordMode = False
 	Dim defaultTheme As UITheme
 	defaultTheme.Initialize
 	mTheme = defaultTheme
@@ -67,6 +69,14 @@ Public Sub Hint(Value As String) As UIInput
 End Sub
 
 ' Sets a static text value and removes any state binding.
+Public Sub PasswordMode(Enabled As Boolean) As UIInput
+    mPasswordMode = Enabled
+    If mEditText <> Null Then
+        If mEditText.IsInitialized Then mEditText.PasswordMode = Enabled
+    End If
+    Return Me
+End Sub
+
 Public Sub Text(Value As String) As UIInput
 	UnbindText
 	mText = Value
@@ -231,6 +241,7 @@ Public Sub Render
 	mEditText.TextColor = mTextColor
 	mEditText.HintColor = mHintColor
 	mEditText.TextSize = mTextSize
+	mEditText.PasswordMode = mPasswordMode
 	If mCornerRadius > 0 Or mBorderWidth > 0 Then
 		Dim inputBackground As ColorDrawable
 		inputBackground.Initialize2(mBackgroundColor, mCornerRadius, mBorderWidth, mBorderColor)
