@@ -8,7 +8,7 @@ ManifestCode='This code will be applied to the manifest file during compilation.
 NumberOfFiles=0
 NumberOfLibraries=4
 NumberOfModules=0
-Version=13.62
+Version=13.5
 @EndOfDesignText@
 #Region  Project Attributes
     #ApplicationLabel: NOVA Tasks

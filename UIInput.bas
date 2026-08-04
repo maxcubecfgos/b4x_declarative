@@ -32,6 +32,9 @@ Sub Class_Globals
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
 	Private mApplyingState As Boolean
+	Private mMounted As Boolean
+	Private mProgrammaticText As String
+	Private mHasProgrammaticText As Boolean
 End Sub
 
 ' Creates an empty native text input.
@@ -59,6 +62,9 @@ Public Sub Initialize As UIInput
 	mTextTarget = Null
 	mTextEventName = ""
 	mApplyingState = False
+	mMounted = False
+	mProgrammaticText = ""
+	mHasProgrammaticText = False
 	Return Me
 End Sub
 
@@ -255,6 +261,7 @@ Public Sub Render
 	mEditText.Hint = mHint
 	mEditText.Gravity = Gravity.CENTER_VERTICAL
 	ApplyTextToNative
+	mMounted = True
 End Sub
 
 Private Sub ApplyTextToNative
@@ -262,7 +269,11 @@ Private Sub ApplyTextToNative
 	If mEditText.IsInitialized = False Then Return
 	If mEditText.Text = mText Then Return
 	' Programmatic updates must not be reported as user edits.
+	' Keep a marker as well as the guard because some native EditText events
+	' may be delivered after the assignment returns.
 	mApplyingState = True
+	mProgrammaticText = mText
+	mHasProgrammaticText = True
 	mEditText.Text = mText
 	mApplyingState = False
 End Sub
@@ -290,13 +301,28 @@ End Sub
 
 ' Native B4A EditText event. The callback is intentionally not a two-way binding.
 Private Sub NativeInput_TextChanged(Old As String, New As String)
-	mText = New
+	Dim source As EditText = Sender
+	If mMounted = False Then Return
+	If mEditText = Null Or source <> mEditText Then Return
+	If mParent = Null Then Return
+	If mParent.IsInitialized = False Then Return
 	If mApplyingState Then Return
+	If mHasProgrammaticText Then
+		If New = mProgrammaticText Then
+			mHasProgrammaticText = False
+			Return
+		End If
+		' Any different value from the currently mounted control is a real
+		' user edit, including an intentional empty value.
+		mHasProgrammaticText = False
+	End If
+	mText = New
 	If mTextTarget = Null Or mTextEventName.Trim = "" Then Return
 	If SubExists(mTextTarget, mTextEventName) Then CallSub2(mTextTarget, mTextEventName, New)
 End Sub
 
 Public Sub Unmount
+	mMounted = False
 	If mTextState <> Null Then
 		If mTextState.IsInitialized Then mTextState.Unsubscribe(Me, "TextState_Changed")
 	End If
@@ -306,6 +332,7 @@ Public Sub Unmount
 	mEditText = Null
 	mBaseView = Null
 	mParent = Null
+	mHasProgrammaticText = False
 End Sub
 
 ' Natural measurement used by parent layout containers.

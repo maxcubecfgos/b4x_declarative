@@ -15,6 +15,7 @@ $expectedModules = @(
     'UIButton.bas'
     'UICard.bas'
     'UICenter.bas'
+    'UICheckbox.bas'
     'UIColumn.bas'
     'UIDivider.bas'
     'UIExpanded.bas'
@@ -73,7 +74,7 @@ try {
         'Modification=Testing and local project modifications welcome'
         'ReverseEngineering=Study, debugging and experimentation welcome'
         'Redistribution=Please do not repackage the implementation as your own library'
-        'DependsOn=XUI, IME, OkHttpUtils2'
+        'DependsOn=XUI, IME, JavaObject, OkHttpUtils2'
     ) -join [Environment]::NewLine
     [IO.File]::WriteAllText((Join-Path $stage 'manifest.txt'), $manifest, $utf8NoBom)
 
@@ -88,7 +89,7 @@ try {
         $actualEntries = @($entries | ForEach-Object FullName)
         $missingEntries = @($expectedEntries | Where-Object { $_ -notin $actualEntries })
         $unexpectedEntries = @($actualEntries | Where-Object { $_ -notin $expectedEntries })
-        if ($entries.Count -ne 34 -or $missingEntries.Count -gt 0 -or $unexpectedEntries.Count -gt 0) {
+        if ($entries.Count -ne 35 -or $missingEntries.Count -gt 0 -or $unexpectedEntries.Count -gt 0) {
             throw ('Package entry mismatch. Missing: ' + ($missingEntries -join ', ') + '; unexpected: ' + ($unexpectedEntries -join ', '))
         }
 
@@ -121,7 +122,7 @@ try {
     Write-Host ('File: ' + $output)
     Write-Host ('Size: ' + $fileInfo.Length + ' bytes')
     Write-Host ('SHA-256: ' + $hash)
-    Write-Host 'Contents: 32 UI modules + manifest.txt + LICENSE.txt'
+    Write-Host 'Contents: 33 UI modules + manifest.txt + LICENSE.txt'
 }
 catch {
     Write-Error ('The b4xlib could not be created or validated: ' + $_.Exception.Message)
