@@ -54,12 +54,12 @@ Private Sub InitializeState
     Tasks.Initialize
     ActionButtons.Initialize
     ActiveTaskIndex = -1
-    Tasks.Add(Task("Design the declarative API", "Keep the public syntax clear.", 72))
-    Tasks.Add(Task("Polish the Material theme", "Check both color schemes.", 44))
-    Tasks.Add(Task("Refine the interaction flow", "Make every action feel effortless.", 18))
+    Tasks.Add(Task("Take the dog for a walk", "A brisk walk keeps both of you happy and healthy.", 72))
+    Tasks.Add(Task("Water the plants", "Check the soil and give each plant the water it needs.", 44))
+    Tasks.Add(Task("Do 20 minutes of cardio", "A short workout is enough to keep your daily routine moving.", 18))
     TitleState.Initialize("")
     NoteState.Initialize("")
-    SummaryState.Initialize("3 tasks in your workspace")
+    SummaryState.Initialize("3 household tasks for today")
     SavingState.Initialize(False)
     SaveState.Initialize
 End Sub
