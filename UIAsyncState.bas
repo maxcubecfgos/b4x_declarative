@@ -107,7 +107,15 @@ Public Sub Unsubscribe(Target As Object, EventName As String) As UIAsyncState
 	If mListeners.IsInitialized = False Then Return Me
 	For i = mListeners.Size - 1 To 0 Step -1
 		Dim listener As Map = mListeners.Get(i)
-		If listener.Get("Target") = Target And listener.Get("EventName") = EventName Then
+		Dim listenerTarget As Object = listener.Get("Target")
+		Dim listenerEventName As String = listener.Get("EventName")
+		Dim sameTarget As Boolean = False
+		If listenerTarget = Null Then
+			sameTarget = (Target = Null)
+		Else If Target <> Null Then
+			sameTarget = (listenerTarget = Target)
+		End If
+		If sameTarget And listenerEventName = EventName Then
 			mListeners.RemoveAt(i)
 		End If
 	Next
@@ -119,7 +127,10 @@ Public Sub UnsubscribeTarget(Target As Object) As UIAsyncState
 	If Target = Null Or mListeners.IsInitialized = False Then Return Me
 	For i = mListeners.Size - 1 To 0 Step -1
 		Dim listener As Map = mListeners.Get(i)
-		If listener.Get("Target") = Target Then mListeners.RemoveAt(i)
+		Dim listenerTarget As Object = listener.Get("Target")
+		If listenerTarget <> Null Then
+			If listenerTarget = Target Then mListeners.RemoveAt(i)
+		End If
 	Next
 	Return Me
 End Sub
@@ -130,7 +141,13 @@ Public Sub ClearListeners
 End Sub
 
 Private Sub SetSnapshot(NewStatus As String, NewValue As Object, NewErrorMessage As String)
-	If mStatus = NewStatus And mValue = NewValue And mErrorMessage = NewErrorMessage Then Return
+	Dim sameValue As Boolean = False
+	If mValue = Null Then
+		sameValue = (NewValue = Null)
+	Else If NewValue <> Null Then
+		sameValue = (mValue = NewValue)
+	End If
+	If mStatus = NewStatus And sameValue And mErrorMessage = NewErrorMessage Then Return
 	mStatus = NewStatus
 	mValue = NewValue
 	mErrorMessage = NewErrorMessage
@@ -143,7 +160,15 @@ End Sub
 
 Private Sub HasListener(Target As Object, EventName As String) As Boolean
 	For Each item As Map In mListeners
-		If item.Get("Target") = Target And item.Get("EventName") = EventName Then Return True
+		Dim listenerTarget As Object = item.Get("Target")
+		Dim listenerEventName As String = item.Get("EventName")
+		Dim sameTarget As Boolean = False
+		If listenerTarget = Null Then
+			sameTarget = (Target = Null)
+		Else If Target <> Null Then
+			sameTarget = (listenerTarget = Target)
+		End If
+		If sameTarget And listenerEventName = EventName Then Return True
 	Next
 	Return False
 End Sub
@@ -163,8 +188,10 @@ Private Sub NotifyListeners
 			If mListeners.IndexOf(item) >= 0 Then
 				Dim target As Object = item.Get("Target")
 				Dim eventName As String = item.Get("EventName")
-				If SubExists(target, eventName) Then
-					CallSub2(target, eventName, Me)
+				If target <> Null Then
+					If eventName.Trim <> "" Then
+						If SubExists(target, eventName) Then CallSub2(target, eventName, Me)
+					End If
 				End If
 			End If
 		Next

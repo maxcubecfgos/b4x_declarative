@@ -8,7 +8,7 @@ ManifestCode='This code will be applied to the manifest file during compilation.
 NumberOfFiles=0
 NumberOfLibraries=4
 NumberOfModules=0
-Version=13.70
+Version=13.62
 @EndOfDesignText@
 #Region  Project Attributes
     #ApplicationLabel: NOVA Tasks
@@ -35,6 +35,8 @@ Sub Globals
     Private Navigator As UINavigator
     Private Theme As UITheme
     Private ScreenName As String
+    Private ActiveTaskIndex As Int
+    Private ActionButtons As List
     Private DetailsCard As UICard
     Private LastWidth, LastHeight As Int
 End Sub
@@ -50,9 +52,11 @@ End Sub
 
 Private Sub InitializeState
     Tasks.Initialize
+    ActionButtons.Initialize
+    ActiveTaskIndex = -1
     Tasks.Add(Task("Design the declarative API", "Keep the public syntax clear.", 72))
     Tasks.Add(Task("Polish the Material theme", "Check both color schemes.", 44))
-    Tasks.Add(Task("Prepare the forum post", "Show the idea with less ceremony.", 18))
+    Tasks.Add(Task("Refine the interaction flow", "Make every action feel effortless.", 18))
     TitleState.Initialize("")
     NoteState.Initialize("")
     SummaryState.Initialize("3 tasks in your workspace")
@@ -96,8 +100,16 @@ Private Sub TasksScreen As UIScaffold
 
     Dim taskColumn As UIColumn
     taskColumn.Initialize.Spacing(12dip).CrossAxisAlignment("stretch")
+    If ActionButtons.IsInitialized = False Then
+        ActionButtons.Initialize
+    Else
+        ActionButtons.Clear
+    End If
     For i = 0 To Tasks.Size - 1
-        taskColumn.AddChild(TaskCard(Tasks.Get(i)))
+        Dim actionButton As UIButton
+        actionButton.Initialize.Text("Open details").OnClick(Me, "OpenDetails_Click").ApplyTheme(Theme)
+        ActionButtons.Add(actionButton)
+        taskColumn.AddChild(TaskCard(Tasks.Get(i), actionButton))
     Next
     Dim list As UIScrollView
     list.Initialize.Child(taskColumn)
@@ -114,7 +126,7 @@ Private Sub TasksScreen As UIScaffold
     Return screen
 End Sub
 
-Private Sub TaskCard(Value As Object) As UICard
+Private Sub TaskCard(Value As Object, ActionButton As UIButton) As UICard
     Dim item As Map = Value
     Dim title As UILabel
     title.Initialize.Text("" & item.Get("title")).Size(Theme.TitleMedium).Color(Theme.PrimaryText).ApplyTheme(Theme)
@@ -130,20 +142,27 @@ Private Sub TaskCard(Value As Object) As UICard
         .AddChild(titleRow) _
         .AddChild(TextLabel("" & item.Get("note"), Theme.BodyMedium, Theme.SecondaryText)) _
         .AddChild(Progress(percent)) _
-        .AddChild(Button("Open details", "OpenDetails_Click"))
+        .AddChild(ActionButton)
     Return Card(content)
 End Sub
 
 Private Sub DetailsScreen As UIScaffold
+    Dim headerText As String = "Create a task"
+    If ActiveTaskIndex >= 0 Then headerText = "Edit task"
+
     Dim content As UIColumn
     content.Initialize.Spacing(12dip).CrossAxisAlignment("stretch") _
-        .AddChild(TextLabel("Create a task", Theme.TitleLarge, Theme.PrimaryText)) _
+        .AddChild(TextLabel(headerText, Theme.TitleLarge, Theme.PrimaryText)) _
         .AddChild(TextLabel("State drives the form and feedback.", Theme.BodyMedium, Theme.SecondaryText)) _
         .AddChild(Input("Task title", TitleState, "TitleChanged")) _
         .AddChild(Input("Short description", NoteState, "NoteChanged")) _
         .AddChild(SaveProgress).AddChild(SavingLabel) _
-        .AddChild(Button("Save task", "Save_Click")) _
-        .AddChild(Divider).AddChild(Button("Clear all tasks", "Clear_Click"))
+        .AddChild(Button("Save task", "Save_Click"))
+
+    If ActiveTaskIndex >= 0 Then
+        content.AddChild(Button("Delete task", "DeleteTask_Click"))
+    End If
+    content.AddChild(Divider).AddChild(Button("Clear all tasks", "Clear_Click"))
 
     DetailsCard = Card(Pad(content, 16dip))
     Dim screen As UIScaffold
@@ -158,9 +177,11 @@ Private Sub AppBar As UIAppBar
     bar.Initialize.Title(title).ApplyTheme(Theme)
     Dim icon As UIIcon
     If ScreenName = "Tasks" Then
-        icon.Initialize.MaterialCode(0xE51C).Color(Theme.DashboardBarText).OnClick(Me, "Theme_Click")
+        Dim themeIcon As Int = 0xF186 ' Moon in the light scheme.
+        If Theme.IsDark Then themeIcon = 0xF185 ' Sun in the dark scheme.
+        icon.Initialize.FontAwesomeCode(themeIcon).Size(22).Color(Theme.DashboardBarText).OnClick(Me, "Theme_Click")
     Else
-        icon.Initialize.MaterialCode(0xE5C4).Color(Theme.DashboardBarText).OnClick(Me, "Back_Click")
+        icon.Initialize.FontAwesomeCode(0xF060).Size(22).Color(Theme.DashboardBarText).OnClick(Me, "Back_Click")
     End If
     bar.Action(icon)
     Return bar
@@ -234,6 +255,7 @@ Private Sub Expand(Child As Object) As UIExpanded
 End Sub
 
 Sub NewTask_Click
+    ActiveTaskIndex = -1
     TitleState.SetState("")
     NoteState.SetState("")
     ScreenName = "Details"
@@ -242,6 +264,16 @@ Sub NewTask_Click
 End Sub
 
 Sub OpenDetails_Click
+    Dim actionButton As UIButton = Sender
+    If actionButton = Null Then Return
+    If ActionButtons.IsInitialized = False Then Return
+
+    ActiveTaskIndex = ActionButtons.IndexOf(actionButton)
+    If ActiveTaskIndex < 0 Or ActiveTaskIndex >= Tasks.Size Then Return
+
+    Dim item As Map = Tasks.Get(ActiveTaskIndex)
+    TitleState.SetState(item.Get("title"))
+    NoteState.SetState(item.Get("note"))
     ScreenName = "Details"
     RenderApp
     AnimateDetails
@@ -249,6 +281,7 @@ End Sub
 
 Sub Back_Click
     SavingState.SetState(False)
+    ActiveTaskIndex = -1
     ScreenName = "Tasks"
     RenderApp
 End Sub
@@ -259,11 +292,11 @@ Sub Theme_Click
     RenderApp
 End Sub
 
-Sub TitleChanged(Value As String)
+Sub TitleChanged(Value As String) 'ignore
     TitleState.SetState(Value)
 End Sub
 
-Sub NoteChanged(Value As String)
+Sub NoteChanged(Value As String) 'ignore
     NoteState.SetState(Value)
 End Sub
 
@@ -280,15 +313,36 @@ Private Sub SaveTask
     SaveState.SetLoading
     RenderApp
     Sleep(700)
-    Tasks.Add(Task(TitleState.GetState, NoteState.GetState, 0))
+    If ActiveTaskIndex < 0 Then
+        Tasks.Add(Task(TitleState.GetState, NoteState.GetState, 0))
+    Else If ActiveTaskIndex < Tasks.Size Then
+        Dim item As Map = Tasks.Get(ActiveTaskIndex)
+        item.Put("title", TitleState.GetState)
+        item.Put("note", NoteState.GetState)
+    End If
     SummaryState.SetState(Tasks.Size & " tasks in your workspace")
     SaveState.SetSuccess("saved")
     TitleState.SetState("")
     NoteState.SetState("")
     SavingState.SetState(False)
+    ActiveTaskIndex = -1
     ScreenName = "Tasks"
     RenderApp
     ShowSnack("Task saved")
+End Sub
+
+Sub DeleteTask_Click
+    If ActiveTaskIndex < 0 Or ActiveTaskIndex >= Tasks.Size Then Return
+    Tasks.RemoveAt(ActiveTaskIndex)
+    ActiveTaskIndex = -1
+    If Tasks.Size = 0 Then
+        SummaryState.SetState("No tasks yet")
+    Else
+        SummaryState.SetState(Tasks.Size & " tasks in your workspace")
+    End If
+    ScreenName = "Tasks"
+    RenderApp
+    ShowSnack("Task deleted")
 End Sub
 
 Sub Clear_Click
@@ -298,11 +352,9 @@ Sub Clear_Click
         .PositiveButton("Clear", Me, "ConfirmClear").ApplyTheme(Theme).Show(Root)
 End Sub
 
-Sub DialogClosed
-End Sub
-
-Sub ConfirmClear
+Sub ConfirmClear 'ignore
     Tasks.Clear
+    ActiveTaskIndex = -1
     SummaryState.SetState("No tasks yet")
     ScreenName = "Tasks"
     RenderApp

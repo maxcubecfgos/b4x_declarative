@@ -76,11 +76,20 @@ Public Sub Render
     ' Detect an external detach or reparent so a later declarative render can
     ' recover instead of relying on stale adapter bookkeeping.
     If mMounted Then
-        If mNativeView.Parent = Null Or mNativeView.Parent <> mMountedParent Then
-            mMounted = False
-            mMountedParent = Null
-        End If
-    End If
+		Dim currentParent As B4XView = mNativeView.Parent
+		Dim parentChanged As Boolean = False
+		If currentParent = Null Then
+			parentChanged = True
+		Else If mMountedParent = Null Then
+			parentChanged = True
+		Else If currentParent <> mMountedParent Then
+			parentChanged = True
+		End If
+		If parentChanged Then
+			mMounted = False
+			mMountedParent = Null
+		End If
+	End If
 
     ' A native view can only have one parent. Remove an existing parent before
     ' the first declarative mount as well; this makes wrapping a view that was

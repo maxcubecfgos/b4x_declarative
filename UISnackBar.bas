@@ -174,8 +174,10 @@ End Sub
 Public Sub Show(Parent As B4XView) As UISnackBar
 	If Parent = Null Then Return Me
 	If Parent.IsInitialized = False Then Return Me
-	If mParent <> Null And mParent.IsInitialized Then
-		If mParent <> Parent Then RemoveNativeView
+	If mParent <> Null Then
+		If mParent.IsInitialized Then
+			If mParent <> Parent Then RemoveNativeView
+		End If
 	End If
 	mParent = Parent
 	mRunId = mRunId + 1
@@ -207,9 +209,13 @@ Public Sub Dismiss As UISnackBar
 		Return Me
 	End If
 	mVisible = False
-	If mParent <> Null And mParent.IsInitialized And mAnimationDuration > 0 Then
-		mBaseView.SetLayoutAnimated(mAnimationDuration, mBaseView.Left, mParent.Height, mBaseView.Width, mBaseView.Height)
-		FinishDismiss(currentRun)
+	If mParent <> Null Then
+		If mParent.IsInitialized And mAnimationDuration > 0 Then
+			mBaseView.SetLayoutAnimated(mAnimationDuration, mBaseView.Left, mParent.Height, mBaseView.Width, mBaseView.Height)
+			FinishDismiss(currentRun)
+		Else
+			RemoveNativeView
+		End If
 	Else
 		RemoveNativeView
 	End If
@@ -229,20 +235,38 @@ Public Sub Unmount
 End Sub
 
 Private Sub EnsureViews
-	If mBaseView = Null Or mBaseView.IsInitialized = False Then
+	Dim createBase As Boolean = False
+	If mBaseView = Null Then
+		createBase = True
+	Else If mBaseView.IsInitialized = False Then
+		createBase = True
+	End If
+	If createBase Then
 		Dim panel As Panel
 		panel.Initialize("")
 		mBaseView = panel
 		mParent.AddView(mBaseView, 0, mParent.Height, mParent.Width, mHeight)
 	End If
-	If mMessageLabel = Null Or mMessageLabel.IsInitialized = False Then
+	Dim createMessage As Boolean = False
+	If mMessageLabel = Null Then
+		createMessage = True
+	Else If mMessageLabel.IsInitialized = False Then
+		createMessage = True
+	End If
+	If createMessage Then
 		Dim label As Label
 		label.Initialize("")
 		mMessageLabel = label
 		mBaseView.AddView(mMessageLabel, 0, 0, mBaseView.Width, mBaseView.Height)
 	End If
 	If mActionText.Trim <> "" Then
-		If mActionButton = Null Or mActionButton.IsInitialized = False Then
+		Dim createAction As Boolean = False
+		If mActionButton = Null Then
+			createAction = True
+		Else If mActionButton.IsInitialized = False Then
+			createAction = True
+		End If
+		If createAction Then
 			Dim button As Button
 			button.Initialize("SnackAction")
 			mActionButton = button
@@ -285,8 +309,10 @@ Private Sub ApplyAppearance
 End Sub
 
 Private Sub LayoutVisible
-	If mParent = Null Or mBaseView = Null Then Return
-	If mParent.IsInitialized = False Or mBaseView.IsInitialized = False Then Return
+	If mParent = Null Then Return
+	If mBaseView = Null Then Return
+	If mParent.IsInitialized = False Then Return
+	If mBaseView.IsInitialized = False Then Return
 	Dim width As Int = Max(0, mParent.Width - 2 * mMargin)
 	Dim left As Int = mMargin
 	Dim top As Int = Max(0, mParent.Height - mHeight - mMargin)

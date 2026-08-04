@@ -25,7 +25,9 @@ Public Sub ApplyTheme(Theme As UITheme) As UIStack
 	If Theme = Null Then Return Me
 	If Theme.IsInitialized = False Then Return Me
 	For Each child As Object In mChildren
-		If child <> Null And SubExists(child, "ApplyTheme") Then CallSub2(child, "ApplyTheme", Theme)
+		If child <> Null Then
+			If SubExists(child, "ApplyTheme") Then CallSub2(child, "ApplyTheme", Theme)
+		End If
 	Next
 	Return Me
 End Sub
@@ -113,7 +115,9 @@ End Sub
 
 Public Sub Unmount
 	For Each child As Object In mChildren
-		If child <> Null And SubExists(child, "Unmount") Then CallSub(child, "Unmount")
+		If child <> Null Then
+			If SubExists(child, "Unmount") Then CallSub(child, "Unmount")
+		End If
 	Next
 	If mBaseView <> Null Then
 		If mBaseView.IsInitialized Then mBaseView.RemoveAllViews

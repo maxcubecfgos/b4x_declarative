@@ -141,8 +141,10 @@ End Sub
 
 ' Re-measure the safe area and remount only when an inset changes.
 Public Sub RefreshInsets
-	If mParent = Null Or mHost = Null Then Return
-	If mParent.IsInitialized = False Or mHost.IsInitialized = False Then Return
+	If mParent = Null Then Return
+	If mHost = Null Then Return
+	If mParent.IsInitialized = False Then Return
+	If mHost.IsInitialized = False Then Return
 	Dim previousLeft As Int = mInsetLeft
 	Dim previousTop As Int = mInsetTop
 	Dim previousRight As Int = mInsetRight

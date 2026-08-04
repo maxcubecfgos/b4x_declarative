@@ -54,7 +54,9 @@ Public Sub ApplyTheme(Theme As UITheme) As UICard
 	If mBorderColorOverridden = False Then mBorderColor = mTheme.Border
 	If mRadiusOverridden = False Then mRadius = mTheme.CardRadius
 	' A card is a composition boundary: theme its nested content as well.
-	If mChild <> Null And SubExists(mChild, "ApplyTheme") Then CallSub2(mChild, "ApplyTheme", Theme)
+	If mChild <> Null Then
+		If SubExists(mChild, "ApplyTheme") Then CallSub2(mChild, "ApplyTheme", Theme)
+	End If
 	If mParent <> Null Then
 		If mParent.IsInitialized Then Render
 	End If
@@ -126,7 +128,9 @@ Public Sub GetView As B4XView
 End Sub
 
 Public Sub Unmount
-	If mChild <> Null And SubExists(mChild, "Unmount") Then CallSub(mChild, "Unmount")
+	If mChild <> Null Then
+		If SubExists(mChild, "Unmount") Then CallSub(mChild, "Unmount")
+	End If
 	mBaseView = Null
 	mParent = Null
 End Sub

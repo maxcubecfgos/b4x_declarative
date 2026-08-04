@@ -109,7 +109,9 @@ Public Sub ApplyTheme(Theme As UITheme) As UIAppBar
 	If mTitleSizeOverridden = False Then mTitleSize = mTheme.AppBarTitleSize
 	If mColorOverridden = False Then mColor = mTheme.DashboardBar
 	If mTitleColorOverridden = False Then mTitleColor = mTheme.DashboardBarText
-	If mActionWidget <> Null And SubExists(mActionWidget, "ApplyTheme") Then CallSub2(mActionWidget, "ApplyTheme", Theme)
+	If mActionWidget <> Null Then
+		If SubExists(mActionWidget, "ApplyTheme") Then CallSub2(mActionWidget, "ApplyTheme", Theme)
+	End If
 	If mParent <> Null Then
 		If mParent.IsInitialized Then Render
 	End If
@@ -119,7 +121,9 @@ End Sub
 ' Sets the trailing action widget, typically a UIIcon or UIButton.
 Public Sub Action(Widget As Object) As UIAppBar
 	If IsWidgetProtocol(Widget) = False Then Return Me
-	If mActionWidget <> Null And mActionWidget = Widget Then Return Me
+	If mActionWidget <> Null Then
+		If mActionWidget = Widget Then Return Me
+	End If
 	mActionWidget = Widget
 	If mParent <> Null Then
 		If mParent.IsInitialized Then Render
@@ -129,7 +133,9 @@ End Sub
 
 ' Removes the trailing action widget.
 Public Sub ClearAction As UIAppBar
-	If mActionWidget <> Null And SubExists(mActionWidget, "Unmount") Then CallSub(mActionWidget, "Unmount")
+	If mActionWidget <> Null Then
+		If SubExists(mActionWidget, "Unmount") Then CallSub(mActionWidget, "Unmount")
+	End If
 	mActionWidget = Null
 	If mParent <> Null Then
 		If mParent.IsInitialized Then Render
@@ -229,7 +235,9 @@ Public Sub Render
 End Sub
 
 Public Sub Unmount
-	If mActionWidget <> Null And SubExists(mActionWidget, "Unmount") Then CallSub(mActionWidget, "Unmount")
+	If mActionWidget <> Null Then
+		If SubExists(mActionWidget, "Unmount") Then CallSub(mActionWidget, "Unmount")
+	End If
 	If mTitleState <> Null Then
 		If mTitleState.IsInitialized Then mTitleState.Unsubscribe(Me, "TitleState_Changed")
 	End If

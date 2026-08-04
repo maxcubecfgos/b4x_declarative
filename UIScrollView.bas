@@ -41,7 +41,9 @@ End Sub
 Public Sub ApplyTheme(Theme As UITheme) As UIScrollView
     If Theme = Null Then Return Me
     If Theme.IsInitialized = False Then Return Me
-    If mChild <> Null And SubExists(mChild, "ApplyTheme") Then CallSub2(mChild, "ApplyTheme", Theme)
+    If mChild <> Null Then
+        If SubExists(mChild, "ApplyTheme") Then CallSub2(mChild, "ApplyTheme", Theme)
+    End If
     Return Me
 End Sub
 
@@ -86,11 +88,13 @@ Public Sub Render
     ' Keep the native ScrollView and the same declarative child mounted during
     ' ordinary updates. This preserves scroll position, focus and native state.
     ' A replaced child is structural, so remove only the previous content tree.
-    If mMountedChild <> Null And mMountedChild <> mChild Then
-        If SubExists(mMountedChild, "Unmount") Then CallSub(mMountedChild, "Unmount")
-        mScrollView.Panel.RemoveAllViews
-        mMountedChild = Null
-    End If
+    If mMountedChild <> Null Then
+		If mMountedChild <> mChild Then
+			If SubExists(mMountedChild, "Unmount") Then CallSub(mMountedChild, "Unmount")
+			mScrollView.Panel.RemoveAllViews
+			mMountedChild = Null
+		End If
+	End If
     mScrollView.Panel.Width = Max(0, mWidth)
 
     Dim viewportWidth As Int = Max(0, mWidth)
@@ -99,8 +103,10 @@ Public Sub Render
 
     If mChild <> Null Then
         Dim childSize As List = CallSub3(mChild, "GetContentSize", viewportWidth, 100000dip)
-        If childSize <> Null And childSize.IsInitialized And childSize.Size >= 2 Then
-            contentHeight = Max(viewportHeight, childSize.Get(1))
+        If childSize <> Null Then
+            If childSize.IsInitialized Then
+                If childSize.Size >= 2 Then contentHeight = Max(viewportHeight, childSize.Get(1))
+            End If
         End If
         mContentHeight = contentHeight
 
@@ -139,7 +145,9 @@ End Sub
 
 ' Removes the native view and releases child mounting references.
 Public Sub Unmount
-    If mChild <> Null And SubExists(mChild, "Unmount") Then CallSub(mChild, "Unmount")
+    If mChild <> Null Then
+        If SubExists(mChild, "Unmount") Then CallSub(mChild, "Unmount")
+    End If
     If mBaseView <> Null Then
         If mBaseView.IsInitialized Then mBaseView.RemoveViewFromParent
     End If
@@ -161,7 +169,11 @@ End Sub
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
     If mChild <> Null Then
         Dim childSize As List = CallSub3(mChild, "GetContentSize", MaxWidth, MaxHeight)
-        If childSize <> Null And childSize.IsInitialized And childSize.Size >= 2 Then Return childSize
+        If childSize <> Null Then
+            If childSize.IsInitialized Then
+                If childSize.Size >= 2 Then Return childSize
+            End If
+        End If
     End If
 
     Dim flexibleSize As List

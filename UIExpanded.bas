@@ -29,7 +29,9 @@ End Sub
 Public Sub ApplyTheme(Theme As UITheme) As UIExpanded
 	If Theme = Null Then Return Me
 	If Theme.IsInitialized = False Then Return Me
-	If mChild <> Null And SubExists(mChild, "ApplyTheme") Then CallSub2(mChild, "ApplyTheme", Theme)
+	If mChild <> Null Then
+		If SubExists(mChild, "ApplyTheme") Then CallSub2(mChild, "ApplyTheme", Theme)
+	End If
 	Return Me
 End Sub
 
@@ -60,7 +62,9 @@ Public Sub Render
 End Sub
 
 Public Sub Unmount
-	If mChild <> Null And SubExists(mChild, "Unmount") Then CallSub(mChild, "Unmount")
+	If mChild <> Null Then
+		If SubExists(mChild, "Unmount") Then CallSub(mChild, "Unmount")
+	End If
 	mParent = Null
 End Sub
 

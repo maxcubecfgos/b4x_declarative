@@ -65,7 +65,8 @@ End Sub
 
 ' Uses a List as the data source. The list is read through GetItem during binding.
 Public Sub Items(Data As List) As UIListView
-    If Data = Null Or Data.IsInitialized = False Then Return Me
+    If Data = Null Then Return Me
+    If Data.IsInitialized = False Then Return Me
     mItems = Data
     mItemCount = Data.Size
     NotifyDataSetChanged
@@ -90,7 +91,8 @@ End Sub
 
 ' Returns the data item at Index, or Null when the host owns the data source.
 Public Sub GetItem(Index As Int) As Object
-    If mItems = Null Or mItems.IsInitialized = False Then Return Null
+    If mItems = Null Then Return Null
+    If mItems.IsInitialized = False Then Return Null
     If Index < 0 Or Index >= mItems.Size Then Return Null
     Return mItems.Get(Index)
 End Sub
@@ -140,7 +142,8 @@ End Sub
 
 ' Applies a theme to the list and to currently pooled or visible widgets.
 Public Sub ApplyTheme(Theme As UITheme) As UIListView
-    If Theme = Null Or Theme.IsInitialized = False Then Return Me
+    If Theme = Null Then Return Me
+    If Theme.IsInitialized = False Then Return Me
     mTheme = Theme
     If mBackgroundColorOverridden = False Then mBackgroundColor = mTheme.Background
     For Each item As Object In mPool
@@ -149,20 +152,26 @@ Public Sub ApplyTheme(Theme As UITheme) As UIListView
     For Each key As Int In mVisibleItems.Keys
         ApplyThemeToItem(mVisibleItems.Get(key), Theme)
     Next
-    If mParent <> Null And mParent.IsInitialized Then Render
+    If mParent <> Null Then
+        If mParent.IsInitialized Then Render
+    End If
     Return Me
 End Sub
 
 Public Sub BackgroundColor(Color As Int) As UIListView
     mBackgroundColor = Color
     mBackgroundColorOverridden = True
-    If mBaseView <> Null And mBaseView.IsInitialized Then mBaseView.Color = Color
+    If mBaseView <> Null Then
+        If mBaseView.IsInitialized Then mBaseView.Color = Color
+    End If
     Return Me
 End Sub
 
 ' Invalidates the visible window after the data source or item binding changes.
 Public Sub NotifyDataSetChanged
-    If mItems <> Null And mItems.IsInitialized Then mItemCount = mItems.Size
+    If mItems <> Null Then
+        If mItems.IsInitialized Then mItemCount = mItems.Size
+    End If
     mNeedsRefresh = True
     If mRefreshing Then
         ' Defer structural work until the current visible-window pass is complete.
@@ -172,7 +181,9 @@ Public Sub NotifyDataSetChanged
     ' Without BindItem, visible rows cannot be safely updated in place.
     ' Recreate them from CreateItem so a changed data source never leaves stale content.
     If HasBindCallback = False Then RecycleAllVisible
-    If mParent <> Null And mParent.IsInitialized Then Render
+    If mParent <> Null Then
+        If mParent.IsInitialized Then Render
+    End If
 End Sub
 
 Public Sub SetParent(Parent As B4XView)
@@ -190,7 +201,8 @@ Public Sub SetSize(Width As Int, Height As Int)
 End Sub
 
 Public Sub Render
-    If mParent = Null Or mParent.IsInitialized = False Then Return
+    If mParent = Null Then Return
+    If mParent.IsInitialized = False Then Return
     EnsureNativeView
     mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     mBaseView.Color = mBackgroundColor
@@ -209,14 +221,24 @@ Public Sub Render
 End Sub
 
 Private Sub EnsureNativeView
-    If mBaseView = Null Or mBaseView.IsInitialized = False Then
+    Dim createBase As Boolean = False
+    If mBaseView = Null Then
+        createBase = True
+    Else If mBaseView.IsInitialized = False Then
+        createBase = True
+    End If
+    If createBase Then
         ' Initialize2 supplies both the initial content height and the event prefix.
         mScrollView.Initialize2(0, "mScrollView")
         mBaseView = mScrollView
         mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
         mContentPanel = mScrollView.Panel
     End If
-    If mContentPanel = Null Or mContentPanel.IsInitialized = False Then mContentPanel = mScrollView.Panel
+    If mContentPanel = Null Then
+        mContentPanel = mScrollView.Panel
+    Else If mContentPanel.IsInitialized = False Then
+        mContentPanel = mScrollView.Panel
+    End If
 End Sub
 
 Private Sub RefreshVisibleWindow(Position As Int)
@@ -285,7 +307,9 @@ Private Sub RefreshVisibleWindow(Position As Int)
     If mRefreshPending Then
         mRefreshPending = False
         If HasBindCallback = False Then RecycleAllVisible
-        If mParent <> Null And mParent.IsInitialized Then Render
+        If mParent <> Null Then
+        If mParent.IsInitialized Then Render
+    End If
     End If
 End Sub
 
@@ -315,7 +339,9 @@ Private Sub RecycleItem(Index As Int)
     End If
     If mVisibleContainers.ContainsKey(Index) Then
         Dim itemContainer As B4XView = mVisibleContainers.Get(Index)
-        If itemContainer <> Null And itemContainer.IsInitialized Then itemContainer.RemoveViewFromParent
+        If itemContainer <> Null Then
+            If itemContainer.IsInitialized Then itemContainer.RemoveViewFromParent
+        End If
         mVisibleContainers.Remove(Index)
     End If
     mVisibleItems.Remove(Index)
@@ -355,7 +381,8 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 End Sub
 
 Public Sub GetView As B4XView
-    If mBaseView = Null Or mBaseView.IsInitialized = False Then Return Null
+    If mBaseView = Null Then Return Null
+    If mBaseView.IsInitialized = False Then Return Null
     Return mBaseView
 End Sub
 
@@ -367,7 +394,9 @@ Public Sub Unmount
     mNeedsRefresh = True
     mRefreshing = False
     mRefreshPending = False
-    If mBaseView <> Null And mBaseView.IsInitialized Then mBaseView.RemoveViewFromParent
+    If mBaseView <> Null Then
+        If mBaseView.IsInitialized Then mBaseView.RemoveViewFromParent
+    End If
     mScrollView = Null
     mContentPanel = Null
     mBaseView = Null

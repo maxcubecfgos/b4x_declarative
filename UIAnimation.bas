@@ -117,6 +117,7 @@ Private Sub WaitForCompletion(RunId As Int)
 	Sleep(mDuration)
 	If RunId <> mRunId Or mRunning = False Then Return
 	mRunning = False
-	If mCallbackTarget = Null Or mCallbackName.Trim = "" Then Return
+	If mCallbackTarget = Null Then Return
+	If mCallbackName.Trim = "" Then Return
 	If SubExists(mCallbackTarget, mCallbackName) Then CallSub(mCallbackTarget, mCallbackName)
 End Sub

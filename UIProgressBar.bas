@@ -188,13 +188,25 @@ Private Sub EffectiveHeight As Int
 End Sub
 
 Private Sub EnsureBars
-    If mTrackView = Null Or mTrackView.IsInitialized = False Then
+    Dim createTrack As Boolean = False
+    If mTrackView = Null Then
+        createTrack = True
+    Else If mTrackView.IsInitialized = False Then
+        createTrack = True
+    End If
+    If createTrack Then
         Dim track As Panel
         track.Initialize("")
         mTrackView = track
         mBaseView.AddView(mTrackView, 0, 0, mWidth, EffectiveHeight)
     End If
-    If mProgressView = Null Or mProgressView.IsInitialized = False Then
+    Dim createProgress As Boolean = False
+    If mProgressView = Null Then
+        createProgress = True
+    Else If mProgressView.IsInitialized = False Then
+        createProgress = True
+    End If
+    If createProgress Then
         Dim progress As Panel
         progress.Initialize("")
         mProgressView = progress
@@ -239,11 +251,19 @@ Private Sub AnimateIndeterminate(RunId As Int)
         mAnimationActive = False
         Return
     End If
-    If mBaseView = Null Or mProgressView = Null Then
+    If mBaseView = Null Then
         mAnimationActive = False
         Return
     End If
-    If mBaseView.IsInitialized = False Or mProgressView.IsInitialized = False Then
+    If mProgressView = Null Then
+        mAnimationActive = False
+        Return
+    End If
+    If mBaseView.IsInitialized = False Then
+        mAnimationActive = False
+        Return
+    End If
+    If mProgressView.IsInitialized = False Then
         mAnimationActive = False
         Return
     End If

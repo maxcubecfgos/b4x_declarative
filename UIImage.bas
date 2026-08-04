@@ -151,7 +151,13 @@ Public Sub Render
     If mParent.IsInitialized = False Then Return
 
     EnsureLocalBitmaps
-    If mBaseView = Null Or mBaseView.IsInitialized = False Then
+    Dim createBase As Boolean = False
+    If mBaseView = Null Then
+        createBase = True
+    Else If mBaseView.IsInitialized = False Then
+        createBase = True
+    End If
+    If createBase Then
         Dim image As ImageView
         image.Initialize("")
         mBaseView = image

@@ -83,7 +83,8 @@ Private Sub VisibilityState_Changed(State As UIState)
 	' host to render an obsolete parent tree.
 	If mParent = Null Then Return
 	If mParent.IsInitialized = False Then Return
-	If mVisibilityTarget = Null Or mVisibilityEventName.Trim = "" Then Return
+	If mVisibilityTarget = Null Then Return
+	If mVisibilityEventName.Trim = "" Then Return
 	If SubExists(mVisibilityTarget, mVisibilityEventName) Then
 		CallSub2(mVisibilityTarget, mVisibilityEventName, Me)
 	End If
@@ -92,7 +93,9 @@ End Sub
 ' Replaces the single child managed by this wrapper.
 Public Sub Child(Widget As Object) As UIVisibility
 	If IsWidgetProtocol(Widget) = False Then Return Me
-	If mChild = Widget Then Return Me
+	If mChild <> Null Then
+		If mChild = Widget Then Return Me
+	End If
 	If mChild <> Null Then
 		If SubExists(mChild, "Unmount") Then CallSub(mChild, "Unmount")
 	End If

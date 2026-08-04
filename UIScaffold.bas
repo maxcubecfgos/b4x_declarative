@@ -38,7 +38,9 @@ End Sub
 
 Public Sub AppBar(bar As Object) As UIScaffold
 	If IsWidgetProtocol(bar) = False Then Return Me
-	If mAppBar <> Null And mAppBar = bar Then Return Me
+	If mAppBar <> Null Then
+		If mAppBar = bar Then Return Me
+	End If
 	Dim wasMounted As Boolean = PrepareForStructureChange
 	mAppBar = bar
 	If wasMounted Then Render
@@ -55,7 +57,9 @@ End Sub
 
 Public Sub Body(b As Object) As UIScaffold
 	If IsWidgetProtocol(b) = False Then Return Me
-	If mBody <> Null And mBody = b Then Return Me
+	If mBody <> Null Then
+		If mBody = b Then Return Me
+	End If
 	Dim wasMounted As Boolean = PrepareForStructureChange
 	mBody = b
 	If wasMounted Then Render
@@ -72,7 +76,9 @@ End Sub
 
 Public Sub FloatingActionButtonLeft(fab As Object) As UIScaffold
 	If IsWidgetProtocol(fab) = False Then Return Me
-	If mFabLeft <> Null And mFabLeft = fab Then Return Me
+	If mFabLeft <> Null Then
+		If mFabLeft = fab Then Return Me
+	End If
 	Dim wasMounted As Boolean = PrepareForStructureChange
 	mFabLeft = fab
 	If wasMounted Then Render
@@ -89,7 +95,9 @@ End Sub
 
 Public Sub FloatingActionButtonRight(fab As Object) As UIScaffold
 	If IsWidgetProtocol(fab) = False Then Return Me
-	If mFabRight <> Null And mFabRight = fab Then Return Me
+	If mFabRight <> Null Then
+		If mFabRight = fab Then Return Me
+	End If
 	Dim wasMounted As Boolean = PrepareForStructureChange
 	mFabRight = fab
 	If wasMounted Then Render
@@ -107,7 +115,9 @@ End Sub
 ' Adds an optional persistent bottom navigation slot.
 Public Sub BottomNavigationBar(bar As Object) As UIScaffold
 	If IsWidgetProtocol(bar) = False Then Return Me
-	If mBottomNavigationBar <> Null And mBottomNavigationBar = bar Then Return Me
+	If mBottomNavigationBar <> Null Then
+		If mBottomNavigationBar = bar Then Return Me
+	End If
 	Dim wasMounted As Boolean = PrepareForStructureChange
 	mBottomNavigationBar = bar
 	If wasMounted Then Render
@@ -266,11 +276,21 @@ Private Sub PrepareForStructureChange As Boolean
 End Sub
 
 Private Sub UnmountChildren
-	If mAppBar <> Null And SubExists(mAppBar, "Unmount") Then CallSub(mAppBar, "Unmount")
-	If mBody <> Null And SubExists(mBody, "Unmount") Then CallSub(mBody, "Unmount")
-	If mFabLeft <> Null And SubExists(mFabLeft, "Unmount") Then CallSub(mFabLeft, "Unmount")
-	If mFabRight <> Null And SubExists(mFabRight, "Unmount") Then CallSub(mFabRight, "Unmount")
-	If mBottomNavigationBar <> Null And SubExists(mBottomNavigationBar, "Unmount") Then CallSub(mBottomNavigationBar, "Unmount")
+	If mAppBar <> Null Then
+		If SubExists(mAppBar, "Unmount") Then CallSub(mAppBar, "Unmount")
+	End If
+	If mBody <> Null Then
+		If SubExists(mBody, "Unmount") Then CallSub(mBody, "Unmount")
+	End If
+	If mFabLeft <> Null Then
+		If SubExists(mFabLeft, "Unmount") Then CallSub(mFabLeft, "Unmount")
+	End If
+	If mFabRight <> Null Then
+		If SubExists(mFabRight, "Unmount") Then CallSub(mFabRight, "Unmount")
+	End If
+	If mBottomNavigationBar <> Null Then
+		If SubExists(mBottomNavigationBar, "Unmount") Then CallSub(mBottomNavigationBar, "Unmount")
+	End If
 End Sub
 
 Private Sub IfBottomBarOffset(Bar As Object, Height As Int) As Int
