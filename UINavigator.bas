@@ -156,7 +156,6 @@ Public Sub Render
 		CallSub3(Screen, "SetSize", contentWidth, contentHeight)
 		CallSub(Screen, "Render")
 		mMountedScreen = Screen
-	Else
 	End If
 	mIsMounted = mHost.IsInitialized
 End Sub
@@ -184,16 +183,18 @@ Public Sub RefreshInsets
     Dim previousBoundsHeight As Int = mBoundsHeight
     Dim hadBounds As Boolean = mBoundsReady
     Dim currentBounds As List = GetSafeBounds
-    Dim boundsChanged As Boolean = hadBounds = False _
-        Or previousBoundsLeft <> currentBounds.Get(0) _
-        Or previousBoundsTop <> currentBounds.Get(1) _
-        Or previousBoundsWidth <> currentBounds.Get(2) _
-        Or previousBoundsHeight <> currentBounds.Get(3)
-    If previousLeft <> mInsetLeft Or previousTop <> mInsetTop _
-        Or previousRight <> mInsetRight Or previousBottom <> mInsetBottom _
-        Or boundsChanged Then
-        Render
-    End If
+    Dim boundsChanged As Boolean = False
+    If hadBounds = False Then boundsChanged = True
+    If previousBoundsLeft <> currentBounds.Get(0) Then boundsChanged = True
+    If previousBoundsTop <> currentBounds.Get(1) Then boundsChanged = True
+    If previousBoundsWidth <> currentBounds.Get(2) Then boundsChanged = True
+    If previousBoundsHeight <> currentBounds.Get(3) Then boundsChanged = True
+    Dim insetsChanged As Boolean = False
+    If previousLeft <> mInsetLeft Then insetsChanged = True
+    If previousTop <> mInsetTop Then insetsChanged = True
+    If previousRight <> mInsetRight Then insetsChanged = True
+    If previousBottom <> mInsetBottom Then insetsChanged = True
+    If insetsChanged Or boundsChanged Then Render
 End Sub
 
 Private Sub GetSafeBounds As List

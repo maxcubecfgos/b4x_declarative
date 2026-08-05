@@ -24,17 +24,20 @@ Module22=UINavigator
 Module23=UIPadding
 Module24=UIPlaceholder
 Module25=UIProgressBar
-Module26=UIRow
-Module27=UIScaffold
-Module28=UIScrollView
-Module29=UISnackBar
+Module26=UIRadioButton
+Module27=UIRadioGroup
+Module28=UIRow
+Module29=UIScaffold
 Module3=UIAppBar
-Module30=UISpace
-Module31=UIStack
-Module32=UIState
-Module33=UITheme
-Module34=UIVisibility
-Module35=UIWidgetBridge
+Module30=UIScrollView
+Module31=UISnackBar
+Module32=UISpace
+Module33=UIStack
+Module34=UIState
+Module35=UISwitch
+Module36=UITheme
+Module37=UIVisibility
+Module38=UIWidgetBridge
 Module4=UIAsyncState
 Module5=UIBottomNavigationBar
 Module6=UIBox
@@ -43,7 +46,7 @@ Module8=UICard
 Module9=UICenter
 NumberOfFiles=1
 NumberOfLibraries=3
-NumberOfModules=35
+NumberOfModules=38
 Version=13.62
 @EndOfDesignText@
 #Region  Project Attributes
@@ -67,6 +70,11 @@ End Sub
 Sub Globals
 	Private Root As B4XView
 	Private Image As UIImage
+	Private TestSwitch As UISwitch
+	Private SwitchState As UIState
+	Private TestRadioGroup As UIRadioGroup
+	Private RadioState As UIState
+	Private Content As UIColumn
 	Private Center As UICenter
 	Private ImageMounted As Boolean
 End Sub
@@ -75,8 +83,16 @@ Sub Activity_Create(FirstTime As Boolean)
 	Root = Activity
 	ImageMounted = False
 	Image.Initialize.Asset("r.jpg").Width(300dip).Height(220dip).Fit("contain")
-	Center.Initialize.Child(Image)
+	SwitchState.Initialize(False)
+	TestSwitch.Initialize.Text("Notifications").BindChecked(SwitchState).OnChanged(Me, "HarnessSwitch_Changed")
+	RadioState.Initialize("medium")
+	TestRadioGroup.Initialize.Spacing(8dip).AddOption("small", "Small").AddOption("medium", "Medium").AddOption("large", "Large") _
+		.BindSelected(RadioState).OnSelected(Me, "HarnessRadio_Selected")
+	Content.Initialize.Spacing(16dip).MainAxisAlignment("center").CrossAxisAlignment("center") _
+		.AddChild(Image).AddChild(TestSwitch).AddChild(TestRadioGroup)
+	Center.Initialize.Child(Content)
 	Log("DeclarativeUI TEST INFO  UIImage asset test initialized")
+	Log("DeclarativeUI TEST INFO  UISwitch test initialized")
 End Sub
 
 Sub Activity_Resume
@@ -101,8 +117,22 @@ Sub Activity_Resume
 			ImageMounted = True
 			Log("DeclarativeUI TEST PASS  UIImage asset render")
 		End If
+
+		Dim switchView As B4XView = TestSwitch.GetView
+		If switchView = Null Then
+			Log("DeclarativeUI TEST FAIL  UISwitch -> native view was not mounted")
+		Else If switchView.IsInitialized = False Then
+			Log("DeclarativeUI TEST FAIL  UISwitch -> native view was not initialized")
+		Else
+			SwitchState.SetState(True)
+			If TestSwitch.IsChecked Then
+				Log("DeclarativeUI TEST PASS  UISwitch render and state binding")
+			Else
+				Log("DeclarativeUI TEST FAIL  UISwitch -> state binding did not update")
+			End If
+		End If
 	Catch
-		Log("DeclarativeUI TEST FAIL  UIImage asset -> " & LastException.Message)
+		Log("DeclarativeUI TEST FAIL  harness -> " & LastException.Message)
 	End Try
 End Sub
 
@@ -111,4 +141,12 @@ Sub Activity_Pause (UserClosed As Boolean)
 		Center.Unmount
 		ImageMounted = False
 	End If
+End Sub
+
+Private Sub HarnessSwitch_Changed(Checked As Boolean)
+	Log("DeclarativeUI TEST INFO  UISwitch changed=" & Checked)
+End Sub
+
+Private Sub HarnessRadio_Selected(Value As String)
+	Log("DeclarativeUI TEST INFO  UIRadioGroup selected=" & Value)
 End Sub
