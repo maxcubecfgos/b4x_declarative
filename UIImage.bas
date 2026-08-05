@@ -14,8 +14,8 @@ Sub Class_Globals
     Private mAssetName As String
     Private mNetworkUrl As String
     Private mPlaceholderName As String
-    Private mBitmap As Bitmap
-    Private mPlaceholderBitmap As Bitmap
+    Private mBitmap As B4XBitmap
+    Private mPlaceholderBitmap As B4XBitmap
     Private mFitMode As String
     Private mTheme As UITheme
     Private mLoadStarted As Boolean
@@ -174,17 +174,28 @@ Public Sub Render
 End Sub
 
 Private Sub EnsureLocalBitmaps
-    If mPlaceholderBitmap = Null And mPlaceholderName <> "" Then
-        If File.Exists(File.DirAssets, mPlaceholderName) Then
-            mPlaceholderBitmap = LoadBitmapResize(File.DirAssets, mPlaceholderName, Max(1, mWidth), Max(1, mHeight), True)
-        End If
+    If mPlaceholderName.Trim <> "" Then
+        Try
+            Dim loadedPlaceholder As B4XBitmap = xui.LoadBitmapResize(File.DirAssets, mPlaceholderName, Max(1, mWidth), Max(1, mHeight), True)
+            If loadedPlaceholder.IsInitialized Then mPlaceholderBitmap = loadedPlaceholder
+        Catch
+            mPlaceholderBitmap = Null
+        End Try
     End If
-    If mSourceKind = "asset" And mBitmap = Null And mAssetName <> "" Then
-        If File.Exists(File.DirAssets, mAssetName) Then
-            mBitmap = LoadBitmapResize(File.DirAssets, mAssetName, Max(1, mWidth), Max(1, mHeight), True)
-            If mBitmap.IsInitialized Then mLoaded = True
+
+    If mSourceKind <> "asset" Then Return
+    If mLoaded Then Return
+    If mAssetName.Trim = "" Then Return
+
+    Try
+        Dim loadedAsset As B4XBitmap = xui.LoadBitmapResize(File.DirAssets, mAssetName, Max(1, mWidth), Max(1, mHeight), True)
+        If loadedAsset.IsInitialized Then
+            mBitmap = loadedAsset
+            mLoaded = True
         End If
-    End If
+    Catch
+        mLoaded = False
+    End Try
 End Sub
 
 Private Sub ApplyViewStyle
@@ -202,15 +213,14 @@ End Sub
 Private Sub ApplyCurrentBitmap
     If mBaseView = Null Then Return
     If mBaseView.IsInitialized = False Then Return
-    Dim image As ImageView = mBaseView
     If mBitmap <> Null Then
         If mBitmap.IsInitialized Then
-            image.Bitmap = mBitmap
+            mBaseView.SetBitmap(mBitmap)
             Return
         End If
     End If
     If mPlaceholderBitmap <> Null Then
-        If mPlaceholderBitmap.IsInitialized Then image.Bitmap = mPlaceholderBitmap
+        If mPlaceholderBitmap.IsInitialized Then mBaseView.SetBitmap(mPlaceholderBitmap)
     End If
 End Sub
 
@@ -229,7 +239,7 @@ Private Sub StartNetworkLoad
         Return
     End If
     If job.Success Then
-        Dim downloaded As Bitmap
+        Dim downloaded As B4XBitmap
         Try
             downloaded = job.GetBitmapResize(Max(1, mWidth), Max(1, mHeight), True)
         Catch
@@ -264,6 +274,10 @@ Public Sub GetView As B4XView
     If mBaseView = Null Then Return Null
     If mBaseView.IsInitialized = False Then Return Null
     Return mBaseView
+End Sub
+
+Public Sub IsLoaded As Boolean
+    Return mLoaded
 End Sub
 
 ' Releases only the native view. Source and loaded bitmaps survive navigation.

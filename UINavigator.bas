@@ -7,6 +7,7 @@ Version=13.5
 Sub Class_Globals
 	Private xui As XUI
 	Private mScreens As Map
+	Private mHistory As List
 	Private mCurrentScreen As String
 	Private mParent As B4XView
 	Private mHost As B4XView
@@ -20,6 +21,7 @@ End Sub
 
 Public Sub Initialize As UINavigator
 	mScreens.Initialize
+    mHistory.Initialize
     mCurrentScreen = ""
     mMountedScreen = Null
     mIsMounted = False
@@ -46,7 +48,10 @@ End Sub
 Public Sub AddScreen(Name As String, Screen As Object) As UINavigator
 	If Name.Trim = "" Or IsWidgetProtocol(Screen) = False Then Return Me
 	mScreens.Put(Name, Screen)
-	If mCurrentScreen = "" Then mCurrentScreen = Name
+	If mCurrentScreen = "" Then
+		mCurrentScreen = Name
+		mHistory.Add(Name)
+	End If
 	If mHost <> Null Then
 		If mHost.IsInitialized And Name = mCurrentScreen Then Render
 	End If
@@ -57,17 +62,35 @@ Public Sub NavigateTo(Name As String)
 	If mScreens.ContainsKey(Name) = False Then
 		Return
 	End If
-	If mCurrentScreen = Name And mIsMounted Then
+	If mHistory.Size = 0 And mCurrentScreen <> "" Then mHistory.Add(mCurrentScreen)
+	If mCurrentScreen = Name Then
+		If mIsMounted Then Return
+		If mHost <> Null Then
+			If mHost.IsInitialized Then Render
+		End If
 		Return
 	End If
+	mHistory.Add(Name)
 	mCurrentScreen = Name
 	If mHost <> Null Then
-		If mHost.IsInitialized Then
-			Render
-		Else
-		End If
-	Else
+		If mHost.IsInitialized Then Render
 	End If
+End Sub
+
+' Returns True when a previously visited screen can be restored.
+Public Sub CanGoBack As Boolean
+	Return mHistory.Size > 1
+End Sub
+
+' Pops the current screen and renders the previous one when mounted.
+Public Sub GoBack As Boolean
+	If CanGoBack = False Then Return False
+	mHistory.RemoveAt(mHistory.Size - 1)
+	mCurrentScreen = mHistory.Get(mHistory.Size - 1)
+	If mHost <> Null Then
+		If mHost.IsInitialized Then Render
+	End If
+	Return True
 End Sub
 
 Public Sub SetParent(Parent As B4XView)

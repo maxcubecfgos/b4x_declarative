@@ -1,13 +1,12 @@
 ﻿Build1=Default,b4a.example
 Group=Default Group
 Library1=core
-Library2=ime
-Library3=xui
-Library4=declarativeui
-Library5=okhttputils2
+Library2=declarativeui
+Library3=okhttputils2
+Library4=xui
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~AddPermission(android.permission.INTERNET)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
 NumberOfFiles=0
-NumberOfLibraries=5
+NumberOfLibraries=4
 NumberOfModules=0
 Version=13.62
 @EndOfDesignText@
@@ -16,7 +15,7 @@ Version=13.62
     #VersionCode: 1
     #VersionName: 1.0
     #SupportedOrientations: portrait
-    #EdgeToEdgeOldDevices: True
+'    #EdgeToEdgeOldDevices: True
 #End Region
 
 #Region  Activity Attributes
