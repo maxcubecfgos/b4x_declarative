@@ -437,6 +437,15 @@ Private Sub RefreshIfMounted
     End If
 End Sub
 
+Public Sub Detach
+    If mBaseView <> Null Then
+        If mBaseView.IsInitialized Then
+            If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+        End If
+    End If
+    mParent = Null
+End Sub
+
 Public Sub Unmount
     If mSelectedState <> Null Then
         If mSelectedState.IsInitialized Then mSelectedState.Unsubscribe(Me, "SelectedState_Changed")

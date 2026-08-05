@@ -215,6 +215,10 @@ Public Sub Render
 		mBaseView.Tag = Me
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
+	If mBaseView.Parent <> mParent Then
+		If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
+	End If
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
 	mBaseView.Tag = Me
 	' Keep content buttons above remounted siblings so their touch surface remains available.
@@ -269,6 +273,15 @@ Private Sub SetRoundedRippleBackground(ButtonView As Button)
 	ripple.InitializeNewInstance("android.graphics.drawable.RippleDrawable", Array(rippleColor, shape, mask))
 	Dim nativeView As JavaObject = ButtonView
 	nativeView.RunMethod("setBackground", Array(ripple))
+End Sub
+
+Public Sub Detach
+	If mBaseView <> Null Then
+		If mBaseView.IsInitialized Then
+			If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		End If
+	End If
+	mParent = Null
 End Sub
 
 Public Sub Unmount

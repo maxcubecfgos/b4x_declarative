@@ -153,10 +153,14 @@ Public Sub Render
 		mBaseView.Color = Colors.Transparent
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
+	If mBaseView.Parent <> mParent Then
+		If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
+	End If
 
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
 	If mVisible = False Then
-		If mChild <> Null Then mBridge.Unmount(mChild)
+		If mChild <> Null Then mBridge.Detach(mChild)
 		mBaseView.RemoveAllViews
 		mBaseView.SetLayoutAnimated(0, mLeft, mTop, 0, 0)
 		Return
@@ -173,12 +177,20 @@ Public Sub Render
 	mBridge.Render(mChild)
 End Sub
 
+Public Sub Detach
+	If mBaseView <> Null Then
+		If mBaseView.IsInitialized Then
+			If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		End If
+	End If
+	mParent = Null
+End Sub
+
 Public Sub Unmount
 	If mVisibilityState <> Null Then
 		If mVisibilityState.IsInitialized Then mVisibilityState.Unsubscribe(Me, "VisibilityState_Changed")
 	End If
-	' Unmount is temporary during navigation/remounting; preserve the state
-	' binding so the same declarative widget remains reactive when mounted again.
+	' Unmount is terminal for this wrapper: release the child and its binding.
 	If mChild <> Null Then mBridge.Unmount(mChild)
 	If mBaseView <> Null Then
 		If mBaseView.IsInitialized Then mBaseView.RemoveAllViews

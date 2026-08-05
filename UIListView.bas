@@ -28,6 +28,7 @@ Sub Class_Globals
     Private mNeedsRefresh As Boolean
     Private mRefreshing As Boolean
     Private mRefreshPending As Boolean
+    Private mUnmounted As Boolean
     Private mBackgroundColor As Int
     Private mBackgroundColorOverridden As Boolean
     Private mTheme As UITheme
@@ -56,6 +57,7 @@ Public Sub Initialize As UIListView
     mNeedsRefresh = True
     mRefreshing = False
     mRefreshPending = False
+    mUnmounted = False
     Dim defaultTheme As UITheme
     defaultTheme.Initialize
     mTheme = defaultTheme
@@ -122,7 +124,7 @@ Public Sub CreateItem(Target As Object, EventName As String) As UIListView
     If Target = Null Or EventName.Trim = "" Then Return Me
     If SubExists(Target, EventName) = False Then Return Me
     RecycleAllVisible
-    mPool.Clear
+    ReleasePool
     mCreateTarget = Target
     mCreateEventName = EventName
     NotifyDataSetChanged
@@ -135,7 +137,7 @@ Public Sub BindItem(Target As Object, EventName As String) As UIListView
     If Target = Null Or EventName.Trim = "" Then Return Me
     If SubExists(Target, EventName) = False Then Return Me
     RecycleAllVisible
-    mPool.Clear
+    ReleasePool
     mBindTarget = Target
     mBindEventName = EventName
     NotifyDataSetChanged
@@ -190,6 +192,7 @@ End Sub
 
 Public Sub SetParent(Parent As B4XView)
     mParent = Parent
+    mUnmounted = False
 End Sub
 
 Public Sub SetPosition(Left As Int, Top As Int)
@@ -203,6 +206,7 @@ Public Sub SetSize(Width As Int, Height As Int)
 End Sub
 
 Public Sub Render
+    If mUnmounted Then Return
     If mParent = Null Then Return
     If mParent.IsInitialized = False Then Return
     EnsureNativeView
@@ -244,6 +248,11 @@ Private Sub EnsureNativeView
 End Sub
 
 Private Sub RefreshVisibleWindow(Position As Int)
+    If mUnmounted Then Return
+    If mContentPanel = Null Then Return
+    If mContentPanel.IsInitialized = False Then Return
+    If mScrollView = Null Then Return
+    If mScrollView.IsInitialized = False Then Return
     If mRefreshing Then
         mRefreshPending = True
         Return
@@ -336,8 +345,14 @@ Private Sub RecycleItem(Index As Int)
     If mVisibleItems.ContainsKey(Index) = False Then Return
     Dim itemView As Object = mVisibleItems.Get(Index)
     If itemView <> Null Then
-        mBridge.Unmount(itemView)
-        If HasBindCallback Then mPool.Add(itemView)
+        If HasBindCallback Then
+            ' Temporary recycling preserves the declarative instance and its native view.
+            mBridge.Detach(itemView)
+            mPool.Add(itemView)
+        Else
+            ' Without a bind callback the row is no longer reusable.
+            mBridge.Unmount(itemView)
+        End If
     End If
     If mVisibleContainers.ContainsKey(Index) Then
         Dim itemContainer As B4XView = mVisibleContainers.Get(Index)
@@ -360,6 +375,13 @@ Private Sub RecycleAllVisible
     Next
 End Sub
 
+Private Sub ReleasePool
+    For Each item As Object In mPool
+        If item <> Null Then mBridge.Unmount(item)
+    Next
+    mPool.Clear
+End Sub
+
 Private Sub ApplyThemeToItem(Item As Object, Theme As UITheme)
     If Item <> Null And SubExists(Item, "ApplyTheme") Then CallSub2(Item, "ApplyTheme", Theme)
 End Sub
@@ -369,6 +391,12 @@ Private Sub IsWidgetProtocol(Widget As Object) As Boolean
 End Sub
 
 Private Sub mScrollView_ScrollChanged(Position As Int)
+    ' A delayed Android scroll event may arrive after terminal Unmount.
+    If mUnmounted Then Return
+    If mContentPanel = Null Then Return
+    If mContentPanel.IsInitialized = False Then Return
+    If mScrollView = Null Then Return
+    If mScrollView.IsInitialized = False Then Return
     RefreshVisibleWindow(Position)
 End Sub
 
@@ -386,8 +414,9 @@ Public Sub GetView As B4XView
 End Sub
 
 Public Sub Unmount
+    mUnmounted = True
     RecycleAllVisible
-    mPool.Clear
+    ReleasePool
     mFirstVisible = -1
     mLastVisible = -1
     mNeedsRefresh = True

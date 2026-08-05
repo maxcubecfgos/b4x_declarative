@@ -56,6 +56,11 @@ Public Sub Render
 	End If
 End Sub
 
+Public Sub Detach
+	If mChild <> Null Then mBridge.Detach(mChild)
+	mParent = Null
+End Sub
+
 Public Sub Unmount
 	If mChild <> Null Then
 		mBridge.Unmount(mChild)

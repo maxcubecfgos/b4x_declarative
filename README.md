@@ -44,6 +44,8 @@ The repository documentation also covers the complete widget set, including natu
 | `UIButton.bas` | Native button wrapper with safe callbacks, optional state binding and configurable corners/borders |
 | `UIFloatingActionButton.bas` | Compact native floating action button with safe callbacks and optional `UIState` text binding |
 | `UIInput.bas` | Native text input with natural measurement, optional state binding, safe callbacks and configurable corners/borders |
+| `UISwitch.bas` | Declarative switch with explicit checked state and label |
+| `UIRadioButton.bas` / `UIRadioGroup.bas` | Radio options with exclusive selection and optional state binding |
 | `UIAppBar.bas` | App bar with a persistent title and optional `UIState` binding |
 | `UIDivider.bas` | Themed horizontal divider |
 | `UISpace.bas` | Fixed-size layout spacer |
@@ -86,8 +88,11 @@ Every layout-aware widget follows the same basic contract:
 2. Fluent methods configure text, colors, children, spacing, and callbacks.
 3. `SetParent`, `SetPosition`, and `SetSize` receive layout information.
 4. `GetContentSize` reports the natural size when the widget has one.
-5. `Render` creates or updates the native B4A view.
-6. `Unmount` releases native references before a remount.
+5. `Render` creates or updates the native B4A view; repeated renders preserve the widget instance and its native view whenever possible.
+6. `Detach` temporarily removes the native view from its parent while keeping declarative state, bindings and reusable native controls.
+7. `Unmount` is terminal cleanup: it removes native references and subscriptions before the widget is discarded or permanently rebuilt.
+
+This distinction follows the practical Flutter principle that rebuilds must not equal disposal. Containers, `UINavigator` and `UIListView` use `Detach` for temporary moves/recycling and `Unmount` only for structural destruction. Existing custom widgets that expose only `Unmount` remain compatible through the bridge fallback.
 
 This convention keeps containers reusable and lets `UIColumn`, `UIRow`, `UICenter`, and `UIScrollView` work with different child types through the same small protocol.
 
@@ -136,7 +141,7 @@ Sub DetailsVisibilityChanged(Visibility As UIVisibility)
 End Sub
 ```
 
-`BindVisible` updates the wrapper immediately and notifies the callback when the state changes. The explicit callback keeps ownership clear: the library does not guess which parent should be remeasured. When hidden, the wrapper reports a natural size of `0, 0`, unmounts the child's native views and allows `UIColumn` or `UIRow` to place the remaining children without a gap.
+`BindVisible` updates the wrapper immediately and notifies the callback when the state changes. The explicit callback keeps ownership clear: the library does not guess which parent should be remeasured. When hidden, the wrapper reports a natural size of `0, 0`, detaches the child's native view and allows `UIColumn` or `UIRow` to place the remaining children without a gap.
 
 `UIStack` provides Flutter-like Z-axis composition:
 
@@ -239,7 +244,7 @@ End Sub
 
 The list requires a fixed `ItemHeight`. `CreateItem` must return an initialized widget implementing the normal composition protocol, and `BindItem` must update that widget for the current index before it is rendered. `BindItem` is required for safe pooling when rows display changing data. Call `NotifyDataSetChanged` after changing the external data source or the contents of an item.
 
-`UIListView` recycles declarative widget instances and keeps only visible plus overscanned rows mounted. It currently does not implement variable-height rows or a platform `RecyclerView`; recycled widget instances may recreate their internal native controls after unmounting. Use `UIScrollView` for small, variable-height content and `UIListView` for long, fixed-height collections.
+`UIListView` recycles declarative widget instances and keeps only visible plus overscanned rows mounted. With `BindItem`, rows leaving the viewport are detached into the pool and can reuse their native controls; when the pool is permanently released, rows are unmounted. Without `BindItem`, rows are recreated rather than pooled so stale content cannot survive a data change. It currently does not implement variable-height rows or a platform `RecyclerView`; use `UIScrollView` for small, variable-height content and `UIListView` for long, fixed-height collections.
 
 ## UIAnimation
 
@@ -440,9 +445,9 @@ Navigator.Initialize _
 Navigator.NavigateTo("Activity")
 ```
 
-The host uses the available content rectangle reported by the B4A `IME` API. This keeps the declarative root below the Android status area, including the battery and clock region, without requiring every screen to calculate top insets independently.
+The host uses the available content rectangle calculated from Android `WindowInsets` through `JavaObject`. This keeps the declarative root below the Android status area, including the battery and clock region, without requiring every screen to calculate top insets independently.
 
-This is intentionally a single-Activity navigation model. It avoids pretending that a virtual declarative screen is a physical B4A Activity or layout file. Native Activity behavior can still be added later when a real Activity is genuinely required.
+This is intentionally a single-Activity navigation model. It avoids pretending that a virtual declarative screen is a physical B4A Activity or layout file. A route change detaches the previous screen so its declarative/native identity can be restored by `GoBack`; `Unmount` is reserved for terminal cleanup. Native Activity behavior can still be added later when a real Activity is genuinely required.
 
 ## Bottom navigation
 
@@ -502,8 +507,9 @@ The remaining widgets are documented in `GUIDE.md` and can be explored without m
 The project currently uses the following B4A libraries:
 
 - `core`
-- `ime`
-- `xui`
+- `XUI`
+- `JavaObject`
+- `OkHttpUtils2` (required by `UIImage.Network`)
 
 ## Suggested demonstration flow
 

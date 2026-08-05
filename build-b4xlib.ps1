@@ -79,7 +79,7 @@ try {
         'Modification=Testing and local project modifications welcome'
         'ReverseEngineering=Study, debugging and experimentation welcome'
         'Redistribution=Please do not repackage the implementation as your own library'
-        'DependsOn=XUI, IME, JavaObject, OkHttpUtils2'
+        'DependsOn=XUI, JavaObject, OkHttpUtils2'
     ) -join [Environment]::NewLine
     [IO.File]::WriteAllText((Join-Path $stage 'manifest.txt'), $manifest, $utf8NoBom)
 

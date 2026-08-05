@@ -193,8 +193,12 @@ Public Sub Render
 		pnl.Initialize("")
 		mBaseView = pnl
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
-		mMounted = True
 	End If
+	If mBaseView.Parent <> mParent Then
+		If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
+	End If
+	mMounted = True
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
 	mBaseView.Color = mBackgroundColor
     
@@ -285,6 +289,25 @@ End Sub
 Private Sub IfBottomBarOffset(Bar As Object, Height As Int) As Int
 	If Bar <> Null Then Return Height
 	Return 0
+End Sub
+
+Public Sub Detach
+	If mBaseView <> Null Then
+		If mBaseView.IsInitialized Then
+			If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		End If
+	End If
+	DetachChild(mAppBar)
+	DetachChild(mBody)
+	DetachChild(mFabLeft)
+	DetachChild(mFabRight)
+	DetachChild(mBottomNavigationBar)
+	mParent = Null
+	mMounted = False
+End Sub
+
+Private Sub DetachChild(Child As Object)
+	If Child <> Null Then mBridge.Detach(Child)
 End Sub
 
 Public Sub Unmount

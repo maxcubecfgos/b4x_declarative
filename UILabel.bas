@@ -145,6 +145,10 @@ Public Sub Render
 		mBaseView = lbl
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
+	If mBaseView.Parent <> mParent Then
+		If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
+	End If
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     
 	Dim NativeLabel As Label = mBaseView
@@ -152,6 +156,15 @@ Public Sub Render
 	NativeLabel.TextSize = mSize
 	NativeLabel.TextColor = mTextColor
 	NativeLabel.Gravity = mGravityValue
+End Sub
+
+Public Sub Detach
+	If mBaseView <> Null Then
+		If mBaseView.IsInitialized Then
+			If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		End If
+	End If
+	mParent = Null
 End Sub
 
 Public Sub Unmount

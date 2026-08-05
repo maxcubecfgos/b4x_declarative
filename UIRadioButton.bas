@@ -254,6 +254,10 @@ Public Sub Render
 		mLabelView = label
 		mBaseView.AddView(mLabelView, mIndicatorSize + 12dip, 0, 1dip, mHeight)
 	End If
+	If mBaseView.Parent <> mParent Then
+		If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
+	End If
 
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
 	Dim indicatorTop As Int = Max(0, (mHeight - mIndicatorSize) / 2)
@@ -356,6 +360,15 @@ End Sub
 Private Sub StateText(InputValue As Object) As String
 	If InputValue = Null Then Return ""
 	Return "" & InputValue
+End Sub
+
+Public Sub Detach
+	If mBaseView <> Null Then
+		If mBaseView.IsInitialized Then
+			If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		End If
+	End If
+	mParent = Null
 End Sub
 
 Public Sub Unmount

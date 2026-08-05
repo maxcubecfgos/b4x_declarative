@@ -5,6 +5,7 @@ Group=Default Group
 Library1=core
 Library2=okhttputils2
 Library3=xui
+Library4=javaobject
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~AddPermission(android.permission.INTERNET)
 Module1=UIAlertDialog
 Module10=UICheckbox
@@ -45,7 +46,7 @@ Module7=UIButton
 Module8=UICard
 Module9=UICenter
 NumberOfFiles=1
-NumberOfLibraries=3
+NumberOfLibraries=4
 NumberOfModules=38
 Version=13.62
 @EndOfDesignText@
@@ -77,6 +78,9 @@ Sub Globals
 	Private Content As UIColumn
 	Private Center As UICenter
 	Private ImageMounted As Boolean
+	Private LifecycleList As UIListView
+	Private LifecycleCreateCount As Int
+	Private LifecycleBindCount As Int
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
@@ -91,6 +95,9 @@ Sub Activity_Create(FirstTime As Boolean)
 	Content.Initialize.Spacing(16dip).MainAxisAlignment("center").CrossAxisAlignment("center") _
 		.AddChild(Image).AddChild(TestSwitch).AddChild(TestRadioGroup)
 	Center.Initialize.Child(Content)
+	' The list invokes these callbacks by name. Keep a direct compile-time reference
+	' so the B4A analyzer does not report reflective callbacks as unused.
+	If False Then HarnessBindItem(0, HarnessCreateItem(0))
 	Log("DeclarativeUI TEST INFO  UIImage asset test initialized")
 	Log("DeclarativeUI TEST INFO  UISwitch test initialized")
 End Sub
@@ -131,9 +138,205 @@ Sub Activity_Resume
 				Log("DeclarativeUI TEST FAIL  UISwitch -> state binding did not update")
 			End If
 		End If
+
+		Wait For (RunLifecycleHarness) Complete (Result As Object)
 	Catch
 		Log("DeclarativeUI TEST FAIL  harness -> " & LastException.Message)
 	End Try
+End Sub
+
+Private Sub RunLifecycleHarness As ResumableSub
+	Dim lifecycleInput As UIInput
+	lifecycleInput.Initialize.Text("lifecycle")
+	lifecycleInput.SetParent(Root)
+	lifecycleInput.SetPosition(0, 0)
+	lifecycleInput.SetSize(1dip, 1dip)
+	lifecycleInput.Render
+	Dim firstView As B4XView = lifecycleInput.GetView
+	Dim firstId As Int = NativeViewIdentity(firstView)
+
+	lifecycleInput.Render
+	Dim stableView As B4XView = lifecycleInput.GetView
+	Dim stableId As Int = NativeViewIdentity(stableView)
+	Dim stableText As String = lifecycleInput.GetText
+	Dim stableRenderOk As Boolean = False
+	If firstId > 0 Then
+		If firstId = stableId Then
+			If stableText = "lifecycle" Then stableRenderOk = True
+		End If
+	End If
+	If stableRenderOk Then
+		Log("DeclarativeUI TEST PASS  lifecycle stable render preserves native view")
+	Else
+		Log("DeclarativeUI TEST FAIL  lifecycle stable render")
+	End If
+
+	lifecycleInput.Detach
+	lifecycleInput.SetParent(Root)
+	lifecycleInput.SetPosition(0, 0)
+	lifecycleInput.SetSize(1dip, 1dip)
+	lifecycleInput.Render
+	Dim remountedView As B4XView = lifecycleInput.GetView
+	Dim remountedId As Int = NativeViewIdentity(remountedView)
+	Dim remountedMounted As Boolean = False
+	If remountedView <> Null Then
+		If remountedView.IsInitialized Then
+			If remountedView.Parent <> Null Then remountedMounted = True
+		End If
+	End If
+	Dim detachRenderOk As Boolean = False
+	If remountedId > 0 Then
+		If remountedId = firstId Then
+			If remountedMounted Then
+				If lifecycleInput.GetText = "lifecycle" Then detachRenderOk = True
+			End If
+		End If
+	End If
+	If detachRenderOk Then
+		Log("DeclarativeUI TEST PASS  lifecycle detach preserves native view and state")
+	Else
+		Log("DeclarativeUI TEST FAIL  lifecycle detach/remount")
+	End If
+
+	lifecycleInput.Unmount
+	Dim releasedInputView As B4XView = lifecycleInput.GetView
+	If releasedInputView.IsInitialized = False Then
+		Log("DeclarativeUI TEST PASS  lifecycle unmount releases native view")
+	Else
+		Log("DeclarativeUI TEST FAIL  lifecycle unmount release")
+	End If
+
+	RunNavigatorLifecycleHarness
+	Wait For (RunListLifecycleHarness) Complete (Result As Object)
+	Return Null
+End Sub
+
+Private Sub RunNavigatorLifecycleHarness
+	Dim routeHostPanel As Panel
+	routeHostPanel.Initialize("")
+	Dim routeHost As B4XView = routeHostPanel
+	Root.AddView(routeHost, 0, 0, 1dip, 1dip)
+
+	Dim routeInput As UIInput
+	routeInput.Initialize.Text("route-a")
+	Dim routeBodyA As UIColumn
+	routeBodyA.Initialize.AddChild(routeInput)
+	Dim routeA As UIScaffold
+	routeA.Initialize.Body(routeBodyA)
+
+	Dim routeLabel As UILabel
+	routeLabel.Initialize.Text("route-b")
+	Dim routeBodyB As UIColumn
+	routeBodyB.Initialize.AddChild(routeLabel)
+	Dim routeB As UIScaffold
+	routeB.Initialize.Body(routeBodyB)
+
+	Dim routeNavigator As UINavigator
+	routeNavigator.Initialize.AddScreen("A", routeA).AddScreen("B", routeB)
+	routeNavigator.SetParent(routeHost)
+	routeNavigator.SetPosition(0, 0)
+	routeNavigator.SetSize(1dip, 1dip)
+	routeNavigator.Render
+	Dim initialText As String = routeInput.GetText
+	Dim initialRouteView As B4XView = routeInput.GetView
+	Dim initialRouteId As Int = NativeViewIdentity(initialRouteView)
+	routeNavigator.NavigateTo("B")
+	Dim openedBackStack As Boolean = routeNavigator.CanGoBack
+	Dim popped As Boolean = routeNavigator.GoBack
+	Dim restoredText As String = routeInput.GetText
+	Dim restoredRouteView As B4XView = routeInput.GetView
+	Dim restoredRouteId As Int = NativeViewIdentity(restoredRouteView)
+	Dim restoredRouteMounted As Boolean = False
+	If restoredRouteView <> Null Then
+		If restoredRouteView.IsInitialized Then
+			If restoredRouteView.Parent <> Null Then restoredRouteMounted = True
+		End If
+	End If
+	Dim routeLifecycleOk As Boolean = True
+	If initialText <> "route-a" Then routeLifecycleOk = False
+	If openedBackStack = False Then routeLifecycleOk = False
+	If popped = False Then routeLifecycleOk = False
+	If restoredText <> "route-a" Then routeLifecycleOk = False
+	If restoredRouteMounted = False Then routeLifecycleOk = False
+	If initialRouteId <= 0 Then routeLifecycleOk = False
+	If initialRouteId <> restoredRouteId Then routeLifecycleOk = False
+	If routeLifecycleOk Then
+		Log("DeclarativeUI TEST PASS  navigator detach A->B->GoBack preserves route state")
+	Else
+		Log("DeclarativeUI TEST FAIL  navigator route detach/restore")
+	End If
+	routeNavigator.Unmount
+	Dim releasedRouteView As B4XView = routeInput.GetView
+	If releasedRouteView.IsInitialized = False Then
+		Log("DeclarativeUI TEST PASS  navigator unmount releases route tree")
+	Else
+		Log("DeclarativeUI TEST FAIL  navigator unmount release")
+	End If
+	routeHost.RemoveViewFromParent
+End Sub
+
+Private Sub RunListLifecycleHarness As ResumableSub
+	LifecycleCreateCount = 0
+	LifecycleBindCount = 0
+	Dim data As List
+	data.Initialize
+	For i = 0 To 49
+		data.Add("item-" & i)
+	Next
+	LifecycleList.Initialize.Items(data).ItemHeight(40dip).Overscan(0) _
+		.CreateItem(Me, "HarnessCreateItem").BindItem(Me, "HarnessBindItem")
+	LifecycleList.SetParent(Root)
+	LifecycleList.SetPosition(0, 0)
+	LifecycleList.SetSize(240dip, 120dip)
+	LifecycleList.Render
+	Sleep(0)
+	Dim baselineCreate As Int = LifecycleCreateCount
+	Dim baselineBind As Int = LifecycleBindCount
+	Dim nativeList As B4XView = LifecycleList.GetView
+	Dim listScroll As ScrollView = nativeList
+	listScroll.ScrollPosition = 800dip
+	Sleep(0)
+	LifecycleList.Render
+	Dim recycledCreate As Int = LifecycleCreateCount
+	Dim recycledBind As Int = LifecycleBindCount
+	Dim createdDuringScroll As Int = recycledCreate - baselineCreate
+	Dim bindsDuringScroll As Int = recycledBind - baselineBind
+	If baselineCreate > 0 And bindsDuringScroll > 0 And bindsDuringScroll > createdDuringScroll Then
+		Log("DeclarativeUI TEST PASS  list detach pool reuses rows")
+		Log("DeclarativeUI TEST INFO  list create=" & recycledCreate & " bind=" & recycledBind)
+	Else
+		Log("DeclarativeUI TEST FAIL  list detach pool reuse")
+		Log("DeclarativeUI TEST INFO  list create=" & recycledCreate & " bind=" & recycledBind)
+	End If
+	LifecycleList.Unmount
+	Dim releasedListView As B4XView = LifecycleList.GetView
+	If releasedListView.IsInitialized = False Then
+		Log("DeclarativeUI TEST PASS  list unmount releases native viewport")
+	Else
+		Log("DeclarativeUI TEST FAIL  list unmount release")
+	End If
+	Return Null
+End Sub
+
+Private Sub NativeViewIdentity(View As B4XView) As Int
+	If View = Null Then Return 0
+	If View.IsInitialized = False Then Return 0
+	Dim system As JavaObject
+	system.InitializeStatic("java.lang.System")
+	Return system.RunMethod("identityHashCode", Array(View))
+End Sub
+
+Private Sub HarnessCreateItem(Index As Int) As Object
+	LifecycleCreateCount = LifecycleCreateCount + 1
+	Dim label As UILabel
+	label.Initialize.Size(12).Text("item-" & Index)
+	Return label
+End Sub
+
+Private Sub HarnessBindItem(Index As Int, ItemView As Object)
+	LifecycleBindCount = LifecycleBindCount + 1
+	Dim label As UILabel = ItemView
+	label.Text("item-" & Index)
 End Sub
 
 Sub Activity_Pause (UserClosed As Boolean)

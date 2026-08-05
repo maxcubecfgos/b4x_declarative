@@ -16,7 +16,7 @@ It is:
 
 - B4X/B4A code with optional fluent method chaining;
 - a tree of reusable widget objects;
-- a measure, layout, render and unmount protocol;
+- a measure, layout, render and two-level detach/unmount lifecycle protocol;
 - explicit state through `UIState`;
 - virtual navigation inside one real B4A Activity.
 
@@ -85,7 +85,7 @@ These rules apply to all new public API:
 - Callback names follow normal B4A event style: `Save_Click`, `Increment_Click`.
 - State variables use descriptive PascalCase names: `CounterState`, `ScreenTitleState`.
 - Configuration methods return the configured widget when chaining is useful.
-- Lifecycle methods use the fixed names `SetParent`, `SetPosition`, `SetSize`, `Render`, `Unmount` and `GetContentSize`.
+- Lifecycle methods use the fixed names `SetParent`, `SetPosition`, `SetSize`, `Render`, optional `Detach`, `Unmount` and `GetContentSize`.
 - New public methods must not silently change the meaning of an existing method.
 
 The library will not introduce lower-case, Dart-style, JavaScript-style or operator-based alternatives to these conventions.
@@ -122,6 +122,7 @@ SetParent(parent As B4XView)
 SetPosition(left As Int, top As Int)
 SetSize(width As Int, height As Int)
 Render
+Detach
 Unmount
 GetContentSize(maxWidth As Int, maxHeight As Int) As List
 ```
@@ -274,10 +275,12 @@ Initialize → configure → compose → SetParent/SetPosition/SetSize → Rende
 Rules:
 
 - Render the root, not every leaf, during normal screen composition.
-- `Render` creates native views when necessary and updates their current bounds/properties.
-- `Unmount` releases native view references so the same declarative tree can be mounted again.
-- Unmounting does not mean that state bindings or declarative configuration are forgotten.
-- Navigation and theme changes may remount a virtual screen.
+- `Render` creates native views when necessary and updates their current bounds/properties without recreating a stable widget tree.
+- `Detach` temporarily removes a native view from its parent while preserving declarative configuration, state bindings and reusable native controls.
+- `Unmount` is terminal cleanup: it releases native view references and subscriptions when the declarative identity is discarded.
+- Existing custom widgets that do not implement `Detach` remain compatible; `UIWidgetBridge` safely falls back to `Unmount`.
+- Unmounting does not mean that application state is reset, but a terminally unmounted widget must be rendered again before native controls exist.
+- Navigation and virtualization use detach for temporary moves and unmount only for permanent destruction.
 - A property update that affects only one widget should prefer a targeted `Render` or a documented binding.
 - A structural change requires rendering the affected root/container; there is no implicit full-tree diff in this release.
 - A bound visibility change is a localized structural update: the wrapper changes first and its explicit callback requests the affected parent render.
@@ -322,8 +325,9 @@ Rules:
 - `BindVisible(UIState)` reads the current Boolean value immediately and observes later replacements.
 - `Visible(Boolean)` and `UnbindVisible` remove the visibility binding while preserving the current value.
 - `OnVisibilityChanged(Target, EventName)` receives the changed `UIVisibility` instance through a one-argument callback.
-- When hidden, the wrapper returns `List(0, 0)`, unmounts the child and removes the child's native views.
-- When visible again, the child is mounted from its declarative configuration.
+- When hidden, the wrapper returns `List(0, 0)`, detaches the child and removes its native view from the visible tree.
+- When visible again, the child is mounted from the same declarative/native identity when possible.
+- Terminal `Unmount` releases the child and its subscriptions.
 - The binding changes the wrapper immediately, but the callback owns parent remeasurement. Render the containing `UIColumn`, `UIRow`, `UIScrollView` or other affected root so siblings are remeasured and reflowed.
 - `UIVisibility` does not guess which parent to render; this keeps ownership explicit and avoids hidden global rendering.
 
@@ -603,9 +607,10 @@ Rules:
 - A screen is a named widget tree, not a physical Activity or `.bal` layout.
 - Screen names are application strings and must match exactly.
 - Register a screen before navigating to it.
-- The navigator owns mounting and unmounting of the active virtual screen.
+- The navigator owns mounting, temporary detachment and terminal unmounting of virtual screens.
+- A route change detaches the previous screen so a later `GoBack` can restore its state; the active route is updated in place on ordinary renders.
 - The root content area is responsible for staying below the Android status area.
-- The current implementation uses one real Activity and the B4A `IME` content rectangle.
+- The current implementation uses one real Activity and Android `WindowInsets` accessed through `JavaObject`.
 
 A future native multi-Activity integration must be additive and must not redefine virtual screens as Activities.
 
@@ -680,7 +685,7 @@ Before merging a library change:
 
 The following are intentionally outside the contract for now:
 
-- automatic virtual-DOM diffing;
+- automatic virtual-DOM diffing; `Detach` is a targeted reuse primitive, not a general-purpose diff engine;
 - variable-height or full `RecyclerView` semantics in `UIListView`;
 - automatic two-way data binding;
 - implicit parent rendering for `UIVisibility` (use explicit `BindVisible` and `OnVisibilityChanged` instead);

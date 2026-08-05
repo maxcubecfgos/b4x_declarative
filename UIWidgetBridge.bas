@@ -96,6 +96,9 @@ Public Sub Render(Widget As Object) As Boolean
 	End Try
 End Sub
 
+' Temporarily detaches a widget when the tree moves or is recycled.
+' New widgets may expose Detach to preserve native views and bindings.
+' Legacy widgets continue through Unmount without changing their syntax.
 Public Sub Unmount(Widget As Object) As Boolean
 	If Widget = Null Then Return False
 	If SubExists(Widget, "Unmount") = False Then Return True
@@ -104,6 +107,36 @@ Public Sub Unmount(Widget As Object) As Boolean
 		Return True
 	Catch
 		Return Report("Unmount", Widget, LastException.Message)
+	End Try
+End Sub
+
+' Temporarily detaches a widget for recycling or a tree move. Older custom
+' widgets safely fall back to their existing Unmount implementation.
+Public Sub Detach(Widget As Object) As Boolean
+	If Widget = Null Then Return False
+	Dim operation As String = "Detach"
+	If SubExists(Widget, operation) = False Then operation = "Unmount"
+	If SubExists(Widget, operation) = False Then Return True
+	Try
+		CallSub(Widget, operation)
+		Return True
+	Catch
+		Return Report(operation, Widget, LastException.Message)
+	End Try
+End Sub
+
+' Permanently releases a widget when its declarative identity is discarded.
+' Dispose is optional so existing custom widgets remain source-compatible.
+Public Sub Dispose(Widget As Object) As Boolean
+	If Widget = Null Then Return False
+	Dim operation As String = "Dispose"
+	If SubExists(Widget, operation) = False Then operation = "Unmount"
+	If SubExists(Widget, operation) = False Then Return True
+	Try
+		CallSub(Widget, operation)
+		Return True
+	Catch
+		Return Report(operation, Widget, LastException.Message)
 	End Try
 End Sub
 

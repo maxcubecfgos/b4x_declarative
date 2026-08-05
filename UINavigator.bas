@@ -141,20 +141,39 @@ Public Sub Render
 		mHost.SetLayoutAnimated(0, contentLeft, contentTop, contentWidth, contentHeight)
 	End If
 
+	Dim Screen As Object = mScreens.Get(mCurrentScreen)
 	If mMountedScreen <> Null Then
-		If SubExists(mMountedScreen, "Unmount") Then
-			CallSub(mMountedScreen, "Unmount")
+		If Screen = Null Or Screen <> mMountedScreen Then
+			' A route in history may be restored, so detach it instead of destroying it.
+			Dim bridge As UIWidgetBridge
+			bridge.Initialize
+			bridge.Detach(mMountedScreen)
+			mHost.RemoveAllViews
+			mMountedScreen = Null
 		End If
 	End If
-	mHost.RemoveAllViews
-	mMountedScreen = Null
-
-	Dim Screen As Object = mScreens.Get(mCurrentScreen)
+	' A stable route keeps its existing widget tree. This is the main lifecycle
+	' optimization: resize/re-render updates the mounted screen in place instead
+	' of unmounting every native descendant first.
+	If Screen <> Null And mMountedScreen <> Null Then
+		If Screen = mMountedScreen Then
+			Dim stableBridge As UIWidgetBridge
+			stableBridge.Initialize
+			stableBridge.SetParent(Screen, mHost)
+			stableBridge.SetPosition(Screen, 0, 0)
+			stableBridge.SetSize(Screen, contentWidth, contentHeight)
+			stableBridge.Render(Screen)
+			mIsMounted = mHost.IsInitialized
+			Return
+		End If
+	End If
 	If Screen <> Null Then
-		CallSub2(Screen, "SetParent", mHost)
-		CallSub3(Screen, "SetPosition", 0, 0)
-		CallSub3(Screen, "SetSize", contentWidth, contentHeight)
-		CallSub(Screen, "Render")
+		Dim screenBridge As UIWidgetBridge
+		screenBridge.Initialize
+		screenBridge.SetParent(Screen, mHost)
+		screenBridge.SetPosition(Screen, 0, 0)
+		screenBridge.SetSize(Screen, contentWidth, contentHeight)
+		screenBridge.Render(Screen)
 		mMountedScreen = Screen
 	End If
 	mIsMounted = mHost.IsInitialized
@@ -296,7 +315,9 @@ End Sub
 
 Public Sub Unmount
 	If mMountedScreen <> Null Then
-		If SubExists(mMountedScreen, "Unmount") Then CallSub(mMountedScreen, "Unmount")
+		Dim terminalBridge As UIWidgetBridge
+		terminalBridge.Initialize
+		terminalBridge.Unmount(mMountedScreen)
 	End If
 	If mHost <> Null Then
 		If mHost.IsInitialized Then

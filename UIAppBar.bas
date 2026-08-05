@@ -196,6 +196,10 @@ Public Sub Render
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
         
 	End If
+	If mBaseView.Parent <> mParent Then
+		If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
+	End If
 
 	Dim titleNeedsCreate As Boolean = needsCreate
 	If mTitleLabel = Null Then
@@ -234,6 +238,16 @@ Public Sub Render
 	mTitleLabel.TextColor = mTitleColor
 	mTitleLabel.TextSize = mTitleSize
 	mTitleLabel.Text = mTitle
+End Sub
+
+Public Sub Detach
+	If mBaseView <> Null Then
+		If mBaseView.IsInitialized Then
+			If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		End If
+	End If
+	If mActionWidget <> Null Then mBridge.Detach(mActionWidget)
+	mParent = Null
 End Sub
 
 Public Sub Unmount

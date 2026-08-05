@@ -4,7 +4,7 @@ This guide explains how to use the declarative UI classes included in this proje
 
 > **Stable syntax contract:** Read [SYNTAX.md](SYNTAX.md) before publishing or extending the library. It defines the rules that future releases must preserve.
 
-> **Current status:** this release is B4A-only. It uses native B4A `Panel`, `ScrollView`, `IME`, `Colors` and `B4XView` APIs. It is not yet a cross-platform B4X library for B4i or B4J.
+> **Current status:** this release is B4A-only. It uses native B4A `Panel`, `ScrollView`, `Colors`, `B4XView` and `JavaObject` APIs. It is not yet a cross-platform B4X library for B4i or B4J.
 
 ## 1. What this library provides
 
@@ -42,7 +42,8 @@ The only community boundary is about source authorship: please do not copy the i
 3. Enable the library in the host project.
 4. Enable the required B4A libraries:
    - `XUI`
-   - `IME`
+   - `JavaObject`
+   - `OkHttpUtils2` (required when using `UIImage.Network`)
 5. Create or open a B4A Activity project and use the classes from the package.
 
 The package contains only the reusable `.bas` UI classes, `manifest.txt` and `LICENSE.txt`. Project documentation such as `README.md`, `GUIDE.md` and `SYNTAX.md` remains in the source repository and is not copied into the `.b4xlib`. The package intentionally excludes the NOVA demo Activity and `Starter.bas`.
@@ -115,6 +116,8 @@ The important idea is that `body` describes the child tree. The parent is respon
 | `UIButton` | Native clickable button | `Text`, `BindText`, `UnbindText`, `BackgroundColor`, `TextColor`, `CornerRadius`, `Border`, `OnClick` |
 | `UIFloatingActionButton` | Compact circular-style native button | `Text`, `BindText`, `UnbindText`, `BackgroundColor`, `OnClick` |
 | `UIInput` | Native text input | `Hint`, `Text`, `BindText`, `UnbindText`, `OnTextChanged`, `TextColor`, `BackgroundColor`, `CornerRadius`, `Border`, `GetText` |
+| `UISwitch` | Declarative switch with label and checked state | `Text`, `Checked`, `BindChecked`, `OnChanged` |
+| `UIRadioButton` / `UIRadioGroup` | Exclusive radio selection | `Value`, `Text`, `Selected`, `BindSelected`, `AddOption`, `AddButton`, `OnSelected` |
 | `UIState` | Observable value holder with selective callbacks | `Initialize`, `GetState`, `SetState`, `Subscribe`, `Unsubscribe`, `UnsubscribeTarget`, `ClearListeners` |
 | `UIAsyncState` | Observable idle/loading/success/error operation state | `Initialize`, `SetIdle`, `SetLoading`, `SetSuccess`, `SetError`, `Reset`, `GetStatus`, `GetValue`, `GetErrorMessage`, `Subscribe` |
 | `UISnackBar` | Transient overlay notification with optional action | `Initialize`, `Message`, `Action`, `Duration`, `AnimationDuration`, `BackgroundColor`, `TextColor`, `ActionColor`, `CornerRadius`, `Margin`, `Show`, `Dismiss` |
@@ -338,7 +341,7 @@ Sub DetailsVisibilityChanged(Visibility As UIVisibility)
 End Sub
 ```
 
-`Visible(True)` is the default. `BindVisible` reads the current Boolean state and observes later replacements. Calling `Visible(...)` or `UnbindVisible` removes the binding. `OnVisibilityChanged` receives the changed wrapper and lets the host choose whether to render a `UIColumn`, `UIRow`, `UIScrollView` or another affected parent. When hidden, `UIVisibility` reports a natural size of `0, 0`, removes the child's native views and lets containers reflow the remaining children without a gap. The wrapper preserves the declarative child, so it can be mounted again when visibility returns.
+`Visible(True)` is the default. `BindVisible` reads the current Boolean state and observes later replacements. Calling `Visible(...)` or `UnbindVisible` removes the binding. `OnVisibilityChanged` receives the changed wrapper and lets the host choose whether to render a `UIColumn`, `UIRow`, `UIScrollView` or another affected parent. When hidden, `UIVisibility` reports a natural size of `0, 0`, detaches the child's native view and lets containers reflow the remaining children without a gap. The wrapper preserves the declarative child and its binding, so it can be mounted again when visibility returns; terminal `Unmount` still releases it.
 
 The included example intentionally keeps its UI small; this guide documents the visibility API independently so it can be used in larger applications.
 
@@ -476,7 +479,7 @@ End Sub
 
 `CreateItem` has the signature `Sub EventName(Index As Int) As Object`. `BindItem` has the signature `Sub EventName(Index As Int, ItemView As Object)`. The item must implement `SetParent`, `SetPosition`, `SetSize`, `Render` and `GetContentSize`. Call `NotifyDataSetChanged` after changing the data source or any item content. `ItemHeight` is mandatory conceptually: this first implementation does not support variable-height rows. For small or variable-height trees, use `UIScrollView` instead.
 
-The list pools declarative item objects, but it is not a full Android `RecyclerView` wrapper. A recycled widget may recreate its internal native view after it is unmounted; row state should therefore come from the data source or an explicit `UIState`, not from transient native control state.
+The list pools declarative item objects, but it is not a full Android `RecyclerView` wrapper. With `BindItem`, a row leaving the viewport is temporarily detached and its native view may be reused without recreating the declarative object. Rows are unmounted only when the pool is released or the list is permanently unmounted. Without `BindItem`, rows are not pooled because stale row content would be unsafe. Row state should still come from the data source or an explicit `UIState`, not from transient native control state.
 
 ## 12. Lifecycle and rendering
 
@@ -485,8 +488,9 @@ Every layout-aware widget follows this lifecycle:
 1. `Initialize` creates the declarative object.
 2. Fluent methods configure its properties and children.
 3. The parent assigns `SetParent`, `SetPosition` and `SetSize`.
-4. `Render` creates or updates the native B4A view.
-5. `Unmount` releases native references before a remount.
+4. `Render` creates or updates the native B4A view and preserves identity across ordinary re-renders.
+5. `Detach` temporarily removes the native view from its current parent while preserving configuration, bindings and reusable native controls.
+6. `Unmount` performs terminal cleanup: it removes native references and subscriptions when the declarative identity is discarded.
 
 The following methods are part of the internal composition contract:
 
@@ -495,6 +499,7 @@ SetParent(parent As B4XView)
 SetPosition(left As Int, top As Int)
 SetSize(width As Int, height As Int)
 Render
+Detach
 Unmount
 GetContentSize(maxWidth As Int, maxHeight As Int) As List
 ```
@@ -508,7 +513,7 @@ rootWidget.SetSize(Activity.Width, Activity.Height)
 rootWidget.Render
 ```
 
-When a property changes after mounting, call `Render` on the affected widget or rebuild the root tree when the structure itself changes. The current project uses targeted label renders for simple state changes and a controlled remount for navigation and theme changes.
+When a property changes after mounting, call `Render` on the affected widget or rebuild the root tree when the structure itself changes. The current project uses targeted renders for simple state changes. Navigation and list virtualization detach temporary subtrees instead of destroying them, while terminal `Unmount` is reserved for discarded structures. Existing custom widgets that implement only the original protocol remain usable because the bridge falls back from `Detach` to `Unmount`.
 
 ## 13. Events and callbacks
 
@@ -839,7 +844,7 @@ Navigate between registered screens:
 Navigator.NavigateTo("Settings")
 ```
 
-The navigator uses the B4A `IME.GetContentRect` information to place the root below the Android status area. This keeps content away from the clock, battery and notification area without requiring every screen to calculate the top inset.
+The navigator calculates the safe rectangle from Android `WindowInsets` through `JavaObject` and places the root below the Android status area. This keeps content away from the clock, battery and notification area without requiring every screen to calculate the top inset. Re-rendering the active route updates it in place. Moving to another registered route detaches the previous route so `GoBack` can restore its declarative/native identity; `Unmount` is used only when the navigator itself is discarded.
 
 Screens registered with `UINavigator` are virtual widget trees. They are not physical B4A Activities and do not require separate `.bal` layouts.
 

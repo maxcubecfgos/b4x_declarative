@@ -43,7 +43,7 @@ The project does not currently promise complete Flutter compatibility, automatic
 
 ## 3. Available widgets and building blocks
 
-The following catalog describes the complete set of classes included in the current demo library. Methods listed here are the application-facing API; `SetParent`, `SetPosition`, `SetSize`, `Render`, `Unmount` and `GetContentSize` are the shared composition protocol and are normally called by parent containers.
+The following catalog describes the complete set of classes included in the current demo library. Methods listed here are the application-facing API; `SetParent`, `SetPosition`, `SetSize`, `Render`, optional `Detach`, `Unmount` and `GetContentSize` are the shared composition protocol and are normally called by parent containers.
 
 ### Layout and composition widgets
 
@@ -116,6 +116,8 @@ stack.Initialize _
 | `UIButton` | Native clickable button. | `Text`, `BindText`, `UnbindText`, `BackgroundColor`, `TextColor`, `TextSize`, `CornerRadius`, `Border`, `OnClick`, `TriggerClick` |
 | `UIFloatingActionButton` | Compact floating action button for a primary screen action. | `Text`, `BindText`, `UnbindText`, `BackgroundColor`, `TextColor`, `TextSize`, `CornerRadius`, `OnClick`, `ApplyTheme` |
 | `UIInput` | Native B4A `EditText` inside the declarative layout protocol. | `Hint`, `Text`, `BindText`, `UnbindText`, `OnTextChanged`, `TextColor`, `HintColor`, `BackgroundColor`, `TextSize`, `CornerRadius`, `Border`, `GetText` |
+| `UISwitch` | Labeled switch with explicit checked state. | `Text`, `Checked`, `BindChecked`, `OnChanged` |
+| `UIRadioButton` / `UIRadioGroup` | Exclusive radio selection with optional state binding. | `Value`, `Text`, `Selected`, `BindSelected`, `AddOption`, `AddButton`, `OnSelected` |
 | `UIIcon` | Material Icons, FontAwesome or regular Unicode glyph. | `Material`, `FontAwesome`, `Unicode`, `MaterialCode`, `FontAwesomeCode`, `Size`, `Color`, `Alignment`, `OnClick` |
 | `UIImage` | Image from Files or a public URL with placeholder support. | `Asset`, `Network`, `PlaceholderAsset`, `Fit`, `Width`, `Height`, `OnLoaded`, `OnError`, `ApplyTheme` |
 | `UIPlaceholder` | Lightweight Flutter-style placeholder box for loading or reserved content. | `Color`, `StrokeWidth`, `Width`, `Height`, `Size`, `ApplyTheme` |
@@ -252,7 +254,7 @@ These are not visual widgets, but they are part of the public building-block set
 1. Copy `DeclarativeUI.b4xlib` to the B4A Additional Libraries folder.
 2. Refresh the Libraries Manager in the B4A IDE.
 3. Enable the `DeclarativeUI` library.
-4. Enable the required B4A libraries used by the host project: `XUI` and `IME`.
+4. Enable the required B4A libraries used by the host project: `XUI` and `JavaObject`; add `OkHttpUtils2` when using `UIImage.Network`.
 5. Create a normal B4A Activity project and use the UI classes from the library.
 
 ## 4. The basic lifecycle
@@ -272,9 +274,12 @@ SetParent(parent As B4XView)
 SetPosition(left As Int, top As Int)
 SetSize(width As Int, height As Int)
 Render
+Detach
 Unmount
 GetContentSize(maxWidth As Int, maxHeight As Int) As List
 ```
+
+`Render` updates a stable native tree. `Detach` is temporary: it removes the native view from the current parent while preserving widget configuration, bindings and reusable controls. `Unmount` is terminal cleanup and releases native references/subscriptions. Custom widgets may omit `Detach`; the bridge falls back safely to `Unmount` for compatibility.
 
 Application code normally configures a root tree and renders only that root. Containers call the protocol on their children. Custom widgets can participate when they implement the same methods.
 
@@ -487,7 +492,7 @@ Navigator.NavigateTo("Home")
 Navigator.Render
 ```
 
-`UINavigator` manages virtual widget trees, not physical Activities or `.bal` files. It uses the available B4A content rectangle so the root stays below the Android status area. `UIScaffold` lays out the app bar, body, optional bottom navigation and FABs without making each screen calculate those offsets.
+`UINavigator` manages virtual widget trees, not physical Activities or `.bal` files. It uses the available B4A content rectangle so the root stays below the Android status area. `UIScaffold` lays out the app bar, body, optional bottom navigation and FABs without making each screen calculate those offsets. Re-rendering the same route is in-place; switching routes detaches the old tree so back navigation can restore it, while terminal navigator unmount releases it.
 
 Bottom navigation is data-driven:
 
@@ -583,7 +588,7 @@ Sub BindRow(Index As Int, ItemView As Object)
 End Sub
 ```
 
-`UIListView` is fixed-height and is not a full RecyclerView replacement. Use `NotifyDataSetChanged` after changing the data source.
+`UIListView` is fixed-height and is not a full RecyclerView replacement. With `BindItem`, rows leaving the viewport are detached into the pool and their native controls can be reused; permanent pool release unmounts them. Without `BindItem`, rows are recreated to avoid stale data. Use `NotifyDataSetChanged` after changing the data source.
 
 ## 12. Native views are still possible
 

@@ -95,6 +95,10 @@ Public Sub Render
 		mBaseView.Color = Colors.Transparent
 		mParent.AddView(mBaseView, mLeft, mTopCoord, mWidth, mHeight)
 	End If
+	If mBaseView.Parent <> mParent Then
+		If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		mParent.AddView(mBaseView, mLeft, mTopCoord, mWidth, mHeight)
+	End If
 	mBaseView.SetLayoutAnimated(0, mLeft, mTopCoord, mWidth, mHeight)
     
 	If mChild <> Null Then
@@ -112,6 +116,15 @@ Public Sub Render
 		mBridge.SetSize(mChild, safeChildWidth, safeChildHeight)
 		mBridge.Render(mChild)
 	End If
+End Sub
+
+Public Sub Detach
+	If mBaseView <> Null Then
+		If mBaseView.IsInitialized Then
+			If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		End If
+	End If
+	mParent = Null
 End Sub
 
 Public Sub Unmount

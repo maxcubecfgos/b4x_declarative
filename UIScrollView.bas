@@ -146,6 +146,17 @@ Public Sub GetScrollPosition As Int
     Return mScrollView.ScrollPosition
 End Sub
 
+' Temporarily detaches the viewport while preserving scroll position and child identity.
+Public Sub Detach
+    If mBaseView <> Null Then
+        If mBaseView.IsInitialized Then
+            If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+        End If
+    End If
+    If mChild <> Null Then mBridge.Detach(mChild)
+    mParent = Null
+End Sub
+
 ' Removes the native view and releases child mounting references.
 Public Sub Unmount
     If mMountedChild <> Null Then

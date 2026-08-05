@@ -207,8 +207,12 @@ Public Sub Render
         mBaseView.Tag = Me
         mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
     End If
+    If mBaseView.Parent <> mParent Then
+		If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
+	End If
 
-    mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
+	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     mBaseView.Tag = Me
     mCheckBox.Text = mText
     mCheckBox.TextColor = mTextColor
@@ -269,6 +273,15 @@ End Sub
 Private Sub StateText(Value As Object) As String
     If Value = Null Then Return ""
     Return "" & Value
+End Sub
+
+Public Sub Detach
+    If mBaseView <> Null Then
+        If mBaseView.IsInitialized Then
+            If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+        End If
+    End If
+    mParent = Null
 End Sub
 
 Public Sub Unmount

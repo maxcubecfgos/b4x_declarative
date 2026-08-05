@@ -242,6 +242,12 @@ Public Sub Render
 		mBaseView = mEditText
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
+	If mBaseView = Null Then Return
+	If mBaseView.IsInitialized = False Then Return
+	If mBaseView.Parent <> mParent Then
+		If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
+	End If
 
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
 	mEditText.TextColor = mTextColor
@@ -319,6 +325,23 @@ Private Sub NativeInput_TextChanged(Old As String, New As String)
 	mText = New
 	If mTextTarget = Null Or mTextEventName.Trim = "" Then Return
 	If SubExists(mTextTarget, mTextEventName) Then CallSub2(mTextTarget, mTextEventName, New)
+End Sub
+
+Public Sub Detach
+	mMounted = False
+	If mBaseView <> Null Then
+		If mBaseView.IsInitialized Then
+			If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		End If
+	End If
+	mParent = Null
+End Sub
+
+' Returns the mounted native EditText for lifecycle diagnostics or animation.
+Public Sub GetView As B4XView
+	If mBaseView = Null Then Return Null
+	If mBaseView.IsInitialized = False Then Return Null
+	Return mBaseView
 End Sub
 
 Public Sub Unmount

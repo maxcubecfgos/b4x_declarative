@@ -116,6 +116,10 @@ Public Sub Render
 		mBaseView.Color = Colors.Transparent
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
+	If mBaseView.Parent <> mParent Then
+		If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
+	End If
 	If mChildren.Size = 0 Then
 		Dim emptyWidth As Int = mWidth
 		If mMainAxisSize = "min" Then emptyWidth = 0
@@ -246,6 +250,15 @@ Public Sub Render
 			If participantIndex < participantCount Then currentLeft = currentLeft + layoutSpacing
 		End If
 	Next
+End Sub
+
+Public Sub Detach
+	If mBaseView <> Null Then
+		If mBaseView.IsInitialized Then
+			If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		End If
+	End If
+	mParent = Null
 End Sub
 
 Public Sub Unmount

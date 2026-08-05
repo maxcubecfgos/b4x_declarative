@@ -106,6 +106,10 @@ Public Sub Render
 		mBaseView = pnl
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
+	If mBaseView.Parent <> mParent Then
+		If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
+	End If
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     
 	Dim NativePanel As Panel = mBaseView
@@ -127,6 +131,15 @@ Public Sub GetView As B4XView
 	If mBaseView = Null Then Return Null
 	If mBaseView.IsInitialized = False Then Return Null
 	Return mBaseView
+End Sub
+
+Public Sub Detach
+	If mBaseView <> Null Then
+		If mBaseView.IsInitialized Then
+			If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+		End If
+	End If
+	mParent = Null
 End Sub
 
 Public Sub Unmount
