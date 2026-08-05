@@ -6,6 +6,7 @@ Version=13.62
 @EndOfDesignText@
 Sub Class_Globals
 	Private xui As XUI
+	Private mBridge As UIWidgetBridge
 	Private mChildren As List
 	Private mAlignment As String
 	Private mBaseView As B4XView
@@ -15,6 +16,7 @@ End Sub
 
 ' Creates an empty stack aligned to the top-left.
 Public Sub Initialize As UIStack
+	mBridge.Initialize
 	mChildren.Initialize
 	mAlignment = "topleft"
 	Return Me
@@ -87,7 +89,8 @@ Public Sub Render
 	For Each child As Object In mChildren
 		If child = Null Then Continue
 		Dim participates As Boolean = IsLayoutParticipant(child)
-		Dim size As List = CallSub3(child, "GetContentSize", mWidth, mHeight)
+		Dim size As List = mBridge.GetContentSize(child, mWidth, mHeight)
+		If mBridge.LastCallSucceeded = False Then size = ZeroSize
 		Dim hasNaturalSize As Boolean = HasMeasuredSize(size)
 		Dim childWidth As Int = mWidth
 		Dim childHeight As Int = mHeight
@@ -95,10 +98,10 @@ Public Sub Render
 		Dim childTop As Int = 0
 
 		If participates = False Then
-			CallSub2(child, "SetParent", mBaseView)
-			CallSub3(child, "SetPosition", 0, 0)
-			CallSub3(child, "SetSize", 0, 0)
-			CallSub(child, "Render")
+			mBridge.SetParent(child, mBaseView)
+			mBridge.SetPosition(child, 0, 0)
+			mBridge.SetSize(child, 0, 0)
+			mBridge.Render(child)
 			Continue
 		Else If hasNaturalSize Then
 			childWidth = Min(Max(0, size.Get(0)), mWidth)
@@ -106,17 +109,17 @@ Public Sub Render
 			GetAlignedPosition(childWidth, childHeight, childLeft, childTop)
 		End If
 
-		CallSub2(child, "SetParent", mBaseView)
-		CallSub3(child, "SetPosition", childLeft, childTop)
-		CallSub3(child, "SetSize", childWidth, childHeight)
-		CallSub(child, "Render")
+		mBridge.SetParent(child, mBaseView)
+		mBridge.SetPosition(child, childLeft, childTop)
+		mBridge.SetSize(child, childWidth, childHeight)
+		mBridge.Render(child)
 	Next
 End Sub
 
 Public Sub Unmount
 	For Each child As Object In mChildren
 		If child <> Null Then
-			If SubExists(child, "Unmount") Then CallSub(child, "Unmount")
+			mBridge.Unmount(child)
 		End If
 	Next
 	If mBaseView <> Null Then
@@ -145,7 +148,8 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 		Dim participates As Boolean = IsLayoutParticipant(child)
 		If participates = False Then Continue
 		participantCount = participantCount + 1
-		Dim size As List = CallSub3(child, "GetContentSize", safeMaxWidth, safeMaxHeight)
+		Dim size As List = mBridge.GetContentSize(child, safeMaxWidth, safeMaxHeight)
+		If mBridge.LastCallSucceeded = False Then size = ZeroSize
 		If HasMeasuredSize(size) Then
 			naturalChildCount = naturalChildCount + 1
 			maxChildWidth = Max(maxChildWidth, size.Get(0))
@@ -199,20 +203,20 @@ Private Sub IsValidAlignment(Value As String) As Boolean
 		Or Value = "bottomleft" Or Value = "bottomcenter" Or Value = "bottomright"
 End Sub
 
+Private Sub ZeroSize As List
+	Dim result As List
+	result.Initialize
+	result.Add(0)
+	result.Add(0)
+	Return result
+End Sub
+
 Private Sub IsWidgetProtocol(Widget As Object) As Boolean
-	If Widget = Null Then Return False
-	Return SubExists(Widget, "SetParent") And SubExists(Widget, "SetPosition") _
-		And SubExists(Widget, "SetSize") And SubExists(Widget, "Render") _
-		And SubExists(Widget, "GetContentSize")
+	Return mBridge.IsWidgetProtocol(Widget)
 End Sub
 
 Private Sub IsLayoutParticipant(Child As Object) As Boolean
-	If Child = Null Then Return False
-	If SubExists(Child, "ParticipatesInLayout") Then
-		Dim result As Boolean = CallSub(Child, "ParticipatesInLayout")
-		Return result
-	End If
-	Return True
+	Return mBridge.IsLayoutParticipant(Child)
 End Sub
 
 Private Sub HasMeasuredSize(Size As List) As Boolean

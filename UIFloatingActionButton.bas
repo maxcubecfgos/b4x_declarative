@@ -197,9 +197,43 @@ Public Sub Render
 	btn.TextSize = mTextSize
 	btn.TextColor = mTextColor
     
-	Dim cd As ColorDrawable
-	cd.Initialize2(mBgColor, mRadius, 0, 0)
-	btn.Background = cd
+	SetRoundedRippleBackground(btn)
+End Sub
+
+' Applies the rounded FAB shape and restores Android's pressed ripple state.
+' API 21+ uses RippleDrawable; older devices retain the rounded fallback.
+Private Sub SetRoundedRippleBackground(ButtonView As Button)
+	If ButtonView = Null Then Return
+	If ButtonView.IsInitialized = False Then Return
+
+	Dim version As JavaObject
+	version.InitializeStatic("android.os.Build$VERSION")
+	Dim sdkInt As Int = version.GetField("SDK_INT")
+	If sdkInt < 21 Then
+		Dim fallback As ColorDrawable
+		fallback.Initialize2(mBgColor, mRadius, 0, 0)
+		ButtonView.Background = fallback
+		Return
+	End If
+
+	Dim shape As JavaObject
+	shape.InitializeNewInstance("android.graphics.drawable.GradientDrawable", Null)
+	shape.RunMethod("setColor", Array(mBgColor))
+	Dim radiusFloat As Float = mRadius
+	shape.RunMethod("setCornerRadius", Array(radiusFloat))
+
+	Dim mask As JavaObject
+	mask.InitializeNewInstance("android.graphics.drawable.GradientDrawable", Null)
+	mask.RunMethod("setColor", Array(Colors.White))
+	mask.RunMethod("setCornerRadius", Array(radiusFloat))
+
+	Dim colorStateList As JavaObject
+	colorStateList.InitializeStatic("android.content.res.ColorStateList")
+	Dim rippleColor As JavaObject = colorStateList.RunMethodJO("valueOf", Array(mTheme.RippleColor))
+	Dim ripple As JavaObject
+	ripple.InitializeNewInstance("android.graphics.drawable.RippleDrawable", Array(rippleColor, shape, mask))
+	Dim nativeView As JavaObject = ButtonView
+	nativeView.RunMethod("setBackground", Array(ripple))
 End Sub
 
 Public Sub Unmount

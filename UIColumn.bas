@@ -6,6 +6,7 @@ Version=13.5
 @EndOfDesignText@
 Sub Class_Globals
 	Private xui As XUI
+	Private mBridge As UIWidgetBridge
 	Private mChildren As List
 	Private mSpacing As Int
 	Private mMainAxisSize As String
@@ -17,6 +18,7 @@ Sub Class_Globals
 End Sub
 
 Public Sub Initialize As UIColumn
+	mBridge.Initialize
 	mChildren.Initialize
 	mSpacing = 0
 	mMainAxisSize = "max"
@@ -130,7 +132,8 @@ Public Sub Render
 	For Each child As Object In mChildren
 		Dim participates As Boolean = IsLayoutParticipant(child)
 		If participates Then participantCount = participantCount + 1
-		Dim size As List = CallSub3(child, "GetContentSize", mWidth, 0)
+		Dim size As List = mBridge.GetContentSize(child, mWidth, 0)
+		If mBridge.LastCallSucceeded = False Then size = ZeroSize
 		Dim hasNaturalSize As Boolean = False
 		If size <> Null Then
 			If size.IsInitialized Then
@@ -198,7 +201,8 @@ Public Sub Render
 		Dim childLeft As Int
 
 		
-		Dim size As List = CallSub3(child, "GetContentSize", mWidth, 0)
+		Dim size As List = mBridge.GetContentSize(child, mWidth, 0)
+		If mBridge.LastCallSucceeded = False Then size = ZeroSize
 		Dim hasNaturalSize As Boolean = False
 		If size <> Null Then
 			If size.IsInitialized Then
@@ -230,10 +234,10 @@ Public Sub Render
 			End If
 		End If
 		
-		CallSub2(child, "SetParent", mBaseView)
-		CallSub3(child, "SetPosition", childLeft, yOffset)
-		CallSub3(child, "SetSize", childWidth, childHeight)
-		CallSub(child, "Render")
+		mBridge.SetParent(child, mBaseView)
+		mBridge.SetPosition(child, childLeft, yOffset)
+		mBridge.SetSize(child, childWidth, childHeight)
+		mBridge.Render(child)
 		yOffset = yOffset + childHeight
 		If participates Then
 			participantIndex = participantIndex + 1
@@ -245,7 +249,7 @@ End Sub
 Public Sub Unmount
 	For Each child As Object In mChildren
 		If child <> Null Then
-			If SubExists(child, "Unmount") Then CallSub(child, "Unmount")
+			mBridge.Unmount(child)
 		End If
 	Next
 	mBaseView = Null
@@ -271,7 +275,8 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	For Each child As Object In mChildren
 		Dim participates As Boolean = IsLayoutParticipant(child)
 		If participates Then participantCount = participantCount + 1
-		Dim size As List = CallSub3(child, "GetContentSize", safeMaxWidth, 0)
+		Dim size As List = mBridge.GetContentSize(child, safeMaxWidth, 0)
+		If mBridge.LastCallSucceeded = False Then size = ZeroSize
 		Dim hasNaturalSize As Boolean = False
 		If size <> Null Then
 			If size.IsInitialized Then
@@ -298,18 +303,18 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Return result
 End Sub
 
+Private Sub ZeroSize As List
+	Dim result As List
+	result.Initialize
+	result.Add(0)
+	result.Add(0)
+	Return result
+End Sub
+
 Private Sub IsWidgetProtocol(Widget As Object) As Boolean
-	If Widget = Null Then Return False
-	Return SubExists(Widget, "SetParent") And SubExists(Widget, "SetPosition") _
-		And SubExists(Widget, "SetSize") And SubExists(Widget, "Render") _
-		And SubExists(Widget, "GetContentSize")
+	Return mBridge.IsWidgetProtocol(Widget)
 End Sub
 
 Private Sub IsLayoutParticipant(Child As Object) As Boolean
-	If Child = Null Then Return False
-	If SubExists(Child, "ParticipatesInLayout") Then
-		Dim result As Boolean = CallSub(Child, "ParticipatesInLayout")
-		Return result
-	End If
-	Return True
+	Return mBridge.IsLayoutParticipant(Child)
 End Sub

@@ -6,6 +6,7 @@ Version=13.5
 @EndOfDesignText@
 Sub Class_Globals
 	Private xui As XUI
+	Private mBridge As UIWidgetBridge
 	Private mAppBar As Object
 	Private mBody As Object
 	Private mFabLeft As Object
@@ -21,6 +22,7 @@ Sub Class_Globals
 End Sub
 
 Public Sub Initialize As UIScaffold
+	mBridge.Initialize
 	' Initialize optional slots explicitly to avoid invalid object references.
 	mAppBar = Null
 	mBody = Null
@@ -207,10 +209,10 @@ Public Sub Render
     
 	' Render the app bar first.
 	If mAppBar <> Null Then
-		CallSub2(mAppBar, "SetParent", mBaseView)
-		CallSub3(mAppBar, "SetPosition", 0, 0)
-		CallSub3(mAppBar, "SetSize", mWidth, appBarHeight)
-		CallSub(mAppBar, "Render")
+		mBridge.SetParent(mAppBar, mBaseView)
+		mBridge.SetPosition(mAppBar, 0, 0)
+		mBridge.SetSize(mAppBar, mWidth, appBarHeight)
+		mBridge.Render(mAppBar)
 		topOffset = appBarHeight ' The body starts below the app bar
 	End If
     
@@ -225,40 +227,37 @@ Public Sub Render
 		Dim bodyHeight As Int = mHeight - topOffset - bottomOffset
 		If bodyHeight < 0 Then bodyHeight = 0
         
-		CallSub2(mBody, "SetParent", mBaseView)
-		CallSub3(mBody, "SetPosition", 0, topOffset)
-		CallSub3(mBody, "SetSize", mWidth, bodyHeight)
-		CallSub(mBody, "Render")
+		mBridge.SetParent(mBody, mBaseView)
+		mBridge.SetPosition(mBody, 0, topOffset)
+		mBridge.SetSize(mBody, mWidth, bodyHeight)
+		mBridge.Render(mBody)
 	End If
     
 	' Render the floating action buttons above the body layer.
 	If mFabRight <> Null Then
-		CallSub2(mFabRight, "SetParent", mBaseView)
-		CallSub3(mFabRight, "SetPosition", mWidth - fabSize - 16dip, mHeight - fabSize - 16dip - IfBottomBarOffset(mBottomNavigationBar, bottomNavigationHeight))
-		CallSub3(mFabRight, "SetSize", fabSize, fabSize)
-		CallSub(mFabRight, "Render")
+		mBridge.SetParent(mFabRight, mBaseView)
+		mBridge.SetPosition(mFabRight, mWidth - fabSize - 16dip, mHeight - fabSize - 16dip - IfBottomBarOffset(mBottomNavigationBar, bottomNavigationHeight))
+		mBridge.SetSize(mFabRight, fabSize, fabSize)
+		mBridge.Render(mFabRight)
 	End If
     
 	If mFabLeft <> Null Then
-		CallSub2(mFabLeft, "SetParent", mBaseView)
-		CallSub3(mFabLeft, "SetPosition", 16dip, mHeight - fabSize - 16dip - IfBottomBarOffset(mBottomNavigationBar, bottomNavigationHeight))
-		CallSub3(mFabLeft, "SetSize", fabSize, fabSize)
-		CallSub(mFabLeft, "Render")
+		mBridge.SetParent(mFabLeft, mBaseView)
+		mBridge.SetPosition(mFabLeft, 16dip, mHeight - fabSize - 16dip - IfBottomBarOffset(mBottomNavigationBar, bottomNavigationHeight))
+		mBridge.SetSize(mFabLeft, fabSize, fabSize)
+		mBridge.Render(mFabLeft)
 	End If
 
 	If mBottomNavigationBar <> Null Then
-		CallSub2(mBottomNavigationBar, "SetParent", mBaseView)
-		CallSub3(mBottomNavigationBar, "SetPosition", 0, mHeight - bottomNavigationHeight)
-		CallSub3(mBottomNavigationBar, "SetSize", mWidth, bottomNavigationHeight)
-		CallSub(mBottomNavigationBar, "Render")
+		mBridge.SetParent(mBottomNavigationBar, mBaseView)
+		mBridge.SetPosition(mBottomNavigationBar, 0, mHeight - bottomNavigationHeight)
+		mBridge.SetSize(mBottomNavigationBar, mWidth, bottomNavigationHeight)
+		mBridge.Render(mBottomNavigationBar)
 	End If
 End Sub
 
 Private Sub IsWidgetProtocol(Widget As Object) As Boolean
-	If Widget = Null Then Return False
-	Return SubExists(Widget, "SetParent") And SubExists(Widget, "SetPosition") _
-		And SubExists(Widget, "SetSize") And SubExists(Widget, "Render") _
-		And SubExists(Widget, "GetContentSize")
+	Return mBridge.IsWidgetProtocol(Widget)
 End Sub
 
 Private Sub PrepareForStructureChange As Boolean
@@ -276,21 +275,11 @@ Private Sub PrepareForStructureChange As Boolean
 End Sub
 
 Private Sub UnmountChildren
-	If mAppBar <> Null Then
-		If SubExists(mAppBar, "Unmount") Then CallSub(mAppBar, "Unmount")
-	End If
-	If mBody <> Null Then
-		If SubExists(mBody, "Unmount") Then CallSub(mBody, "Unmount")
-	End If
-	If mFabLeft <> Null Then
-		If SubExists(mFabLeft, "Unmount") Then CallSub(mFabLeft, "Unmount")
-	End If
-	If mFabRight <> Null Then
-		If SubExists(mFabRight, "Unmount") Then CallSub(mFabRight, "Unmount")
-	End If
-	If mBottomNavigationBar <> Null Then
-		If SubExists(mBottomNavigationBar, "Unmount") Then CallSub(mBottomNavigationBar, "Unmount")
-	End If
+	If mAppBar <> Null Then mBridge.Unmount(mAppBar)
+	If mBody <> Null Then mBridge.Unmount(mBody)
+	If mFabLeft <> Null Then mBridge.Unmount(mFabLeft)
+	If mFabRight <> Null Then mBridge.Unmount(mFabRight)
+	If mBottomNavigationBar <> Null Then mBridge.Unmount(mBottomNavigationBar)
 End Sub
 
 Private Sub IfBottomBarOffset(Bar As Object, Height As Int) As Int

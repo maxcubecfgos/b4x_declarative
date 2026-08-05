@@ -6,6 +6,7 @@ Version=13.5
 @EndOfDesignText@
 Sub Class_Globals
 	Private xui As XUI
+	Private mBridge As UIWidgetBridge
 	Private mChild As Object
 	Private mBaseView As B4XView
 	Private mParent As B4XView
@@ -13,6 +14,7 @@ Sub Class_Globals
 End Sub
 
 Public Sub Initialize As UICenter
+	mBridge.Initialize
 	mChild = Null
 	Return Me
 End Sub
@@ -68,7 +70,8 @@ Public Sub Render
 	If mChild <> Null Then
 		' Measure the child so it can be centered using its natural size.
 		' Ask the child for its natural size.
-		Dim childSize As List = CallSub3(mChild, "GetContentSize", mWidth, mHeight)
+		Dim childSize As List = mBridge.GetContentSize(mChild, mWidth, mHeight)
+		If mBridge.LastCallSucceeded = False Then childSize = ZeroSize
 		
 		Dim childWidth As Int = mWidth
 		Dim childHeight As Int = mHeight
@@ -90,16 +93,16 @@ Public Sub Render
 		Dim childLeft As Int = Max(0, (mWidth - childWidth) / 2)
 		Dim childTop As Int = Max(0, (mHeight - childHeight) / 2)
         
-		CallSub2(mChild, "SetParent", mBaseView)
-		CallSub3(mChild, "SetPosition", childLeft, childTop)
-		CallSub3(mChild, "SetSize", childWidth, childHeight)
-		CallSub(mChild, "Render")
+		mBridge.SetParent(mChild, mBaseView)
+		mBridge.SetPosition(mChild, childLeft, childTop)
+		mBridge.SetSize(mChild, childWidth, childHeight)
+		mBridge.Render(mChild)
 	End If
 End Sub
 
 Public Sub Unmount
 	If mChild <> Null Then
-		If SubExists(mChild, "Unmount") Then CallSub(mChild, "Unmount")
+		mBridge.Unmount(mChild)
 	End If
 	mBaseView = Null
 	mParent = Null
@@ -107,16 +110,22 @@ End Sub
 
 ' Natural measurement used by parent layout containers.
 ' UICenter delegates natural measurement to its child.
+Private Sub ZeroSize As List
+	Dim result As List
+	result.Initialize
+	result.Add(0)
+	result.Add(0)
+	Return result
+End Sub
+
 Private Sub IsWidgetProtocol(Widget As Object) As Boolean
-	If Widget = Null Then Return False
-	Return SubExists(Widget, "SetParent") And SubExists(Widget, "SetPosition") _
-		And SubExists(Widget, "SetSize") And SubExists(Widget, "Render") _
-		And SubExists(Widget, "GetContentSize")
+	Return mBridge.IsWidgetProtocol(Widget)
 End Sub
 
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	If mChild <> Null Then
-		Dim result As List = CallSub3(mChild, "GetContentSize", MaxWidth, MaxHeight)
+		Dim result As List = mBridge.GetContentSize(mChild, MaxWidth, MaxHeight)
+		If mBridge.LastCallSucceeded = False Then Return ZeroSize
 		If result <> Null Then
 			If result.IsInitialized Then
 				If result.Size >= 2 Then Return result

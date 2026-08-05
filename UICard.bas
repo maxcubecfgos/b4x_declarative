@@ -6,6 +6,7 @@ Version=13.5
 @EndOfDesignText@
 Sub Class_Globals
 	Private xui As XUI
+	Private mBridge As UIWidgetBridge
 	Private mChild As Object
 	Private mBaseView As B4XView
 	Private mBgColor As Int
@@ -20,6 +21,7 @@ Sub Class_Globals
 End Sub
 
 Public Sub Initialize As UICard
+	mBridge.Initialize
 	Dim defaultTheme As UITheme
 	defaultTheme.Initialize
 	mTheme = defaultTheme
@@ -112,10 +114,10 @@ Public Sub Render
 	NativePanel.Background = cd
     
 	If mChild <> Null Then
-		CallSub2(mChild, "SetParent", mBaseView)
-		CallSub3(mChild, "SetPosition", 0, 0)
-		CallSub3(mChild, "SetSize", mWidth, mHeight)
-		CallSub(mChild, "Render")
+		mBridge.SetParent(mChild, mBaseView)
+		mBridge.SetPosition(mChild, 0, 0)
+		mBridge.SetSize(mChild, mWidth, mHeight)
+		mBridge.Render(mChild)
 	End If
 End Sub
 
@@ -129,7 +131,7 @@ End Sub
 
 Public Sub Unmount
 	If mChild <> Null Then
-		If SubExists(mChild, "Unmount") Then CallSub(mChild, "Unmount")
+		mBridge.Unmount(mChild)
 	End If
 	mBaseView = Null
 	mParent = Null
@@ -138,10 +140,7 @@ End Sub
 ' Natural measurement used by parent layout containers.
 ' UICard measures its child and reserves its internal margin.
 Private Sub IsWidgetProtocol(Widget As Object) As Boolean
-	If Widget = Null Then Return False
-	Return SubExists(Widget, "SetParent") And SubExists(Widget, "SetPosition") _
-		And SubExists(Widget, "SetSize") And SubExists(Widget, "Render") _
-		And SubExists(Widget, "GetContentSize")
+	Return mBridge.IsWidgetProtocol(Widget)
 End Sub
 
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
@@ -159,7 +158,12 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 		Dim childMaxW As Int = Max(0, safeMaxWidth - 2 * childMargin)
 		Dim childMaxH As Int = Max(0, safeMaxHeight - 2 * childMargin)
 		
-		Dim childSize As List = CallSub3(mChild, "GetContentSize", childMaxW, childMaxH)
+		Dim childSize As List = mBridge.GetContentSize(mChild, childMaxW, childMaxH)
+		If mBridge.LastCallSucceeded = False Then
+			result.Add(safeMaxWidth)
+			result.Add(safeMaxHeight)
+			Return result
+		End If
 		If childSize <> Null Then
 			If childSize.IsInitialized Then
 				If childSize.Size >= 2 Then

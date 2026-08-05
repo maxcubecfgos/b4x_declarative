@@ -6,6 +6,7 @@ Version=13.62
 @EndOfDesignText@
 Sub Class_Globals
     Private xui As XUI
+    Private mBridge As UIWidgetBridge
     Private mChild As Object
     Private mScrollView As ScrollView
     Private mBaseView As B4XView
@@ -17,6 +18,7 @@ End Sub
 
 ' Creates an empty declarative scroll container.
 Public Sub Initialize As UIScrollView
+    mBridge.Initialize
     mChild = Null
     mScrollView = Null
     mBaseView = Null
@@ -90,7 +92,7 @@ Public Sub Render
     ' A replaced child is structural, so remove only the previous content tree.
     If mMountedChild <> Null Then
 		If mMountedChild <> mChild Then
-			If SubExists(mMountedChild, "Unmount") Then CallSub(mMountedChild, "Unmount")
+			mBridge.Unmount(mMountedChild)
 			mScrollView.Panel.RemoveAllViews
 			mMountedChild = Null
 		End If
@@ -102,7 +104,8 @@ Public Sub Render
     Dim contentHeight As Int = viewportHeight
 
     If mChild <> Null Then
-        Dim childSize As List = CallSub3(mChild, "GetContentSize", viewportWidth, 100000dip)
+        Dim childSize As List = mBridge.GetContentSize(mChild, viewportWidth, 100000dip)
+        If mBridge.LastCallSucceeded = False Then childSize = Null
         If childSize <> Null Then
             If childSize.IsInitialized Then
                 If childSize.Size >= 2 Then contentHeight = Max(viewportHeight, childSize.Get(1))
@@ -112,14 +115,14 @@ Public Sub Render
 
         mScrollView.Panel.Height = contentHeight
         Dim contentPanel As B4XView = mScrollView.Panel
-        CallSub2(mChild, "SetParent", contentPanel)
-        CallSub3(mChild, "SetPosition", 0, 0)
-        CallSub3(mChild, "SetSize", viewportWidth, contentHeight)
-        CallSub(mChild, "Render")
+        mBridge.SetParent(mChild, contentPanel)
+        mBridge.SetPosition(mChild, 0, 0)
+        mBridge.SetSize(mChild, viewportWidth, contentHeight)
+        mBridge.Render(mChild)
         mMountedChild = mChild
     Else
         If mMountedChild <> Null Then
-            If SubExists(mMountedChild, "Unmount") Then CallSub(mMountedChild, "Unmount")
+            mBridge.Unmount(mMountedChild)
             mScrollView.Panel.RemoveAllViews
             mMountedChild = Null
         End If
@@ -145,8 +148,8 @@ End Sub
 
 ' Removes the native view and releases child mounting references.
 Public Sub Unmount
-    If mChild <> Null Then
-        If SubExists(mChild, "Unmount") Then CallSub(mChild, "Unmount")
+    If mMountedChild <> Null Then
+        mBridge.Unmount(mMountedChild)
     End If
     If mBaseView <> Null Then
         If mBaseView.IsInitialized Then mBaseView.RemoveViewFromParent
@@ -159,16 +162,14 @@ Public Sub Unmount
 End Sub
 
 Private Sub IsWidgetProtocol(Widget As Object) As Boolean
-    If Widget = Null Then Return False
-    Return SubExists(Widget, "SetParent") And SubExists(Widget, "SetPosition") _
-        And SubExists(Widget, "SetSize") And SubExists(Widget, "Render") _
-        And SubExists(Widget, "GetContentSize")
+    Return mBridge.IsWidgetProtocol(Widget)
 End Sub
 
 ' Returns the child's natural size when it can be measured.
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
     If mChild <> Null Then
-        Dim childSize As List = CallSub3(mChild, "GetContentSize", MaxWidth, MaxHeight)
+        Dim childSize As List = mBridge.GetContentSize(mChild, MaxWidth, MaxHeight)
+        If mBridge.LastCallSucceeded = False Then childSize = Null
         If childSize <> Null Then
             If childSize.IsInitialized Then
                 If childSize.Size >= 2 Then Return childSize

@@ -18,10 +18,12 @@ Sub Class_Globals
 	Private mActionWidget As Object
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
+	Private mBridge As UIWidgetBridge
 	Private mTitleLabel As Label ' Persistent reference to the title label.
 End Sub
 
 Public Sub Initialize As UIAppBar
+	mBridge.Initialize
 	mTitle = ""
 	Dim defaultTheme As UITheme
 	defaultTheme.Initialize
@@ -134,7 +136,7 @@ End Sub
 ' Removes the trailing action widget.
 Public Sub ClearAction As UIAppBar
 	If mActionWidget <> Null Then
-		If SubExists(mActionWidget, "Unmount") Then CallSub(mActionWidget, "Unmount")
+		mBridge.Unmount(mActionWidget)
 	End If
 	mActionWidget = Null
 	If mParent <> Null Then
@@ -220,10 +222,10 @@ Public Sub Render
 	mTitleLabel.SetLayoutAnimated(0, mTheme.HorizontalPadding, 0, titleWidth, mHeight)
 
 	If mActionWidget <> Null Then
-		CallSub2(mActionWidget, "SetParent", mBaseView)
-		CallSub3(mActionWidget, "SetPosition", mWidth - mTheme.HorizontalPadding - actionWidth, 0)
-		CallSub3(mActionWidget, "SetSize", actionWidth, mHeight)
-		CallSub(mActionWidget, "Render")
+		mBridge.SetParent(mActionWidget, mBaseView)
+		mBridge.SetPosition(mActionWidget, mWidth - mTheme.HorizontalPadding - actionWidth, 0)
+		mBridge.SetSize(mActionWidget, actionWidth, mHeight)
+		mBridge.Render(mActionWidget)
 	End If
 	
 	' Keep the title vertically centered across the whole bar.
@@ -236,7 +238,7 @@ End Sub
 
 Public Sub Unmount
 	If mActionWidget <> Null Then
-		If SubExists(mActionWidget, "Unmount") Then CallSub(mActionWidget, "Unmount")
+		mBridge.Unmount(mActionWidget)
 	End If
 	If mTitleState <> Null Then
 		If mTitleState.IsInitialized Then mTitleState.Unsubscribe(Me, "TitleState_Changed")
@@ -247,10 +249,7 @@ Public Sub Unmount
 End Sub
 
 Private Sub IsWidgetProtocol(Widget As Object) As Boolean
-	If Widget = Null Then Return False
-	Return SubExists(Widget, "SetParent") And SubExists(Widget, "SetPosition") _
-		And SubExists(Widget, "SetSize") And SubExists(Widget, "Render") _
-		And SubExists(Widget, "GetContentSize")
+	Return mBridge.IsWidgetProtocol(Widget)
 End Sub
 
 ' Natural measurement used by parent layout containers.

@@ -6,6 +6,7 @@ Version=13.62
 @EndOfDesignText@
 Sub Class_Globals
 	Private xui As XUI
+	Private mBridge As UIWidgetBridge
 	Private mChild As Object
 	Private mVisible As Boolean
 	Private mBaseView As B4XView
@@ -18,6 +19,7 @@ End Sub
 
 ' Creates a visible wrapper with no child.
 Public Sub Initialize As UIVisibility
+	mBridge.Initialize
 	' Re-initialization is safe when the same declarative instance is reused
 	' by a screen builder after navigation, theme or state updates.
 	If mBaseView <> Null Then
@@ -97,7 +99,7 @@ Public Sub Child(Widget As Object) As UIVisibility
 		If mChild = Widget Then Return Me
 	End If
 	If mChild <> Null Then
-		If SubExists(mChild, "Unmount") Then CallSub(mChild, "Unmount")
+		mBridge.Unmount(mChild)
 	End If
 	If mBaseView <> Null Then
 		If mBaseView.IsInitialized Then mBaseView.RemoveAllViews
@@ -154,7 +156,7 @@ Public Sub Render
 
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
 	If mVisible = False Then
-		If mChild <> Null And SubExists(mChild, "Unmount") Then CallSub(mChild, "Unmount")
+		If mChild <> Null Then mBridge.Unmount(mChild)
 		mBaseView.RemoveAllViews
 		mBaseView.SetLayoutAnimated(0, mLeft, mTop, 0, 0)
 		Return
@@ -165,10 +167,10 @@ Public Sub Render
 		Return
 	End If
 
-	CallSub2(mChild, "SetParent", mBaseView)
-	CallSub3(mChild, "SetPosition", 0, 0)
-	CallSub3(mChild, "SetSize", mWidth, mHeight)
-	CallSub(mChild, "Render")
+	mBridge.SetParent(mChild, mBaseView)
+	mBridge.SetPosition(mChild, 0, 0)
+	mBridge.SetSize(mChild, mWidth, mHeight)
+	mBridge.Render(mChild)
 End Sub
 
 Public Sub Unmount
@@ -177,7 +179,7 @@ Public Sub Unmount
 	End If
 	' Unmount is temporary during navigation/remounting; preserve the state
 	' binding so the same declarative widget remains reactive when mounted again.
-	If mChild <> Null And SubExists(mChild, "Unmount") Then CallSub(mChild, "Unmount")
+	If mChild <> Null Then mBridge.Unmount(mChild)
 	If mBaseView <> Null Then
 		If mBaseView.IsInitialized Then mBaseView.RemoveAllViews
 	End If
@@ -186,10 +188,7 @@ Public Sub Unmount
 End Sub
 
 Private Sub IsWidgetProtocol(Widget As Object) As Boolean
-	If Widget = Null Then Return False
-	Return SubExists(Widget, "SetParent") And SubExists(Widget, "SetPosition") _
-		And SubExists(Widget, "SetSize") And SubExists(Widget, "Render") _
-		And SubExists(Widget, "GetContentSize")
+	Return mBridge.IsWidgetProtocol(Widget)
 End Sub
 
 ' Internal layout hook used by Column and Row to avoid spacing around hidden children.
@@ -211,5 +210,18 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 		result.Add(0)
 		Return result
 	End If
-	Return CallSub3(mChild, "GetContentSize", MaxWidth, MaxHeight)
+	Dim childSize As List = mBridge.GetContentSize(mChild, MaxWidth, MaxHeight)
+	If mBridge.LastCallSucceeded = False Then
+		result.Add(0)
+		result.Add(0)
+		Return result
+	End If
+	If childSize <> Null Then
+		If childSize.IsInitialized Then
+			If childSize.Size >= 2 Then Return childSize
+		End If
+	End If
+	result.Add(0)
+	result.Add(0)
+	Return result
 End Sub

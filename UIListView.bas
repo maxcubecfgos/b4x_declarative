@@ -6,6 +6,7 @@ Version=13.62
 @EndOfDesignText@
 Sub Class_Globals
     Private xui As XUI
+    Private mBridge As UIWidgetBridge
     Private mBaseView As B4XView
     Private mContentPanel As B4XView
     Private mScrollView As ScrollView
@@ -35,6 +36,7 @@ End Sub
 ' Creates an empty fixed-height virtualized vertical list.
 ' Only visible and overscanned item widgets are mounted.
 Public Sub Initialize As UIListView
+    mBridge.Initialize
     mBaseView = Null
     mContentPanel = Null
     mScrollView = Null
@@ -294,10 +296,10 @@ Private Sub RefreshVisibleWindow(Position As Int)
         ApplyThemeToItem(itemView, mTheme)
         Dim itemContainer As B4XView = mVisibleContainers.Get(index)
         itemContainer.SetLayoutAnimated(0, 0, index * mItemHeight, mWidth, mItemHeight)
-        CallSub2(itemView, "SetParent", itemContainer)
-        CallSub3(itemView, "SetPosition", 0, 0)
-        CallSub3(itemView, "SetSize", mWidth, mItemHeight)
-        CallSub(itemView, "Render")
+        mBridge.SetParent(itemView, itemContainer)
+        mBridge.SetPosition(itemView, 0, 0)
+        mBridge.SetSize(itemView, mWidth, mItemHeight)
+        mBridge.Render(itemView)
     Next
     mFirstVisible = first
     mLastVisible = last
@@ -334,7 +336,7 @@ Private Sub RecycleItem(Index As Int)
     If mVisibleItems.ContainsKey(Index) = False Then Return
     Dim itemView As Object = mVisibleItems.Get(Index)
     If itemView <> Null Then
-        If SubExists(itemView, "Unmount") Then CallSub(itemView, "Unmount")
+        mBridge.Unmount(itemView)
         If HasBindCallback Then mPool.Add(itemView)
     End If
     If mVisibleContainers.ContainsKey(Index) Then
@@ -363,10 +365,7 @@ Private Sub ApplyThemeToItem(Item As Object, Theme As UITheme)
 End Sub
 
 Private Sub IsWidgetProtocol(Widget As Object) As Boolean
-    If Widget = Null Then Return False
-    Return SubExists(Widget, "SetParent") And SubExists(Widget, "SetPosition") _
-        And SubExists(Widget, "SetSize") And SubExists(Widget, "Render") _
-        And SubExists(Widget, "GetContentSize")
+    Return mBridge.IsWidgetProtocol(Widget)
 End Sub
 
 Private Sub mScrollView_ScrollChanged(Position As Int)

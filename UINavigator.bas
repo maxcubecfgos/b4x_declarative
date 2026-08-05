@@ -13,15 +13,22 @@ Sub Class_Globals
 	Private mMountedScreen As Object
 	Private mIsMounted As Boolean
 	Private mLeft, mTop, mWidth, mHeight As Int
-	Private mInsetLeft, mInsetTop, mInsetRight, mInsetBottom As Int
+    Private mInsetLeft, mInsetTop, mInsetRight, mInsetBottom As Int
+    Private mBoundsLeft, mBoundsTop, mBoundsWidth, mBoundsHeight As Int
+    Private mBoundsReady As Boolean
 End Sub
 
 Public Sub Initialize As UINavigator
 	mScreens.Initialize
-	mCurrentScreen = ""
-	mMountedScreen = Null
-	mIsMounted = False
-	Return Me
+    mCurrentScreen = ""
+    mMountedScreen = Null
+    mIsMounted = False
+    mBoundsReady = False
+    mBoundsLeft = 0
+    mBoundsTop = 0
+    mBoundsWidth = 0
+    mBoundsHeight = 0
+    Return Me
 End Sub
 
 ' Applies the active theme to all registered virtual screens.
@@ -89,10 +96,11 @@ Public Sub Render
 	End If
 
 	Dim bounds As List = GetSafeBounds
-	Dim contentLeft As Int = bounds.Get(0)
-	Dim contentTop As Int = bounds.Get(1)
-	Dim contentWidth As Int = bounds.Get(2)
-	Dim contentHeight As Int = bounds.Get(3)
+    Dim contentLeft As Int = bounds.Get(0)
+    Dim contentTop As Int = bounds.Get(1)
+    Dim contentWidth As Int = bounds.Get(2)
+    Dim contentHeight As Int = bounds.Get(3)
+    RememberBounds(contentLeft, contentTop, contentWidth, contentHeight)
 
 	Dim needsCreate As Boolean = False
 	If mHost = Null Then
@@ -143,14 +151,26 @@ Public Sub RefreshInsets
 	If mHost = Null Then Return
 	If mParent.IsInitialized = False Then Return
 	If mHost.IsInitialized = False Then Return
-	Dim previousLeft As Int = mInsetLeft
-	Dim previousTop As Int = mInsetTop
-	Dim previousRight As Int = mInsetRight
-	Dim previousBottom As Int = mInsetBottom
-	GetSafeBounds
-	If previousLeft <> mInsetLeft Or previousTop <> mInsetTop Or previousRight <> mInsetRight Or previousBottom <> mInsetBottom Then
-		Render
-	End If
+    Dim previousLeft As Int = mInsetLeft
+    Dim previousTop As Int = mInsetTop
+    Dim previousRight As Int = mInsetRight
+    Dim previousBottom As Int = mInsetBottom
+    Dim previousBoundsLeft As Int = mBoundsLeft
+    Dim previousBoundsTop As Int = mBoundsTop
+    Dim previousBoundsWidth As Int = mBoundsWidth
+    Dim previousBoundsHeight As Int = mBoundsHeight
+    Dim hadBounds As Boolean = mBoundsReady
+    Dim currentBounds As List = GetSafeBounds
+    Dim boundsChanged As Boolean = hadBounds = False _
+        Or previousBoundsLeft <> currentBounds.Get(0) _
+        Or previousBoundsTop <> currentBounds.Get(1) _
+        Or previousBoundsWidth <> currentBounds.Get(2) _
+        Or previousBoundsHeight <> currentBounds.Get(3)
+    If previousLeft <> mInsetLeft Or previousTop <> mInsetTop _
+        Or previousRight <> mInsetRight Or previousBottom <> mInsetBottom _
+        Or boundsChanged Then
+        Render
+    End If
 End Sub
 
 Private Sub GetSafeBounds As List
@@ -233,6 +253,14 @@ Private Sub FullBounds(Result As List) As List
     Result.Add(Max(0, mWidth))
     Result.Add(Max(0, mHeight))
     Return Result
+End Sub
+
+Private Sub RememberBounds(Left As Int, Top As Int, Width As Int, Height As Int)
+    mBoundsLeft = Left
+    mBoundsTop = Top
+    mBoundsWidth = Width
+    mBoundsHeight = Height
+    mBoundsReady = True
 End Sub
 
 Private Sub ResetInsets

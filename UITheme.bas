@@ -208,6 +208,13 @@ Public Sub AccentText As Int
     Return OnColor(Accent)
 End Sub
 
+' Returns the pressed-state overlay used by rounded native controls.
+' Light surfaces use a translucent dark ripple; dark surfaces use a translucent light ripple.
+Public Sub RippleColor As Int
+    If mDark Then Return ComposeColor(0x66, 255, 255, 255)
+    Return ComposeColor(0x44, 0, 0, 0)
+End Sub
+
 ' Returns a readable foreground for the informational accent.
 Public Sub InfoText As Int
     Return OnColor(Info)

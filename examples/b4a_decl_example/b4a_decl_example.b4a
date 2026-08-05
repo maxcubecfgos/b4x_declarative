@@ -1,0 +1,445 @@
+﻿Build1=Default,b4a.example
+Group=Default Group
+Library1=core
+Library2=declarativeui
+Library3=xui
+Library4=javaobject
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
+Module1=CheckersCell
+Module2=CheckersEngine
+NumberOfFiles=0
+NumberOfLibraries=4
+NumberOfModules=2
+Version=13.62
+@EndOfDesignText@
+#Region  Project Attributes
+    #ApplicationLabel: Declarative Checkers
+    #VersionCode: 1
+    #VersionName: 1.0
+    #SupportedOrientations: portrait
+    #EdgeToEdgeOldDevices: True
+#End Region
+
+#Region  Activity Attributes
+    #FullScreen: False
+    #IncludeTitle: False
+#End Region
+
+' One focused game screen. The Activity owns the game state while the
+' declarative tree describes the current board on every state change.
+Sub Process_Globals
+    Private Engine As CheckersEngine
+    Private StatusState As UIState
+    Private ProgressState As UIState
+End Sub
+
+Sub Globals
+    Private Root As B4XView
+    Private Screen As UIScaffold
+    Private AppTheme As UITheme
+    Private Snack As UISnackBar
+    Private Dialog As UIAlertDialog
+    Private DialogReady As Boolean
+    Private StatusCard As UICard
+    Private StatusCardReady As Boolean
+    Private ScreenReady As Boolean
+    Private InitialLayoutPending As Boolean
+    Private SelectedRow, SelectedCol As Int
+    Private LastFromRow, LastFromCol As Int
+    Private LastToRow, LastToCol As Int
+    Private HasSelection As Boolean
+    Private HasLastMove As Boolean
+    Private CaptureView As B4XView
+    Private CaptureLeft, CaptureTop, CaptureWidth, CaptureHeight As Int
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+    Root = Activity
+    If FirstTime Then
+        Engine.Initialize
+        StatusState.Initialize("Your turn")
+        ProgressState.Initialize(0)
+        SelectedRow = -1
+        SelectedCol = -1
+        LastFromRow = -1
+        LastFromCol = -1
+        LastToRow = -1
+        LastToCol = -1
+        HasSelection = False
+        HasLastMove = False
+    End If
+    Snack.Initialize
+    AppTheme.Initialize.Scheme(0xFF315C8D)
+    Root.Color = AppTheme.Background
+    ScheduleInitialLayout
+End Sub
+
+Private Sub ScheduleInitialLayout
+    If InitialLayoutPending Then Return
+    InitialLayoutPending = True
+    CallSubDelayed(Me, "InitialLayout")
+End Sub
+
+Private Sub InitialLayout
+    InitialLayoutPending = False
+    If Root.Width <= 0 Or Root.Height <= 0 Then
+        ScheduleInitialLayout
+        Return
+    End If
+    RebuildUI
+End Sub
+
+Private Sub RebuildUI
+    If ScreenReady Then Screen.Unmount
+    StatusCardReady = False
+
+    Dim appBar As UIAppBar = BuildAppBar
+    Dim body As Object = BuildBody
+    Screen.Initialize.AppBar(appBar).Body(body).ApplyTheme(AppTheme)
+    ScreenReady = True
+    MountUI
+End Sub
+
+Private Sub MountUI
+    If ScreenReady = False Then Return
+    If Root.Width <= 0 Or Root.Height <= 0 Then Return
+    Screen.SetParent(Root)
+    Screen.SetPosition(0, 0)
+    Screen.SetSize(Root.Width, Root.Height)
+    Screen.Render
+    StatusCardReady = True
+End Sub
+
+Private Sub BuildAppBar As UIAppBar
+    Dim rules As UIIcon
+    rules.Initialize.MaterialCode(0xE88E).Color(AppTheme.DashboardBarText) _
+        .OnClick(Me, "Rules_Click").ApplyTheme(AppTheme)
+
+    Dim bar As UIAppBar
+    bar.Initialize.Title("Quiet Checkers").Action(rules).ApplyTheme(AppTheme)
+    Return bar
+End Sub
+
+Private Sub BuildBody As Object
+    Dim eyebrow As UILabel
+    eyebrow.Initialize.Text("ENGLISH DRAUGHTS").Size(AppTheme.LabelMedium) _
+        .Color(AppTheme.Accent).ApplyTheme(AppTheme)
+
+    Dim title As UILabel
+    title.Initialize.Text("Your move").Size(AppTheme.TitleLarge) _
+        .Color(AppTheme.PrimaryText).ApplyTheme(AppTheme)
+
+    Dim status As UILabel
+    status.Initialize.BindText(StatusState).Size(AppTheme.BodyLarge) _
+        .Color(AppTheme.SecondaryText).ApplyTheme(AppTheme)
+
+    Dim statusCard As UICard
+    statusCard.Initialize.Child(status).ApplyTheme(AppTheme)
+    StatusCard = statusCard
+
+    Dim progress As UIProgressBar
+    progress.Initialize.BindValue(ProgressState).ApplyTheme(AppTheme)
+
+    Dim board As UICard
+    board.Initialize.Child(BuildBoard).ApplyTheme(AppTheme)
+
+    Dim newGame As UIButton
+    newGame.Initialize.Text("NEW GAME").OnClick(Me, "NewGame_Click").ApplyTheme(AppTheme)
+
+    Dim rules As UIButton
+    rules.Initialize.Text("HOW TO PLAY").OnClick(Me, "Rules_Click").ApplyTheme(AppTheme)
+
+    Dim actions As UIRow
+    actions.Initialize.Spacing(10dip).MainAxisAlignment("center") _
+        .CrossAxisAlignment("center").AddChild(newGame).AddChild(rules)
+
+    Dim content As UIColumn
+    content.Initialize.Spacing(10dip).CrossAxisAlignment("stretch") _
+        .AddChild(eyebrow).AddChild(title).AddChild(statusCard) _
+        .AddChild(progress).AddChild(board).AddChild(actions)
+
+    Dim padded As UIBox
+    padded.Initialize(content, AppTheme.HorizontalPadding).ApplyTheme(AppTheme)
+
+    Dim scroll As UIScrollView
+    scroll.Initialize.Child(padded).ApplyTheme(AppTheme)
+    Return scroll
+End Sub
+
+Private Sub BuildBoard As UIColumn
+    Dim board As UIColumn
+    board.Initialize.MainAxisSize("max").CrossAxisAlignment("stretch")
+    Dim legalMoves As List = Engine.GetLegalMoves
+
+    For row = 0 To 7
+        Dim line As UIRow
+        line.Initialize.MainAxisSize("max").CrossAxisAlignment("stretch")
+        For col = 0 To 7
+            Dim cell As CheckersCell
+            Dim selected As Boolean = HasSelection And row = SelectedRow And col = SelectedCol
+            Dim lastMove As Boolean = HasLastMove _
+                And ((row = LastFromRow And col = LastFromCol) Or (row = LastToRow And col = LastToCol))
+            Dim destination As Boolean = HasSelection And IsLegalDestination(legalMoves, row, col)
+            cell.Initialize(row, col).SquareStyle(SquareColorFor(row, col), PieceColorFor(row, col)) _
+                .Selected(selected).LastMove(lastMove).LegalMove(destination) _
+                .Interactive(True).Text(PieceGlyph(Engine.GetPiece(row, col))) _
+                .OnTap(Me, "Cell_Click")
+            line.AddChild(cell)
+        Next
+        board.AddChild(line)
+    Next
+    Return board
+End Sub
+
+Private Sub Cell_Click(Row As Int, Col As Int)
+    If Engine.GetWinner <> 0 Then Return
+    If Engine.IsHumanTurn = False Then Return
+
+    Dim piece As Int = Engine.GetPiece(Row, Col)
+    If piece = 1 Or piece = 2 Then
+        ' During a multiple capture only the piece that just jumped may continue.
+        If Engine.IsCaptureContinuation And HasSelection _
+            And (Row <> SelectedRow Or Col <> SelectedCol) Then
+            StatusState.SetState("Continue with the selected piece")
+            RebuildUI
+            Return
+        End If
+        If HasSelection And Row = SelectedRow And Col = SelectedCol Then Return
+
+        SelectedRow = Row
+        SelectedCol = Col
+        HasSelection = True
+        If Engine.GetLegalMovesForPiece(Row, Col).Size = 0 Then
+            If Engine.IsCaptureRequired Then
+                StatusState.SetState("Choose a piece that can capture")
+            Else
+                StatusState.SetState("That piece cannot move")
+            End If
+        Else If Engine.IsCaptureRequired Then
+            StatusState.SetState("Choose a capture destination")
+        Else
+            StatusState.SetState("Choose a destination")
+        End If
+        RebuildUI
+        Return
+    End If
+
+    If HasSelection = False Then Return
+    Dim move As Map = FindMove(SelectedRow, SelectedCol, Row, Col)
+    If move.IsInitialized = False Then
+        StatusState.SetState("That move is not legal")
+        Snack.ApplyTheme(AppTheme).Message("That move is not legal").Show(Root)
+        RebuildUI
+        Return
+    End If
+
+    Dim capture As Boolean = MoveIsCapture(move)
+    If Engine.ApplyMove(move) = False Then
+        StatusState.SetState("That move is not legal")
+        Snack.ApplyTheme(AppTheme).Message("That move is not legal").Show(Root)
+        RebuildUI
+        Return
+    End If
+
+    RememberMove(move)
+    Dim continuesCapture As Boolean = Engine.IsCaptureContinuation
+    If continuesCapture Then
+        SelectedRow = move.GetDefault("ToRow", -1)
+        SelectedCol = move.GetDefault("ToCol", -1)
+        HasSelection = True
+        StatusState.SetState("Continue the capture")
+        ProgressState.SetState(0)
+        RebuildUI
+        If capture Then AnimateCaptureFeedback
+        Return
+    End If
+
+    HasSelection = False
+    StatusState.SetState("Computer is thinking...")
+    ProgressState.SetState(35)
+    RebuildUI
+    If capture Then AnimateCaptureFeedback
+    ComputerTurn
+End Sub
+
+Private Sub IsLegalDestination(Moves As List, Row As Int, Col As Int) As Boolean
+    If HasSelection = False Or Moves.IsInitialized = False Then Return False
+    For Each move As Map In Moves
+        If move.GetDefault("FromRow", -1) = SelectedRow _
+            And move.GetDefault("FromCol", -1) = SelectedCol _
+            And move.GetDefault("ToRow", -1) = Row _
+            And move.GetDefault("ToCol", -1) = Col Then Return True
+    Next
+    Return False
+End Sub
+
+Private Sub FindMove(FromRow As Int, FromCol As Int, ToRow As Int, ToCol As Int) As Map
+    For Each move As Map In Engine.GetLegalMovesForPiece(FromRow, FromCol)
+        If move.GetDefault("FromRow", -1) = FromRow _
+            And move.GetDefault("FromCol", -1) = FromCol _
+            And move.GetDefault("ToRow", -1) = ToRow _
+            And move.GetDefault("ToCol", -1) = ToCol Then Return move
+    Next
+    Dim noMove As Map
+    Return noMove
+End Sub
+
+Private Sub ComputerTurn
+    Sleep(220)
+    If Engine.GetWinner <> 0 Then
+        ShowWinner
+        Return
+    End If
+
+    Dim computerMove As Map = Engine.PlayComputer(3)
+    If computerMove.IsInitialized = False Then
+        ShowWinner
+        Return
+    End If
+
+    Dim computerCapture As Boolean = MoveIsCapture(computerMove)
+    RememberMove(computerMove)
+    ProgressState.SetState(100)
+    If Engine.GetWinner = 0 Then
+        StatusState.SetState("Your turn")
+    Else
+        StatusState.SetState(WinnerText)
+    End If
+    RebuildUI
+    If computerCapture Then AnimateCaptureFeedback
+    Sleep(140)
+    ProgressState.SetState(0)
+End Sub
+
+Private Sub AnimateCaptureFeedback
+    If StatusCardReady = False Then Return
+    If Null = StatusCard Then Return
+    Dim view As B4XView = StatusCard.GetView
+    If Null = view Then Return
+    If view.IsInitialized = False Or view.Width <= 0 Or view.Height <= 0 Then Return
+    CaptureView = view
+    CaptureLeft = view.Left
+    CaptureTop = view.Top
+    CaptureWidth = view.Width
+    CaptureHeight = view.Height
+    view.SetLayoutAnimated(0, CaptureLeft, CaptureTop + 4dip, CaptureWidth, CaptureHeight)
+    Dim pulse As UIAnimation
+    pulse.Initialize.TargetView(view).MoveAndResize(CaptureLeft, CaptureTop, CaptureWidth, CaptureHeight + 8dip) _
+        .Duration(110).OnCompleted(Me, "CaptureAnimation_Expanded").Start
+End Sub
+
+Private Sub CaptureAnimation_Expanded
+    If Null = CaptureView Then Return
+    If CaptureView.IsInitialized = False Then Return
+    Dim settle As UIAnimation
+    settle.Initialize.TargetView(CaptureView).MoveAndResize(CaptureLeft, CaptureTop, CaptureWidth, CaptureHeight) _
+        .Duration(150).Start
+End Sub
+
+Private Sub MoveIsCapture(Move As Map) As Boolean
+    If Move.IsInitialized = False Then Return False
+    Return ("" & Move.GetDefault("IsCapture", False)).ToLowerCase = "true"
+End Sub
+
+Private Sub ShowWinner
+    StatusState.SetState(WinnerText)
+    Dim dialog As UIAlertDialog
+    dialog.Initialize.Title("Game over").Message(WinnerText) _
+        .PositiveButton("NEW GAME", Me, "NewGame_Click") _
+        .ApplyTheme(AppTheme).Show(Root)
+    Dialog = dialog
+    DialogReady = True
+End Sub
+
+Private Sub Rules_Click
+    If DialogReady Then Dialog.Dismiss
+    Dim dialog As UIAlertDialog
+    dialog.Initialize.Title("How to play") _
+        .Message("Move the white pieces diagonally. Captures are mandatory. " _
+        & "After a capture, continue with the same piece when another jump is available.") _
+        .PositiveButton("GOT IT", Me, "CloseDialog_Click") _
+        .ApplyTheme(AppTheme).Show(Root)
+    Dialog = dialog
+    DialogReady = True
+End Sub
+
+Private Sub CloseDialog_Click
+    If DialogReady Then Dialog.Dismiss
+    DialogReady = False
+End Sub
+
+Private Sub NewGame_Click
+    If DialogReady Then Dialog.Dismiss
+    DialogReady = False
+    Engine.ResetGame
+    SelectedRow = -1
+    SelectedCol = -1
+    LastFromRow = -1
+    LastFromCol = -1
+    LastToRow = -1
+    LastToCol = -1
+    HasSelection = False
+    HasLastMove = False
+    StatusState.SetState("Your turn")
+    ProgressState.SetState(0)
+    RebuildUI
+End Sub
+
+Private Sub RememberMove(Move As Map)
+    LastFromRow = move.GetDefault("FromRow", -1)
+    LastFromCol = move.GetDefault("FromCol", -1)
+    LastToRow = move.GetDefault("ToRow", -1)
+    LastToCol = move.GetDefault("ToCol", -1)
+    HasLastMove = LastFromRow >= 0 And LastFromCol >= 0 _
+        And LastToRow >= 0 And LastToCol >= 0
+End Sub
+
+Private Sub WinnerText As String
+    Select Engine.GetWinner
+        Case 1
+            Return "You win"
+        Case 2
+            Return "The computer wins"
+        Case 3
+            Return "Draw by no progress"
+    End Select
+    Return "Your turn"
+End Sub
+
+Private Sub PieceGlyph(Piece As Int) As String
+    Select Piece
+        Case 1, 3
+            Return "●"
+        Case 2, 4
+            Return "♛"
+    End Select
+    Return ""
+End Sub
+
+Private Sub PieceColorFor(Row As Int, Col As Int) As Int
+    Dim piece As Int = Engine.GetPiece(Row, Col)
+    If piece = 1 Or piece = 2 Then Return Colors.White
+    If piece = 3 Or piece = 4 Then Return AppTheme.Negative
+    If IsDarkSquare(Row, Col) Then Return AppTheme.DashboardBarText
+    Return AppTheme.PrimaryText
+End Sub
+
+Private Sub SquareColorFor(Row As Int, Col As Int) As Int
+    If IsDarkSquare(Row, Col) Then Return AppTheme.SecondaryBar
+    Return AppTheme.SurfaceVariant
+End Sub
+
+Private Sub IsDarkSquare(Row As Int, Col As Int) As Boolean
+    Return (Row + Col) Mod 2 = 1
+End Sub
+
+Sub Activity_Resume
+    If ScreenReady = False Then
+        ScheduleInitialLayout
+    Else
+        MountUI
+    End If
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+End Sub

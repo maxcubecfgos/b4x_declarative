@@ -223,15 +223,52 @@ Public Sub Render
 	If mBaseView.Text <> mText Then mBaseView.Text = mText
 	mBaseView.TextSize = mTextSize
 	If mCornerRadius > 0 Or mBorderWidth > 0 Then
-		Dim buttonBackground As ColorDrawable
-		buttonBackground.Initialize2(mColor, mCornerRadius, mBorderWidth, mBorderColor)
 		Dim nativeButton As Button = mBaseView
-		nativeButton.Background = buttonBackground
+		SetRoundedRippleBackground(nativeButton)
 		mCustomBackgroundApplied = True
 	Else
 		If mBaseView.Color <> mColor Then mBaseView.Color = mColor
 	End If
 	If mBaseView.TextColor <> mTextColor Then mBaseView.TextColor = mTextColor
+End Sub
+
+' Applies the rounded shape and preserves Android's pressed ripple state.
+' API 21+ uses RippleDrawable; older devices keep the rounded fallback.
+Private Sub SetRoundedRippleBackground(ButtonView As Button)
+	If ButtonView = Null Then Return
+	If ButtonView.IsInitialized = False Then Return
+
+	Dim version As JavaObject
+	version.InitializeStatic("android.os.Build$VERSION")
+	Dim sdkInt As Int = version.GetField("SDK_INT")
+	If sdkInt < 21 Then
+		Dim fallback As ColorDrawable
+		fallback.Initialize2(mColor, mCornerRadius, mBorderWidth, mBorderColor)
+		ButtonView.Background = fallback
+		Return
+	End If
+
+	Dim shape As JavaObject
+	shape.InitializeNewInstance("android.graphics.drawable.GradientDrawable", Null)
+	shape.RunMethod("setColor", Array(mColor))
+	Dim radiusFloat As Float = mCornerRadius
+	shape.RunMethod("setCornerRadius", Array(radiusFloat))
+	If mBorderWidth > 0 Then shape.RunMethod("setStroke", Array(mBorderWidth, mBorderColor))
+
+	' RippleDrawable owns both objects. Keep the mask independent so the
+	' content drawable and its clipping drawable do not share mutable state.
+	Dim mask As JavaObject
+	mask.InitializeNewInstance("android.graphics.drawable.GradientDrawable", Null)
+	mask.RunMethod("setColor", Array(Colors.White))
+	mask.RunMethod("setCornerRadius", Array(radiusFloat))
+
+	Dim colorStateList As JavaObject
+	colorStateList.InitializeStatic("android.content.res.ColorStateList")
+	Dim rippleColor As JavaObject = colorStateList.RunMethodJO("valueOf", Array(mTheme.RippleColor))
+	Dim ripple As JavaObject
+	ripple.InitializeNewInstance("android.graphics.drawable.RippleDrawable", Array(rippleColor, shape, mask))
+	Dim nativeView As JavaObject = ButtonView
+	nativeView.RunMethod("setBackground", Array(ripple))
 End Sub
 
 Public Sub Unmount

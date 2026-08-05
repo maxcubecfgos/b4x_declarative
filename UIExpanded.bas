@@ -6,12 +6,14 @@ Version=13.5
 @EndOfDesignText@
 Sub Class_Globals
 	Private xui As XUI
+	Private mBridge As UIWidgetBridge
 	Private mChild As Object
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
 End Sub
 
 Public Sub Initialize As UIExpanded
+	mBridge.Initialize
 	mChild = Null
 	Return Me
 End Sub
@@ -54,16 +56,16 @@ Public Sub Render
 	If mParent.IsInitialized = False Then Return
 
 	If mChild <> Null Then
-		CallSub2(mChild, "SetParent", mParent)
-		CallSub3(mChild, "SetPosition", mLeft, mTop)
-		CallSub3(mChild, "SetSize", mWidth, mHeight)
-		CallSub(mChild, "Render")
+		mBridge.SetParent(mChild, mParent)
+		mBridge.SetPosition(mChild, mLeft, mTop)
+		mBridge.SetSize(mChild, mWidth, mHeight)
+		mBridge.Render(mChild)
 	End If
 End Sub
 
 Public Sub Unmount
 	If mChild <> Null Then
-		If SubExists(mChild, "Unmount") Then CallSub(mChild, "Unmount")
+		mBridge.Unmount(mChild)
 	End If
 	mParent = Null
 End Sub
@@ -72,10 +74,7 @@ End Sub
 ' UIExpanded returns an empty list because it wants all remaining space.
 ' Column and Row use this marker to distribute the remaining space.
 Private Sub IsWidgetProtocol(Widget As Object) As Boolean
-	If Widget = Null Then Return False
-	Return SubExists(Widget, "SetParent") And SubExists(Widget, "SetPosition") _
-		And SubExists(Widget, "SetSize") And SubExists(Widget, "Render") _
-		And SubExists(Widget, "GetContentSize")
+	Return mBridge.IsWidgetProtocol(Widget)
 End Sub
 
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List

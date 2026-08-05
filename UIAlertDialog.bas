@@ -6,6 +6,7 @@ Version=13.62
 @EndOfDesignText@
 Sub Class_Globals
     Private xui As XUI
+    Private mBridge As UIWidgetBridge
     Private mTheme As UITheme
     Private mParent As B4XView
     Private mOverlay As B4XView
@@ -43,6 +44,7 @@ End Sub
 
 ' Creates a hidden modal dialog with Material-like defaults.
 Public Sub Initialize As UIAlertDialog
+    mBridge.Initialize
     Dim defaultTheme As UITheme
     defaultTheme.Initialize
     mTheme = defaultTheme
@@ -99,7 +101,7 @@ Public Sub Content(Widget As Object) As UIAlertDialog
         If mContent = Widget Then Return Me
     End If
     If mContent <> Null Then
-        If SubExists(mContent, "Unmount") Then CallSub(mContent, "Unmount")
+        mBridge.Unmount(mContent)
     End If
     mContent = Widget
     If mVisible Then
@@ -209,16 +211,13 @@ End Sub
 
 ' Shows the dialog over Parent. Parent is normally the Activity or a screen root.
 Public Sub Show(Parent As B4XView) As UIAlertDialog
-    If Parent = Null Then Return Me
     If Parent.IsInitialized = False Then Return Me
-    If mParent <> Null Then
-        If mParent.IsInitialized Then
-            If mParent <> Parent Then
-                If mContent <> Null Then
-                    If SubExists(mContent, "Unmount") Then CallSub(mContent, "Unmount")
-                End If
-                RemoveNativeViews
+    If mParent.IsInitialized Then
+        If mParent <> Parent Then
+            If mContent <> Null Then
+                mBridge.Unmount(mContent)
             End If
+            RemoveNativeViews
         End If
     End If
     mParent = Parent
@@ -234,7 +233,7 @@ End Sub
 Public Sub Dismiss As UIAlertDialog
     mVisible = False
     If mContent <> Null Then
-        If SubExists(mContent, "Unmount") Then CallSub(mContent, "Unmount")
+        mBridge.Unmount(mContent)
     End If
     RemoveNativeViews
     Return Me
@@ -257,22 +256,17 @@ Public Sub SetSize(Width As Int, Height As Int)
 End Sub
 
 Private Sub IsWidgetProtocol(Widget As Object) As Boolean
-    If Widget = Null Then Return False
-    Return SubExists(Widget, "SetParent") And SubExists(Widget, "SetPosition") _
-        And SubExists(Widget, "SetSize") And SubExists(Widget, "Render") _
-        And SubExists(Widget, "GetContentSize")
+    Return mBridge.IsWidgetProtocol(Widget)
 End Sub
 
 ' Dialogs are normally shown explicitly and do not participate in a parent layout.
 Public Sub Render
-    If mVisible And mParent <> Null Then Show(mParent)
+    If mVisible And mParent.IsInitialized Then Show(mParent)
 End Sub
 
 Private Sub EnsureViews
     Dim createOverlay As Boolean = False
-    If mOverlay = Null Then
-        createOverlay = True
-    Else If mOverlay.IsInitialized = False Then
+    If mOverlay.IsInitialized = False Then
         createOverlay = True
     End If
     If createOverlay Then
@@ -282,9 +276,7 @@ Private Sub EnsureViews
         mParent.AddView(mOverlay, 0, 0, mParent.Width, mParent.Height)
     End If
     Dim createCard As Boolean = False
-    If mCardView = Null Then
-        createCard = True
-    Else If mCardView.IsInitialized = False Then
+    If mCardView.IsInitialized = False Then
         createCard = True
     End If
     If createCard Then
@@ -294,9 +286,7 @@ Private Sub EnsureViews
         mOverlay.AddView(mCardView, 0, 0, 0, 0)
     End If
     Dim createTitle As Boolean = False
-    If mTitleLabel = Null Then
-        createTitle = True
-    Else If mTitleLabel.IsInitialized = False Then
+    If mTitleLabel.IsInitialized = False Then
         createTitle = True
     End If
     If createTitle Then
@@ -306,9 +296,7 @@ Private Sub EnsureViews
         mCardView.AddView(mTitleLabel, 0, 0, 0, 0)
     End If
     Dim createMessage As Boolean = False
-    If mMessageLabel = Null Then
-        createMessage = True
-    Else If mMessageLabel.IsInitialized = False Then
+    If mMessageLabel.IsInitialized = False Then
         createMessage = True
     End If
     If createMessage Then
@@ -319,9 +307,7 @@ Private Sub EnsureViews
     End If
     If mPositiveText.Trim <> "" Then
         Dim createPositive As Boolean = False
-        If mPositiveButton = Null Then
-            createPositive = True
-        Else If mPositiveButton.IsInitialized = False Then
+        If mPositiveButton.IsInitialized = False Then
             createPositive = True
         End If
         If createPositive Then
@@ -333,9 +319,7 @@ Private Sub EnsureViews
     End If
     If mNegativeText.Trim <> "" Then
         Dim createNegative As Boolean = False
-        If mNegativeButton = Null Then
-            createNegative = True
-        Else If mNegativeButton.IsInitialized = False Then
+        If mNegativeButton.IsInitialized = False Then
             createNegative = True
         End If
         If createNegative Then
@@ -345,11 +329,11 @@ Private Sub EnsureViews
             mCardView.AddView(mNegativeButton, 0, 0, 0, 0)
         End If
     End If
-    If mPositiveText.Trim = "" And mPositiveButton <> Null Then
+    If mPositiveText.Trim = "" And mPositiveButton.IsInitialized Then
         If mPositiveButton.IsInitialized Then mPositiveButton.RemoveViewFromParent
         mPositiveButton = Null
     End If
-    If mNegativeText.Trim = "" And mNegativeButton <> Null Then
+    If mNegativeText.Trim = "" And mNegativeButton.IsInitialized Then
         If mNegativeButton.IsInitialized Then mNegativeButton.RemoveViewFromParent
         mNegativeButton = Null
     End If
@@ -357,39 +341,34 @@ Private Sub EnsureViews
 End Sub
 
 Private Sub ApplyText
-    If mTitleLabel <> Null Then
-        If mTitleLabel.IsInitialized Then
+    If mTitleLabel.IsInitialized Then
             Dim titleView As Label = mTitleLabel
             titleView.Text = mTitle
             titleView.TextColor = mTitleColor
             titleView.TextSize = mTheme.TitleLarge
             titleView.Gravity = Gravity.CENTER_VERTICAL
-        End If
     End If
-    If mMessageLabel <> Null Then
-        If mMessageLabel.IsInitialized Then
+    If mMessageLabel.IsInitialized Then
             Dim messageView As Label = mMessageLabel
             messageView.Text = mMessage
             messageView.TextColor = mMessageColor
             messageView.TextSize = mTheme.BodyLarge
             messageView.Gravity = Bit.Or(Gravity.LEFT, Gravity.CENTER_VERTICAL)
-        End If
     End If
 End Sub
 
 Private Sub RenderContent
     If mContent = Null Then Return
-    If SubExists(mContent, "SetParent") = False Then Return
-    CallSub2(mContent, "SetParent", mCardView)
-    CallSub3(mContent, "SetPosition", mTheme.HorizontalPadding, 0)
-    CallSub3(mContent, "SetSize", Max(0, mCardView.Width - 2 * mTheme.HorizontalPadding), 0)
-    If SubExists(mContent, "Render") Then CallSub(mContent, "Render")
+    mBridge.SetParent(mContent, mCardView)
+    mBridge.SetPosition(mContent, mTheme.HorizontalPadding, 0)
+    mBridge.SetSize(mContent, Max(0, mCardView.Width - 2 * mTheme.HorizontalPadding), 0)
+    mBridge.Render(mContent)
 End Sub
 
 Private Sub LayoutDialog
-    If mParent = Null Then Return
-    If mOverlay = Null Then Return
-    If mCardView = Null Then Return
+    If mParent.IsInitialized = False Then Return
+    If mOverlay.IsInitialized = False Then Return
+    If mCardView.IsInitialized = False Then Return
     If mParent.IsInitialized = False Then Return
     If mOverlay.IsInitialized = False Or mCardView.IsInitialized = False Then Return
 
@@ -403,19 +382,18 @@ Private Sub LayoutDialog
     If mMessage.Trim <> "" Then messageHeight = mTheme.DialogMessageHeight
     Dim contentHeight As Int = 0
     If mContent <> Null Then
-        If SubExists(mContent, "GetContentSize") Then
-            Dim contentSize As List = CallSub3(mContent, "GetContentSize", dialogWidth - 2 * horizontal, mTheme.DialogMaxContentHeight)
-            If contentSize <> Null Then
-                If contentSize.IsInitialized Then
-                    If contentSize.Size >= 2 Then
-                        contentHeight = Min(mTheme.DialogMaxContentHeight, Max(0, contentSize.Get(1)))
-                    End If
+        Dim contentSize As List = mBridge.GetContentSize(mContent, dialogWidth - 2 * horizontal, mTheme.DialogMaxContentHeight)
+        If mBridge.LastCallSucceeded = False Then contentSize = Null
+        If contentSize <> Null Then
+            If contentSize.IsInitialized Then
+                If contentSize.Size >= 2 Then
+                    contentHeight = Min(mTheme.DialogMaxContentHeight, Max(0, contentSize.Get(1)))
                 End If
             End If
         End If
     End If
     Dim actionHeight As Int = 0
-    If mPositiveButton <> Null Or mNegativeButton <> Null Then actionHeight = mTheme.ControlHeight + 8dip
+    If mPositiveButton.IsInitialized Or mNegativeButton.IsInitialized Then actionHeight = mTheme.ControlHeight + 8dip
     Dim dialogHeight As Int = titleHeight + messageHeight + contentHeight + actionHeight + 2 * horizontal
     If dialogHeight > parentHeight - 2 * mTheme.DialogOuterMargin Then dialogHeight = Max(0, parentHeight - 2 * mTheme.DialogOuterMargin)
 
@@ -434,16 +412,16 @@ Private Sub LayoutDialog
     If mContent <> Null Then
         RenderContent
         If contentHeight > 0 Then
-            CallSub3(mContent, "SetPosition", horizontal, y)
-            CallSub3(mContent, "SetSize", dialogWidth - 2 * horizontal, contentHeight)
-            If SubExists(mContent, "Render") Then CallSub(mContent, "Render")
+            mBridge.SetPosition(mContent, horizontal, y)
+            mBridge.SetSize(mContent, dialogWidth - 2 * horizontal, contentHeight)
+            mBridge.Render(mContent)
             y = y + contentHeight
         End If
     End If
     Dim buttonY As Int = dialogHeight - actionHeight - mTheme.DialogButtonSpacing
     Dim buttonWidth As Int = mTheme.DialogButtonWidth
     Dim right As Int = dialogWidth - horizontal
-    If mPositiveButton <> Null Then
+    If mPositiveButton.IsInitialized Then
         Dim positive As Button = mPositiveButton
         positive.Text = mPositiveText
         positive.TextColor = mButtonTextColor
@@ -453,7 +431,7 @@ Private Sub LayoutDialog
         mPositiveButton.SetLayoutAnimated(0, right - buttonWidth, buttonY, buttonWidth, mTheme.ControlHeight)
         right = right - buttonWidth - mTheme.DialogButtonSpacing
     End If
-    If mNegativeButton <> Null Then
+    If mNegativeButton.IsInitialized Then
         Dim negative As Button = mNegativeButton
         negative.Text = mNegativeText
         negative.TextColor = mButtonTextColor
@@ -465,9 +443,8 @@ Private Sub LayoutDialog
 End Sub
 
 Private Sub ApplyAppearance
-    If mOverlay = Null Then Return
-    If mCardView = Null Then Return
-    If mOverlay.IsInitialized = False Or mCardView.IsInitialized = False Then Return
+    If mOverlay.IsInitialized = False Then Return
+    If mCardView.IsInitialized = False Then Return
     Dim overlayPanel As Panel = mOverlay
     overlayPanel.Color = mOverlayColor
     Dim cardPanel As Panel = mCardView
@@ -475,11 +452,11 @@ Private Sub ApplyAppearance
     cardBackground.Initialize2(mSurfaceColor, mRadius, 0, Colors.Transparent)
     cardPanel.Background = cardBackground
     ApplyText
-    If mPositiveButton <> Null Then
+    If mPositiveButton.IsInitialized Then
         mPositiveButton.SetColorAndBorder(mButtonColor, 0, Colors.Transparent, mTheme.ButtonRadius)
         mPositiveButton.TextColor = mButtonTextColor
     End If
-    If mNegativeButton <> Null Then
+    If mNegativeButton.IsInitialized Then
         mNegativeButton.SetColorAndBorder(mButtonColor, 0, Colors.Transparent, mTheme.ButtonRadius)
         mNegativeButton.TextColor = mButtonTextColor
     End If
@@ -514,9 +491,7 @@ Private Sub DialogNegative_Click
 End Sub
 
 Private Sub RemoveNativeViews
-    If mOverlay <> Null Then
-        If mOverlay.IsInitialized Then mOverlay.RemoveViewFromParent
-    End If
+    If mOverlay.IsInitialized Then mOverlay.RemoveViewFromParent
     mOverlay = Null
     mCardView = Null
     mTitleLabel = Null
@@ -528,7 +503,7 @@ End Sub
 Public Sub Unmount
     mVisible = False
     If mContent <> Null Then
-        If SubExists(mContent, "Unmount") Then CallSub(mContent, "Unmount")
+        mBridge.Unmount(mContent)
     End If
     RemoveNativeViews
     mParent = Null

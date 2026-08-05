@@ -7,30 +7,32 @@ ManifestCode='This code will be applied to the manifest file during compilation.
 Module1=UIAlertDialog
 Module10=UICheckbox
 Module11=UIColumn
-Module12=UIDivider
-Module13=UIExpanded
-Module14=UIFloatingActionButton
-Module15=UIIcon
-Module16=UIImage
-Module17=UIInput
-Module18=UILabel
-Module19=UIListView
+Module12=UIDiagnostics
+Module13=UIDivider
+Module14=UIExpanded
+Module15=UIFloatingActionButton
+Module16=UIIcon
+Module17=UIImage
+Module18=UIInput
+Module19=UILabel
 Module2=UIAnimation
-Module20=UINative
-Module21=UINavigator
-Module22=UIPadding
-Module23=UIPlaceholder
-Module24=UIProgressBar
-Module25=UIRow
-Module26=UIScaffold
-Module27=UIScrollView
-Module28=UISnackBar
-Module29=UISpace
+Module20=UIListView
+Module21=UINative
+Module22=UINavigator
+Module23=UIPadding
+Module24=UIPlaceholder
+Module25=UIProgressBar
+Module26=UIRow
+Module27=UIScaffold
+Module28=UIScrollView
+Module29=UISnackBar
 Module3=UIAppBar
-Module30=UIStack
-Module31=UIState
-Module32=UITheme
-Module33=UIVisibility
+Module30=UISpace
+Module31=UIStack
+Module32=UIState
+Module33=UITheme
+Module34=UIVisibility
+Module35=UIWidgetBridge
 Module4=UIAsyncState
 Module5=UIBottomNavigationBar
 Module6=UIBox
@@ -39,7 +41,7 @@ Module8=UICard
 Module9=UICenter
 NumberOfFiles=0
 NumberOfLibraries=3
-NumberOfModules=33
+NumberOfModules=35
 Version=13.62
 @EndOfDesignText@
 #Region  Project Attributes
@@ -60,17 +62,221 @@ Sub Process_Globals
 End Sub
 
 Sub Globals
-
+	Private Root As B4XView
+	Private mNavigator As UINavigator
+	Private mTheme As UITheme
+	Private mData As List
+	Private mDiagnostics As UIDiagnostics
+	Private mDialog As UIAlertDialog
+	Private mDialogShown As Boolean
+	Private mHarnessReady As Boolean
+	Private mMounted As Boolean
+	Private mLastWidth, mLastHeight As Int
+	Private mRenderLogged As Boolean
+	Private mInsetsLogged As Boolean
+	Private mResults As List
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
+	Root = Activity
+	mResults.Initialize
+	mDiagnostics.Initialize
+	mTheme.Initialize.Scheme(0xFF6750A4)
+	mData.Initialize
+	For i = 1 To 24
+		mData.Add("Virtual row " & i)
+	Next
 
+	mHarnessReady = False
+	mMounted = False
+	mLastWidth = 0
+	mLastHeight = 0
+	mRenderLogged = False
+	mInsetsLogged = False
+	RunPreflightTests
+	Try
+		BuildHarness
+		mHarnessReady = True
+	Catch
+		RecordFailure("harness construction", LastException.Message)
+	End Try
+End Sub
+
+Private Sub RunPreflightTests
+	' These checks exercise object initialization without requiring a mounted Activity.
+	Try
+		Dim state As UIState
+		state.Initialize(1)
+		state.SetState(2)
+		If 2 <> state.GetState Then
+			RecordFailure("UIState.SetState", "state did not update")
+		Else
+			RecordPass("UIState.SetState")
+		End If
+	Catch
+		RecordFailure("UIState.SetState", LastException.Message)
+	End Try
+
+	Try
+		Dim label As UILabel
+		label.Initialize.Text("bridge probe")
+		Dim column As UIColumn
+		column.Initialize.AddChild(label)
+		RecordPass("widget initialization and child composition")
+	Catch
+		RecordFailure("widget initialization and child composition", LastException.Message)
+	End Try
+
+	Try
+		Dim list As UIListView
+		list.Initialize.Items(mData).ItemHeight(56dip).Overscan(2) _
+			.CreateItem(Me, "HarnessCreateItem").BindItem(Me, "HarnessBindItem")
+		RecordPass("UIListView configuration")
+	Catch
+		RecordFailure("UIListView configuration", LastException.Message)
+	End Try
+End Sub
+
+Private Sub BuildHarness
+	mNavigator.Initialize
+
+	Dim heading As UILabel
+	heading.Initialize.Text("DeclarativeUI diagnostic harness").Size(mTheme.TitleLarge) _
+		.Color(mTheme.PrimaryText).ApplyTheme(mTheme)
+
+	Dim description As UILabel
+	description.Initialize.Text("Compile this project, run it, scroll the list, call RefreshInsets through resume, and tap OK in the dialog.") _
+		.Size(mTheme.BodySmall).Color(mTheme.SecondaryText).ApplyTheme(mTheme)
+
+	Dim resultColumn As UIColumn
+	resultColumn.Initialize.Spacing(2dip).CrossAxisAlignment("stretch")
+	For Each result As String In mResults
+		Dim resultLabel As UILabel
+		resultLabel.Initialize.Text(result).Size(mTheme.BodySmall).Color(mTheme.PrimaryText).ApplyTheme(mTheme)
+		resultColumn.AddChild(resultLabel)
+	Next
+
+	Dim list As UIListView
+	list.Initialize.Items(mData).ItemHeight(56dip).Overscan(2) _
+		.CreateItem(Me, "HarnessCreateItem").BindItem(Me, "HarnessBindItem") _
+		.ApplyTheme(mTheme)
+
+	Dim body As UIColumn
+	body.Initialize.Spacing(10dip).CrossAxisAlignment("stretch") _
+		.AddChild(heading).AddChild(description).AddChild(resultColumn).AddChild(list)
+
+	Dim bar As UIAppBar
+	bar.Initialize.Title("B4A runtime checks").ApplyTheme(mTheme)
+
+	Dim screen As UIScaffold
+	screen.Initialize.AppBar(bar).Body(body).ApplyTheme(mTheme)
+	mNavigator.AddScreen("Harness", screen)
+End Sub
+
+Private Sub RecordPass(Operation As String)
+	Dim message As String = "PASS  " & Operation
+	mResults.Add(message)
+	Log("DeclarativeUI TEST " & message)
+End Sub
+
+Private Sub RecordFailure(Operation As String, Message As String)
+	Dim safeMessage As String = Message
+	If safeMessage.Trim = "" Then safeMessage = "unknown error"
+	Dim entry As String = "FAIL  " & Operation & " -> " & safeMessage
+	mResults.Add(entry)
+	mDiagnostics.ReportError(Operation, safeMessage)
+	Log("DeclarativeUI TEST " & entry)
+End Sub
+
+Private Sub MountHarness
+	If mHarnessReady = False Then Return
+	If Root.Width <= 0 Or Root.Height <= 0 Then Return
+
+	Dim sizeChanged As Boolean = mLastWidth <> Root.Width Or mLastHeight <> Root.Height
+	If mMounted = False Or sizeChanged Then
+		Try
+			mNavigator.SetParent(Root)
+			mNavigator.SetPosition(0, 0)
+			mNavigator.SetSize(Root.Width, Root.Height)
+			mNavigator.Render
+			mMounted = True
+			mLastWidth = Root.Width
+			mLastHeight = Root.Height
+			If mRenderLogged = False Then
+				RecordPass("UINavigator and UIScaffold render")
+				mRenderLogged = True
+			Else
+				Log("DeclarativeUI TEST PASS  UINavigator resize render")
+			End If
+		Catch
+			RecordFailure("UINavigator and UIScaffold render", LastException.Message)
+		End Try
+	End If
+
+	Try
+		mNavigator.RefreshInsets
+		If mInsetsLogged = False Then
+			RecordPass("UINavigator.RefreshInsets")
+			mInsetsLogged = True
+		Else
+			Log("DeclarativeUI TEST PASS  UINavigator.RefreshInsets")
+		End If
+	Catch
+		RecordFailure("UINavigator.RefreshInsets", LastException.Message)
+	End Try
+
+	If mDialogShown = False Then ShowDialogProbe
+End Sub
+
+Private Sub ShowDialogProbe
+	Try
+		mDialog.Initialize.Title("Runtime check") _
+			.Message("The library rendered successfully. Tap OK to test the dialog callback.") _
+			.PositiveButton("OK", Me, "DialogProbe_Click") _
+			.ApplyTheme(mTheme).Show(Root)
+		mDialogShown = True
+		RecordPass("UIAlertDialog.Show")
+	Catch
+		mDialogShown = False
+		RecordFailure("UIAlertDialog.Show", LastException.Message)
+	End Try
+End Sub
+
+Sub DialogProbe_Click
+	Try
+		Log("DeclarativeUI TEST PASS  UIAlertDialog positive callback")
+		' The dialog owns its native views; dismiss the active instance through the callback path.
+		If mDialog.IsInitialized Then mDialog.Dismiss
+		mDialogShown = False
+	Catch
+		RecordFailure("UIAlertDialog positive callback", LastException.Message)
+	End Try
+End Sub
+
+Sub HarnessCreateItem(Index As Int) As Object 'ignore
+	Dim row As UILabel
+	row.Initialize.Text("Virtual row " & (Index + 1)).Size(mTheme.BodyLarge).Color(mTheme.PrimaryText)
+	Return row
+End Sub
+
+Sub HarnessBindItem(Index As Int, ItemView As Object) 'ignore
+	Try
+		Dim row As UILabel = ItemView
+		row.Text("" & mData.Get(Index)).ApplyTheme(mTheme)
+	Catch
+		RecordFailure("UIListView.BindItem", LastException.Message)
+	End Try
 End Sub
 
 Sub Activity_Resume
-
+	If Root.IsInitialized = False Then Return
+	MountHarness
 End Sub
 
 Sub Activity_Pause (UserClosed As Boolean)
-
+	If UserClosed Then
+		If mDialog.IsInitialized Then mDialog.Dismiss
+		If mNavigator.IsInitialized Then mNavigator.Unmount
+		mMounted = False
+	End If
 End Sub
