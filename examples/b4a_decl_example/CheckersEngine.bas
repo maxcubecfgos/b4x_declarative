@@ -201,32 +201,52 @@ End Sub
 Private Sub GenerateSearchCaptures(StartRow As Int, StartCol As Int, Row As Int, Col As Int, Piece As Int, PathText As String, Result As List) As Boolean
     Dim branch As String = SerializeBoard
     Dim found As Boolean = False
-    For Each direction As Map In CaptureDirections
-        Dim middleRow As Int = Row + direction.Get("dr")
-        Dim middleCol As Int = Col + direction.Get("dc")
-        Dim toRow As Int = Row + direction.Get("dr") * 2
-        Dim toCol As Int = Col + direction.Get("dc") * 2
-        If IsInside(middleRow, middleCol) = False Or IsInside(toRow, toCol) = False Then Continue
-        If IsEnemy(mBoard(middleRow, middleCol), Piece) = False Then Continue
-        If mBoard(toRow, toCol) <> EMPTY Then Continue
-
-        found = True
-        Dim nextPiece As Int = PromotePiece(Piece, toRow)
-        mBoard(Row, Col) = EMPTY
-        mBoard(middleRow, middleCol) = EMPTY
-        mBoard(toRow, toCol) = nextPiece
-        Dim nextPath As String = PathText
-        If nextPath <> "" Then nextPath = nextPath & ";"
-        nextPath = nextPath & toRow & ":" & toCol
-
-        Dim continued As Boolean = False
-        ' Search evaluates a complete multi-capture as one move. Crowning
-        ' ends the sequence immediately, as required by English draughts.
-        If nextPiece = Piece Or IsKing(Piece) Then
-            continued = GenerateSearchCaptures(StartRow, StartCol, toRow, toCol, nextPiece, nextPath, Result)
-        End If
-        If continued = False Then Result.Add(CreateMove(StartRow, StartCol, toRow, toCol, True, nextPath))
-        DeserializeBoard(branch)
+    For Each direction As Map In MoveDirections(Piece)
+        Dim dr As Int = direction.Get("dr")
+        Dim dc As Int = direction.Get("dc")
+        Dim maxSteps As Int = 7
+        If Not IsKing(Piece) Then maxSteps = 1
+        For k = 1 To maxSteps
+            Dim enemyRow As Int = Row + dr * k
+            Dim enemyCol As Int = Col + dc * k
+            If IsInside(enemyRow, enemyCol) = False Then Exit
+            If IsEnemy(mBoard(enemyRow, enemyCol), Piece) = False Then Continue
+            For m = 1 To maxSteps
+                Dim landRow As Int = enemyRow + dr * m
+                Dim landCol As Int = enemyCol + dc * m
+                If IsInside(landRow, landCol) = False Then Exit
+                If mBoard(landRow, landCol) <> EMPTY Then Exit
+                Dim clear As Boolean = True
+                For step = 1 To k - 1
+                    If mBoard(Row + dr * step, Col + dc * step) <> EMPTY Then
+                        clear = False
+                        Exit
+                    End If
+                Next
+                If clear = False Then Continue
+                For step = 1 To m - 1
+                    If mBoard(enemyRow + dr * step, enemyCol + dc * step) <> EMPTY Then
+                        clear = False
+                        Exit
+                    End If
+                Next
+                If clear = False Then Continue
+                found = True
+                Dim nextPiece As Int = PromotePiece(Piece, landRow)
+                mBoard(Row, Col) = EMPTY
+                mBoard(enemyRow, enemyCol) = EMPTY
+                mBoard(landRow, landCol) = nextPiece
+                Dim nextPath As String = PathText
+                If nextPath <> "" Then nextPath = nextPath & ";"
+                nextPath = nextPath & landRow & ":" & landCol
+                Dim continued As Boolean = False
+                If nextPiece = Piece Or IsKing(Piece) Then
+                    continued = GenerateSearchCaptures(StartRow, StartCol, landRow, landCol, nextPiece, nextPath, Result)
+                End If
+                If continued = False Then Result.Add(CreateMove(StartRow, StartCol, landRow, landCol, True, nextPath))
+                DeserializeBoard(branch)
+            Next
+        Next
     Next
     Return found
 End Sub
@@ -249,10 +269,22 @@ End Sub
 Private Sub GenerateSimpleMoves(Row As Int, Col As Int, Piece As Int, Result As List)
     Dim directions As List = MoveDirections(Piece)
     For Each direction As Map In directions
-        Dim toRow As Int = Row + direction.Get("dr")
-        Dim toCol As Int = Col + direction.Get("dc")
-        If IsInside(toRow, toCol) And mBoard(toRow, toCol) = EMPTY Then
-            Result.Add(CreateMove(Row, Col, toRow, toCol, False, ""))
+        Dim dr As Int = direction.Get("dr")
+        Dim dc As Int = direction.Get("dc")
+        If IsKing(Piece) Then
+            For d = 1 To 7
+                Dim toRow As Int = Row + dr * d
+                Dim toCol As Int = Col + dc * d
+                If IsInside(toRow, toCol) = False Then Exit
+                If mBoard(toRow, toCol) <> EMPTY Then Exit
+                Result.Add(CreateMove(Row, Col, toRow, toCol, False, ""))
+            Next
+        Else
+            Dim toRow As Int = Row + dr
+            Dim toCol As Int = Col + dc
+            If IsInside(toRow, toCol) And mBoard(toRow, toCol) = EMPTY Then
+                Result.Add(CreateMove(Row, Col, toRow, toCol, False, ""))
+            End If
         End If
     Next
 End Sub
@@ -262,36 +294,63 @@ End Sub
 Private Sub GenerateCaptures(StartRow As Int, StartCol As Int, Row As Int, Col As Int, Piece As Int, PathText As String, Result As List) As Boolean
     Dim branch As String = SerializeBoard
     Dim found As Boolean = False
-    For Each direction As Map In CaptureDirections
-        Dim middleRow As Int = Row + direction.Get("dr")
-        Dim middleCol As Int = Col + direction.Get("dc")
-        Dim toRow As Int = Row + direction.Get("dr") * 2
-        Dim toCol As Int = Col + direction.Get("dc") * 2
-        If IsInside(middleRow, middleCol) = False Or IsInside(toRow, toCol) = False Then Continue
-        If IsEnemy(mBoard(middleRow, middleCol), Piece) = False Then Continue
-        If mBoard(toRow, toCol) <> EMPTY Then Continue
-
-        found = True
-        Dim nextPiece As Int = PromotePiece(Piece, toRow)
-        mBoard(Row, Col) = EMPTY
-        mBoard(middleRow, middleCol) = EMPTY
-        mBoard(toRow, toCol) = nextPiece
-        Dim nextPath As String = PathText
-        If nextPath <> "" Then nextPath = nextPath & ";"
-        nextPath = nextPath & toRow & ":" & toCol
-        Dim continued As Boolean = False
-        ' Human moves are entered one jump at a time. Computer moves keep the
-        ' complete recursive path so the search can evaluate a whole turn.
-        If BelongsTo(Piece, HUMAN) Then
-            Result.Add(CreateMove(StartRow, StartCol, toRow, toCol, True, nextPath))
-        Else
-            ' In English draughts, crowning ends the move immediately.
-            If nextPiece = Piece Or IsKing(Piece) Then
-                continued = GenerateCaptures(StartRow, StartCol, toRow, toCol, nextPiece, nextPath, Result)
-            End If
-            If continued = False Then Result.Add(CreateMove(StartRow, StartCol, toRow, toCol, True, nextPath))
-        End If
-        DeserializeBoard(branch)
+    For Each direction As Map In MoveDirections(Piece)
+        Dim dr As Int = direction.Get("dr")
+        Dim dc As Int = direction.Get("dc")
+        ' For kings, scan along the diagonal for enemies to capture
+        Dim maxSteps As Int = 7
+        If Not IsKing(Piece) Then maxSteps = 1
+        For k = 1 To maxSteps
+            Dim enemyRow As Int = Row + dr * k
+            Dim enemyCol As Int = Col + dc * k
+            If IsInside(enemyRow, enemyCol) = False Then Exit
+            If IsEnemy(mBoard(enemyRow, enemyCol), Piece) = False Then Continue
+            ' Found an enemy at distance k. Now look for landing squares beyond it.
+            For m = 1 To maxSteps
+                Dim landRow As Int = enemyRow + dr * m
+                Dim landCol As Int = enemyCol + dc * m
+                If IsInside(landRow, landCol) = False Then Exit
+                If mBoard(landRow, landCol) <> EMPTY Then Exit
+                ' Verify all squares between piece and enemy are empty
+                Dim clear As Boolean = True
+                For step = 1 To k - 1
+                    If mBoard(Row + dr * step, Col + dc * step) <> EMPTY Then
+                        clear = False
+                        Exit
+                    End If
+                Next
+                If clear = False Then Continue
+                ' Verify all squares between enemy and landing are empty
+                For step = 1 To m - 1
+                    If mBoard(enemyRow + dr * step, enemyCol + dc * step) <> EMPTY Then
+                        clear = False
+                        Exit
+                    End If
+                Next
+                If clear = False Then Continue
+                found = True
+                Dim nextPiece As Int = PromotePiece(Piece, landRow)
+                mBoard(Row, Col) = EMPTY
+                mBoard(enemyRow, enemyCol) = EMPTY
+                mBoard(landRow, landCol) = nextPiece
+                Dim nextPath As String = PathText
+                If nextPath <> "" Then nextPath = nextPath & ";"
+                nextPath = nextPath & landRow & ":" & landCol
+                Dim continued As Boolean = False
+                If BelongsTo(Piece, HUMAN) Then
+                    Result.Add(CreateMove(StartRow, StartCol, landRow, landCol, True, nextPath))
+                Else
+                    If nextPiece = Piece Or IsKing(Piece) Then
+                        continued = GenerateCaptures(StartRow, StartCol, landRow, landCol, nextPiece, nextPath, Result)
+                    End If
+                    If continued = False Then Result.Add(CreateMove(StartRow, StartCol, landRow, landCol, True, nextPath))
+                End If
+                DeserializeBoard(branch)
+            Next
+            ' In English draughts, a man captures only the first enemy on the line.
+            ' A king can capture further enemies on the same line after landing,
+            ' but only one enemy per jump.
+        Next
     Next
     Return found
 End Sub
@@ -329,16 +388,39 @@ Private Sub ApplyMoveToBoard(Move As Map) As Boolean
             Dim nextRow As Int = coordinates(0)
             Dim nextCol As Int = coordinates(1)
             If IsInside(nextRow, nextCol) = False Then Return False
-            If Abs(nextRow - currentRow) <> 2 Or Abs(nextCol - currentCol) <> 2 Then Return False
             If mBoard(nextRow, nextCol) <> EMPTY Then Return False
-            Dim middleRow As Int = (currentRow + nextRow) / 2
-            Dim middleCol As Int = (currentCol + nextCol) / 2
-            If IsEnemy(mBoard(middleRow, middleCol), piece) = False Then Return False
+            ' Validate the jump: diagonal, exactly one enemy on path, rest empty
+            Dim dr As Int = nextRow - currentRow
+            Dim dc As Int = nextCol - currentCol
+            If Abs(dr) <> Abs(dc) Or dr = 0 Then Return False
+            Dim stepR As Int = 0
+            If dr > 0 Then stepR = 1 Else stepR = -1
+            Dim stepC As Int = 0
+            If dc > 0 Then stepC = 1 Else stepC = -1
+            Dim enemyCount As Int = 0
+            Dim enemyRow As Int = -1
+            Dim enemyCol As Int = -1
+            For k = 1 To Abs(dr) - 1
+                Dim r As Int = currentRow + stepR * k
+                Dim c As Int = currentCol + stepC * k
+                Dim sq As Int = mBoard(r, c)
+                If sq <> EMPTY Then
+                    If IsEnemy(sq, piece) Then
+                        enemyCount = enemyCount + 1
+                        enemyRow = r
+                        enemyCol = c
+                    Else
+                        Return False ' friendly piece in the way
+                    End If
+                End If
+            Next
+            If enemyCount <> 1 Then Return False
             currentRow = nextRow
             currentCol = nextCol
             piece = PromotePiece(piece, currentRow)
         Next
         If currentRow <> toRow Or currentCol <> toCol Then Return False
+        ' Apply the captures
         mBoard(fromRow, fromCol) = EMPTY
         currentRow = fromRow
         currentCol = fromCol
@@ -346,9 +428,20 @@ Private Sub ApplyMoveToBoard(Move As Map) As Boolean
             Dim coordinates() As String = Regex.Split(":", part)
             Dim nextRow As Int = coordinates(0)
             Dim nextCol As Int = coordinates(1)
-            Dim middleRow As Int = (currentRow + nextRow) / 2
-            Dim middleCol As Int = (currentCol + nextCol) / 2
-            mBoard(middleRow, middleCol) = EMPTY
+            Dim dr As Int = nextRow - currentRow
+            Dim dc As Int = nextCol - currentCol
+            Dim stepR As Int = 0
+            If dr > 0 Then stepR = 1 Else stepR = -1
+            Dim stepC As Int = 0
+            If dc > 0 Then stepC = 1 Else stepC = -1
+            For k = 1 To Abs(dr) - 1
+                Dim r As Int = currentRow + stepR * k
+                Dim c As Int = currentCol + stepC * k
+                If IsEnemy(mBoard(r, c), piece) Then
+                    mBoard(r, c) = EMPTY
+                    Exit
+                End If
+            Next
             currentRow = nextRow
             currentCol = nextCol
             piece = PromotePiece(piece, currentRow)
@@ -356,7 +449,21 @@ Private Sub ApplyMoveToBoard(Move As Map) As Boolean
         mBoard(currentRow, currentCol) = piece
     Else
         If mBoard(toRow, toCol) <> EMPTY Then Return False
-        If Abs(toRow - fromRow) <> 1 Or Abs(toCol - fromCol) <> 1 Then Return False
+        Dim dr As Int = toRow - fromRow
+        Dim dc As Int = toCol - fromCol
+        If Abs(dr) <> Abs(dc) Then Return False
+        If Abs(dr) = 0 Then Return False
+        If IsKing(piece) Then
+            Dim stepR As Int = 0
+            If dr > 0 Then stepR = 1 Else stepR = -1
+            Dim stepC As Int = 0
+            If dc > 0 Then stepC = 1 Else stepC = -1
+            For k = 1 To Abs(dr) - 1
+                If mBoard(fromRow + stepR * k, fromCol + stepC * k) <> EMPTY Then Return False
+            Next
+        Else
+            If Abs(dr) <> 1 Or Abs(dc) <> 1 Then Return False
+        End If
         mBoard(fromRow, fromCol) = EMPTY
         piece = PromotePiece(piece, toRow)
         mBoard(toRow, toCol) = piece
@@ -477,16 +584,6 @@ Private Sub MoveCoordinate(Move As Map, Key As String) As Int
     Dim value As Object = Move.Get(Key)
     If value Is Int Or value Is Long Or value Is Float Or value Is Double Then Return value
     Return -1
-End Sub
-
-Private Sub CaptureDirections As List
-    Dim result As List
-    result.Initialize
-    AddDirection(result, -1, -1)
-    AddDirection(result, -1, 1)
-    AddDirection(result, 1, -1)
-    AddDirection(result, 1, 1)
-    Return result
 End Sub
 
 Private Sub MoveDirections(Piece As Int) As List

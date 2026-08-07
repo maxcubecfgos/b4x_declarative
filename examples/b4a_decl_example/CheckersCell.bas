@@ -89,7 +89,7 @@ End Sub
 Public Sub ApplyTheme(Theme As UITheme) As CheckersCell
     ' The adapter receives a value type class instance from the declarative tree.
     ' Do not compare it with Null: B4A may invoke equals on a null reference.
-    If Theme.IsInitialized = False Then Return Me
+    If False = Theme.IsInitialized Then Return Me
     mTheme = Theme
     mThemeReady = True
     If mButtonReady Then
@@ -118,7 +118,7 @@ End Sub
 
 Public Sub Render
     If mParentReady = False Then Return
-    If mParent.IsInitialized = False Then Return
+    If False = mParent.IsInitialized Then Return
     If mButtonReady = False Then
         Dim button As UIButton
         button.Initialize
@@ -149,6 +149,15 @@ Private Sub Button_Click
     If mInteractive = False Then Return
     If mTargetReady = False Or mEventName.Trim = "" Then Return
     If SubExists(mTarget, mEventName) Then CallSub3(mTarget, mEventName, mRow, mCol)
+End Sub
+
+' Returns the mounted native button, or Null before the first Render.
+' Enables opt-in animations such as UIAnimation pulses on the cell.
+Public Sub GetView As B4XView
+    If mButtonReady = False Then Return Null
+    If mButton = Null Then Return Null
+    If False = mButton.IsInitialized Then Return Null
+    Return mButton.GetView
 End Sub
 
 Public Sub Unmount

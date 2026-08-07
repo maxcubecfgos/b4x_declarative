@@ -82,7 +82,7 @@ Public Sub Render
 			parentChanged = True
 		Else If mMountedParent = Null Then
 			parentChanged = True
-		Else If currentParent <> mMountedParent Then
+		Else If SameNativeView(currentParent, mMountedParent) = False Then
 			parentChanged = True
 		End If
 		If parentChanged Then
@@ -102,7 +102,7 @@ Public Sub Render
         mParent.AddView(mNativeView, mLeft, mTop, targetWidth, targetHeight)
         mMountedParent = mParent
         mMounted = True
-    Else If mMountedParent <> mParent Then
+    Else If SameNativeView(mMountedParent, mParent) = False Then
         mNativeView.RemoveViewFromParent
         mParent.AddView(mNativeView, mLeft, mTop, targetWidth, targetHeight)
         mMountedParent = mParent
@@ -113,19 +113,40 @@ End Sub
 
 ' Detaches the native view without destroying or reinitializing it. The caller
 ' remains responsible for any native event subscriptions and final disposal.
+Public Sub Detach
+    Unmount
+End Sub
+
 Public Sub Unmount
     If mNativeView <> Null Then
         If mNativeView.IsInitialized Then
             If mMounted Then
-                If mNativeView.Parent <> Null Then
-                    If mNativeView.Parent.IsInitialized Then mNativeView.RemoveViewFromParent
+                Dim currentParent As B4XView = mNativeView.Parent
+                Dim ownsCurrentParent As Boolean = False
+                If currentParent <> Null Then
+                    If currentParent.IsInitialized Then
+                        If mMountedParent <> Null Then
+                            If mMountedParent.IsInitialized Then
+                                ownsCurrentParent = SameNativeView(currentParent, mMountedParent)
+                            End If
+                        End If
+                    End If
                 End If
+                If ownsCurrentParent Then mNativeView.RemoveViewFromParent
             End If
         End If
     End If
     mMounted = False
     mMountedParent = Null
     mParent = Null
+End Sub
+
+Private Sub SameNativeView(LeftView As B4XView, RightView As B4XView) As Boolean
+    If LeftView = Null Or RightView = Null Then Return False
+    If LeftView.IsInitialized = False Or RightView.IsInitialized = False Then Return False
+    Dim system As JavaObject
+    system.InitializeStatic("java.lang.System")
+    Return system.RunMethod("identityHashCode", Array(LeftView)) = system.RunMethod("identityHashCode", Array(RightView))
 End Sub
 
 ' Explicit natural dimensions make arbitrary native controls measurable. If

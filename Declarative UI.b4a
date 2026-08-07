@@ -27,18 +27,19 @@ Module24=UIPlaceholder
 Module25=UIProgressBar
 Module26=UIRadioButton
 Module27=UIRadioGroup
-Module28=UIRow
-Module29=UIScaffold
+Module28=UIRebuildScheduler
+Module29=UIRow
 Module3=UIAppBar
-Module30=UIScrollView
-Module31=UISnackBar
-Module32=UISpace
-Module33=UIStack
-Module34=UIState
-Module35=UISwitch
-Module36=UITheme
-Module37=UIVisibility
-Module38=UIWidgetBridge
+Module30=UIScaffold
+Module31=UIScrollView
+Module32=UISnackBar
+Module33=UISpace
+Module34=UIStack
+Module35=UIState
+Module36=UISwitch
+Module37=UITheme
+Module38=UIVisibility
+Module39=UIWidgetBridge
 Module4=UIAsyncState
 Module5=UIBottomNavigationBar
 Module6=UIBox
@@ -47,7 +48,7 @@ Module8=UICard
 Module9=UICenter
 NumberOfFiles=1
 NumberOfLibraries=4
-NumberOfModules=38
+NumberOfModules=39
 Version=13.62
 @EndOfDesignText@
 #Region  Project Attributes
@@ -81,6 +82,8 @@ Sub Globals
 	Private LifecycleList As UIListView
 	Private LifecycleCreateCount As Int
 	Private LifecycleBindCount As Int
+	Private CoalescedState As UIState
+	Private CoalescedNotificationCount As Int
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
@@ -139,10 +142,31 @@ Sub Activity_Resume
 			End If
 		End If
 
+		Wait For (RunCoalescingHarness) Complete (Result As Object)
 		Wait For (RunLifecycleHarness) Complete (Result As Object)
 	Catch
 		Log("DeclarativeUI TEST FAIL  harness -> " & LastException.Message)
 	End Try
+End Sub
+
+Private Sub RunCoalescingHarness As ResumableSub
+	CoalescedNotificationCount = 0
+	CoalescedState.Initialize(0).CoalesceNotifications(True).Subscribe(Me, "HarnessCoalesced_Changed")
+	CoalescedState.SetState(1)
+	CoalescedState.SetState(2)
+	CoalescedState.SetState(3)
+	Sleep(0)
+	Dim coalescedOk As Boolean = CoalescedNotificationCount = 1
+	If coalescedOk Then
+		If 3 <> CoalescedState.GetState Then coalescedOk = False
+	End If
+	If coalescedOk Then
+		Log("DeclarativeUI TEST PASS  coalesced state rebuild uses final value")
+	Else
+		Log("DeclarativeUI TEST FAIL  coalesced state rebuild")
+	End If
+	CoalescedState.ClearListeners
+	Return Null
 End Sub
 
 Private Sub RunLifecycleHarness As ResumableSub
@@ -208,6 +232,7 @@ Private Sub RunLifecycleHarness As ResumableSub
 
 	RunNavigatorLifecycleHarness
 	Wait For (RunListLifecycleHarness) Complete (Result As Object)
+	Wait For (RunNativeAdapterHarness) Complete (Result As Object)
 	Return Null
 End Sub
 
@@ -292,21 +317,22 @@ Private Sub RunListLifecycleHarness As ResumableSub
 	Sleep(0)
 	Dim baselineCreate As Int = LifecycleCreateCount
 	Dim baselineBind As Int = LifecycleBindCount
-	Dim nativeList As B4XView = LifecycleList.GetView
-	Dim listScroll As ScrollView = nativeList
-	listScroll.ScrollPosition = 800dip
+	LifecycleList.ScrollTo(800dip)
 	Sleep(0)
 	LifecycleList.Render
 	Dim recycledCreate As Int = LifecycleCreateCount
 	Dim recycledBind As Int = LifecycleBindCount
+	Dim actualScrollPosition As Int = LifecycleList.GetScrollPosition
 	Dim createdDuringScroll As Int = recycledCreate - baselineCreate
 	Dim bindsDuringScroll As Int = recycledBind - baselineBind
-	If baselineCreate > 0 And bindsDuringScroll > 0 And bindsDuringScroll > createdDuringScroll Then
+	' Android may clamp the requested offset to the native viewport range.
+	' Pooling is proven by effective movement plus more binds than new rows.
+	If baselineCreate > 0 And actualScrollPosition > 0 And bindsDuringScroll > 0 And bindsDuringScroll > createdDuringScroll Then
 		Log("DeclarativeUI TEST PASS  list detach pool reuses rows")
-		Log("DeclarativeUI TEST INFO  list create=" & recycledCreate & " bind=" & recycledBind)
+		Log("DeclarativeUI TEST INFO  list create=" & recycledCreate & " bind=" & recycledBind & " scroll=" & actualScrollPosition)
 	Else
 		Log("DeclarativeUI TEST FAIL  list detach pool reuse")
-		Log("DeclarativeUI TEST INFO  list create=" & recycledCreate & " bind=" & recycledBind)
+		Log("DeclarativeUI TEST INFO  list create=" & recycledCreate & " bind=" & recycledBind & " scroll=" & actualScrollPosition)
 	End If
 	LifecycleList.Unmount
 	Dim releasedListView As B4XView = LifecycleList.GetView
@@ -315,6 +341,145 @@ Private Sub RunListLifecycleHarness As ResumableSub
 	Else
 		Log("DeclarativeUI TEST FAIL  list unmount release")
 	End If
+	Return Null
+End Sub
+
+Private Sub RunNativeAdapterHarness As ResumableSub
+	Dim hostPanelA As Panel
+	hostPanelA.Initialize("")
+	Dim hostA As B4XView = hostPanelA
+	Root.AddView(hostA, 0, 0, 1dip, 1dip)
+
+	Dim hostPanelB As Panel
+	hostPanelB.Initialize("")
+	Dim hostB As B4XView = hostPanelB
+	Root.AddView(hostB, 0, 0, 1dip, 1dip)
+
+	Dim hostPanelC As Panel
+	hostPanelC.Initialize("")
+	Dim hostC As B4XView = hostPanelC
+	Root.AddView(hostC, 0, 0, 1dip, 1dip)
+
+	' Start with a view already owned by a traditional B4A parent. UINative
+	' must safely move it instead of adding a child that already has a parent.
+	Dim nativeButton As Button
+	nativeButton.Initialize("NativeAdapterButton")
+	nativeButton.Text = "native"
+	Dim nativeView As B4XView = nativeButton
+	hostA.AddView(nativeView, 0, 0, 80dip, 32dip)
+
+	Dim adapter As UINative
+	adapter.Initialize(nativeView, 140dip, 48dip)
+	Dim measured As List = adapter.GetContentSize(100dip, 30dip)
+	Dim measurementOk As Boolean = False
+	If measured <> Null Then
+		If measured.IsInitialized Then
+			If measured.Size >= 2 Then
+				Dim measuredWidth As Int = measured.Get(0)
+				Dim measuredHeight As Int = measured.Get(1)
+				If measuredWidth = 100dip And measuredHeight = 30dip Then measurementOk = True
+			End If
+		End If
+	End If
+
+	Dim bridge As UIWidgetBridge
+	bridge.Initialize
+	Dim protocolOk As Boolean = bridge.IsWidgetProtocol(adapter)
+	Dim bridgeMountOk As Boolean = bridge.SetParent(adapter, hostB)
+	bridge.SetPosition(adapter, 7dip, 9dip)
+	bridge.SetSize(adapter, 140dip, 48dip)
+	bridgeMountOk = bridgeMountOk And bridge.Render(adapter)
+	Dim firstView As B4XView = adapter.GetView
+	Dim firstId As Int = NativeViewIdentity(firstView)
+	Dim firstParent As B4XView = firstView.Parent
+	Dim firstMounted As Boolean = firstParent <> Null And firstParent.IsInitialized
+	If firstMounted Then firstMounted = NativeViewIdentity(firstParent) = NativeViewIdentity(hostB)
+	Dim firstSizeOk As Boolean = firstView.Width = 140dip And firstView.Height = 48dip
+
+	' A stable render must update bounds without creating or replacing the
+	' wrapped native control.
+	bridge.SetPosition(adapter, 11dip, 13dip)
+	bridge.SetSize(adapter, 120dip, 44dip)
+	bridge.Render(adapter)
+	Dim stableView As B4XView = adapter.GetView
+	Dim stableId As Int = NativeViewIdentity(stableView)
+	Dim stableSizeOk As Boolean = stableView.Width = 120dip And stableView.Height = 44dip
+	Dim stableRenderOk As Boolean = firstId > 0 And firstId = stableId And stableSizeOk
+
+	' Detach preserves the native instance and its caller-owned configuration.
+	Dim detachedOk As Boolean = bridge.Detach(adapter)
+	Dim detachedView As B4XView = adapter.GetView
+	Dim detachedParent As B4XView = detachedView.Parent
+	If detachedParent <> Null Then
+		If detachedParent.IsInitialized Then detachedOk = False
+	End If
+	If NativeViewIdentity(detachedView) <> firstId Then detachedOk = False
+
+	' Remount into a different declarative host without recreating the Button.
+	bridge.SetParent(adapter, hostA)
+	bridge.SetPosition(adapter, 3dip, 5dip)
+	bridge.SetSize(adapter, 110dip, 40dip)
+	Dim remountOk As Boolean = bridge.Render(adapter)
+	Dim remountedView As B4XView = adapter.GetView
+	Dim remountedParent As B4XView = remountedView.Parent
+	If remountedParent = Null Then
+		remountOk = False
+	Else If NativeViewIdentity(remountedParent) <> NativeViewIdentity(hostA) Then
+		remountOk = False
+	End If
+	If NativeViewIdentity(remountedView) <> firstId Then remountOk = False
+
+	' A managed terminal unmount removes the view from its current declarative
+	' host but keeps the caller-owned native control initialized.
+	Dim managedUnmountOk As Boolean = bridge.Unmount(adapter)
+	Dim releasedView As B4XView = adapter.GetView
+	If releasedView.IsInitialized = False Then managedUnmountOk = False
+	Dim releasedParent As B4XView = releasedView.Parent
+	If releasedParent <> Null Then
+		If releasedParent.IsInitialized Then managedUnmountOk = False
+	End If
+	If NativeViewIdentity(releasedView) <> firstId Then managedUnmountOk = False
+
+	' If the caller takes ownership again and reparents the view externally,
+	' adapter.Unmount must not remove it from that new owner.
+	adapter.Initialize(releasedView, 140dip, 48dip)
+	bridge.SetParent(adapter, hostA)
+	bridge.SetPosition(adapter, 3dip, 5dip)
+	bridge.SetSize(adapter, 110dip, 40dip)
+	Dim ownershipRemountOk As Boolean = bridge.Render(adapter)
+	Dim externallyMoved As B4XView = adapter.GetView
+	If externallyMoved.Parent <> Null Then externallyMoved.RemoveViewFromParent
+	hostC.AddView(externallyMoved, 2dip, 2dip, 110dip, 40dip)
+	Dim ownershipUnmountOk As Boolean = bridge.Unmount(adapter)
+	Dim callerParent As B4XView = externallyMoved.Parent
+	If callerParent = Null Then
+		ownershipUnmountOk = False
+	Else If NativeViewIdentity(callerParent) <> NativeViewIdentity(hostC) Then
+		ownershipUnmountOk = False
+	End If
+	If NativeViewIdentity(externallyMoved) <> firstId Then ownershipUnmountOk = False
+
+	Dim allOk As Boolean = measurementOk And protocolOk And bridgeMountOk And firstMounted _
+		And firstSizeOk And stableRenderOk And detachedOk And remountOk And managedUnmountOk _
+		And ownershipRemountOk And ownershipUnmountOk
+	If allOk Then
+		Log("DeclarativeUI TEST PASS  UINative adapter mount, measure and bridge")
+		Log("DeclarativeUI TEST PASS  UINative stable identity, detach and remount")
+		Log("DeclarativeUI TEST PASS  UINative unmount and caller ownership")
+	Else
+		Log("DeclarativeUI TEST FAIL  UINative adapter lifecycle")
+		Log("DeclarativeUI TEST INFO  measure=" & measurementOk & " protocol=" & protocolOk _
+			& " mount=" & bridgeMountOk & " stable=" & stableRenderOk & " detach=" & detachedOk _
+			& " remount=" & remountOk & " managedUnmount=" & managedUnmountOk _
+			& " ownership=" & ownershipUnmountOk)
+	End If
+
+	hostPanelA.RemoveAllViews
+	hostPanelB.RemoveAllViews
+	hostPanelC.RemoveAllViews
+	hostA.RemoveViewFromParent
+	hostB.RemoveViewFromParent
+	hostC.RemoveViewFromParent
 	Return Null
 End Sub
 
@@ -344,6 +509,10 @@ Sub Activity_Pause (UserClosed As Boolean)
 		Center.Unmount
 		ImageMounted = False
 	End If
+End Sub
+
+Private Sub HarnessCoalesced_Changed(State As UIState)
+	CoalescedNotificationCount = CoalescedNotificationCount + 1
 End Sub
 
 Private Sub HarnessSwitch_Changed(Checked As Boolean)

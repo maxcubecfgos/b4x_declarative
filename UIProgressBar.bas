@@ -308,6 +308,14 @@ Private Sub RefreshIfMounted
     End If
 End Sub
 
+' Returns the mounted native view, or Null before the first Render
+' or after Unmount. Enables opt-in transitions such as UIAnimation.
+Public Sub GetView As B4XView
+    If mBaseView = Null Then Return Null
+    If mBaseView.IsInitialized = False Then Return Null
+    Return mBaseView
+End Sub
+
 Public Sub Unmount
     StopIndeterminate
     If mValueState <> Null Then

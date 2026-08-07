@@ -8,14 +8,14 @@ ManifestCode='This code will be applied to the manifest file during compilation.
 NumberOfFiles=0
 NumberOfLibraries=4
 NumberOfModules=0
-Version=13.5
+Version=13.62
 @EndOfDesignText@
 #Region  Project Attributes
     #ApplicationLabel: NOVA Tasks
     #VersionCode: 1
     #VersionName: 1.0
     #SupportedOrientations: portrait
-    #EdgeToEdgeOldDevices: True
+'    #EdgeToEdgeOldDevices: True
 #End Region
 #Region  Activity Attributes
     #FullScreen: False

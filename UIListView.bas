@@ -162,7 +162,31 @@ Public Sub ApplyTheme(Theme As UITheme) As UIListView
     Return Me
 End Sub
 
+' Scrolls to a clamped item offset and refreshes the visible window.
+' This keeps virtualization deterministic even when Android has not dispatched
+' the native ScrollView event yet.
+Public Sub ScrollTo(Position As Int) As UIListView
+    If mUnmounted Then Return Me
+    If mScrollView = Null Then Return Me
+    If mScrollView.IsInitialized = False Then Return Me
+    If mContentPanel = Null Then Return Me
+    If mContentPanel.IsInitialized = False Then Return Me
+    Dim totalHeight As Int = Max(mHeight, mItemCount * mItemHeight)
+    Dim maximum As Int = Max(0, totalHeight - mHeight)
+    Dim safePosition As Int = Max(0, Min(Position, maximum))
+    mScrollView.ScrollPosition = safePosition
+    RefreshVisibleWindow(safePosition)
+    Return Me
+End Sub
+
+Public Sub GetScrollPosition As Int
+    If mScrollView = Null Then Return 0
+    If mScrollView.IsInitialized = False Then Return 0
+    Return mScrollView.ScrollPosition
+End Sub
+
 Public Sub BackgroundColor(Color As Int) As UIListView
+
     mBackgroundColor = Color
     mBackgroundColorOverridden = True
     If mBaseView <> Null Then

@@ -310,7 +310,7 @@ Sub CounterState_Changed(State As UIState)
 End Sub
 ```
 
-`UIState.UnsubscribeTarget` removes every subscription owned by one widget or object. This is selective notification, not a full virtual-DOM diff engine: bindings update their target widget, while structural changes still require updating and rendering the tree.
+`UIState.UnsubscribeTarget` removes every subscription owned by one widget or object. This is selective notification, not a full virtual-DOM diff engine: bindings update their target widget, while structural changes still require updating and rendering the tree. For state that changes several times in one synchronous operation, opt into Flutter-like coalescing with `State.CoalesceNotifications(True)`; listeners then receive one callback on the next UI cycle with the final value. Existing states remain synchronous by default.
 
 ### UIInput
 

@@ -140,7 +140,7 @@ The important idea is that `body` describes the child tree. The parent is respon
 | `UIVisibility` | Conditionally includes one child in layout | `Visible`, `BindVisible`, `UnbindVisible`, `OnVisibilityChanged`, `Child` |
 | `UIStack` | Overlapping children on the Z axis | `AddChild`, `Alignment` |
 | `UIScrollView` | Native vertical scroll container | `Child`, `ScrollTo` |
-| `UIListView` | Fixed-height virtualized list | `Items`, `ItemCount`, `ItemHeight`, `CreateItem`, `BindItem`, `NotifyDataSetChanged` |
+| `UIListView` | Fixed-height virtualized list | `Items`, `ItemCount`, `ItemHeight`, `CreateItem`, `BindItem`, `NotifyDataSetChanged`, `ScrollTo`, `GetScrollPosition` |
 | `UIScaffold` | App bar, body, bottom navigation and optional FABs | `AppBar`, `Body`, `BottomNavigationBar`, `FloatingActionButtonLeft`, `FloatingActionButtonRight` |
 | `UIBottomNavigationBar` | Declarative bottom navigation | `AddItem`, `BindSelectedIndex`, `OnSelected`, `ActiveColor`, `InactiveColor`, `IndicatorColor` |
 | `UINavigator` | Virtual screens and safe-area host | `AddScreen`, `NavigateTo` |
@@ -447,7 +447,7 @@ The child content is measured and mounted into the native `ScrollView.Panel`. Re
 
 ## 11. UIListView
 
-Use `UIListView` for long vertical collections where each row has the same height. It mounts only the visible window plus the configured overscan rows and reuses declarative item objects when `BindItem` is configured.
+Use `UIListView` for long vertical collections where each row has the same height. It mounts only the visible window plus the configured overscan rows and reuses declarative item objects when `BindItem` is configured. Use `ScrollTo(position)` for deterministic programmatic scrolling and `GetScrollPosition` to read the clamped offset.
 
 ```basic
 Dim records As List
@@ -633,7 +633,7 @@ End Sub
 CounterState.Unsubscribe(Me, "CounterState_Changed")
 ```
 
-`UIState.UnsubscribeTarget` removes every subscription owned by one widget or object. This milestone provides targeted observable updates, not a complete Flutter-style virtual-DOM diff engine: bound widgets update themselves, while structural changes still require updating and rendering the tree. State values are replacement values; mutating an existing `Map` or `List` does not automatically notify listeners.
+`UIState.UnsubscribeTarget` removes every subscription owned by one widget or object. This milestone provides targeted observable updates, not a complete Flutter-style virtual-DOM diff engine: bound widgets update themselves, while structural changes still require updating and rendering the tree. State values are replacement values; mutating an existing `Map` or `List` does not automatically notify listeners. When several replacements should produce one UI update, call `CoalesceNotifications(True)` on that state; the callback is deferred to the next UI cycle and observes the final value. The default remains synchronous for compatibility.
 
 ### UIInput
 
@@ -998,6 +998,7 @@ The project intentionally keeps its first release small:
 - virtual navigation inside one Activity;
 - explicit application state through `UIState` or host variables;
 - selective observable callbacks, not automatic tree diffing;
+- optional coalesced state notifications through `UIState.CoalesceNotifications(True)`;
 - a small widget set;
 - natural measurement instead of a complete constraint solver;
 - no automatic bidirectional data binding;

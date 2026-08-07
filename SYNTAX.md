@@ -106,7 +106,7 @@ This is the API application code is expected to use:
 - event registration through `OnClick` and `OnTextChanged`;
 - navigation methods such as `AddScreen` and `NavigateTo`;
 - `ScrollTo` and other explicitly documented control methods;
-- `UIListView` data and item callbacks (`Items`, `ItemCount`, `ItemHeight`, `CreateItem`, `BindItem`, `NotifyDataSetChanged`);
+- `UIListView` data, item callbacks and scrolling (`Items`, `ItemCount`, `ItemHeight`, `CreateItem`, `BindItem`, `NotifyDataSetChanged`, `ScrollTo`, `GetScrollPosition`);
 - transient feedback through `UISnackBar`;
 - opt-in bounds animation through `UIAnimation`.
 
@@ -466,6 +466,7 @@ Rules:
 
 - `SetState` replaces the value and notifies subscribed listeners when the value changes.
 - `GetState` returns the current value.
+- `CoalesceNotifications(True)` is an opt-in compatibility-preserving mode that defers and groups duplicate listener callbacks until the next UI cycle; the default remains synchronous.
 - `UIState` does not observe mutations inside an existing `Map` or `List`; assign a replacement value to notify listeners.
 - `Subscribe` callbacks receive the `UIState` instance as one argument.
 - `Unsubscribe` removes one subscription; `UnsubscribeTarget` removes all subscriptions owned by a target.

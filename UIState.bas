@@ -9,6 +9,8 @@ Sub Class_Globals
 	Private mListeners As List
 	Private mIsNotifying As Boolean
 	Private mPendingNotification As Boolean
+	Private mCoalesceNotifications As Boolean
+	Private mScheduler As UIRebuildScheduler
 	Private xui As XUI
 End Sub
 
@@ -18,6 +20,8 @@ Public Sub Initialize(InitialValue As Object) As UIState
 	mListeners.Initialize
 	mIsNotifying = False
 	mPendingNotification = False
+	mCoalesceNotifications = False
+	mScheduler.Initialize
 	Return Me
 End Sub
 
@@ -54,6 +58,18 @@ Public Sub SetState(NewValue As Object)
 	NotifyListeners
 End Sub
 
+' Defers listener callbacks until the next UI cycle and coalesces duplicate
+' target/event requests. Existing states remain synchronous by default.
+Public Sub CoalesceNotifications(Enabled As Boolean) As UIState
+	If Enabled = False Then mScheduler.Cancel
+	mCoalesceNotifications = Enabled
+	Return Me
+End Sub
+
+Public Sub IsCoalescingNotifications As Boolean
+	Return mCoalesceNotifications
+End Sub
+
 ' Subscribes Target.EventName to state changes.
 ' The callback signature is: Sub EventName(State As UIState)
 Public Sub Subscribe(Target As Object, EventName As String) As UIState
@@ -71,6 +87,7 @@ End Sub
 
 ' Removes one subscription. Safe to call more than once.
 Public Sub Unsubscribe(Target As Object, EventName As String) As UIState
+	mScheduler.CancelTarget(Target, EventName)
 	If mListeners.IsInitialized = False Then Return Me
 	For i = mListeners.Size - 1 To 0 Step -1
 		Dim listener As Map = mListeners.Get(i)
@@ -92,6 +109,7 @@ End Sub
 ' Removes every subscription owned by Target.
 ' This is useful for widget bindings that need to be replaced or disposed.
 Public Sub UnsubscribeTarget(Target As Object) As UIState
+	mScheduler.CancelTarget(Target, "")
 	If Target = Null Or mListeners.IsInitialized = False Then Return Me
 	For i = mListeners.Size - 1 To 0 Step -1
 		Dim listener As Map = mListeners.Get(i)
@@ -105,6 +123,7 @@ End Sub
 
 ' Removes all subscriptions. Call this when the owner of a state is destroyed.
 Public Sub ClearListeners
+	mScheduler.Cancel
 	If mListeners.IsInitialized Then mListeners.Clear
 End Sub
 
@@ -139,7 +158,9 @@ Private Sub NotifyListeners
 			If mListeners.IndexOf(item) >= 0 Then
 				Dim target As Object = item.Get("Target")
 				Dim eventName As String = item.Get("EventName")
-				If target <> Null Then
+				If mCoalesceNotifications Then
+					mScheduler.Schedule(target, eventName, Me)
+				Else If target <> Null Then
 					If eventName.Trim <> "" Then
 						If SubExists(target, eventName) Then CallSub2(target, eventName, Me)
 					End If
