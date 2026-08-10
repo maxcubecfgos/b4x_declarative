@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $output = Join-Path $root 'DeclarativeUI.b4xlib'
@@ -7,6 +7,7 @@ $tempZip = Join-Path ([IO.Path]::GetTempPath()) ('DeclarativeUI_b4xlib_' + [Guid
 $licenseFile = Join-Path $root 'LICENSE.txt'
 
 $expectedModules = @(
+    'UI.bas'
     'UIAlertDialog.bas'
     'UIAnimation.bas'
     'UIAppBar.bas'
@@ -70,7 +71,7 @@ try {
 
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
     $manifest = @(
-        'Version=0.1'
+        'Version=0.2'
         'Title=Declarative UI for B4A'
         'Author=Maxel Chark Guzm' + [char]0xE1 + 'n'
         'Contact=maxelcfgos@gmail.com'
@@ -95,7 +96,7 @@ try {
         $actualEntries = @($entries | ForEach-Object FullName)
         $missingEntries = @($expectedEntries | Where-Object { $_ -notin $actualEntries })
         $unexpectedEntries = @($actualEntries | Where-Object { $_ -notin $expectedEntries })
-        if ($entries.Count -ne 41 -or $missingEntries.Count -gt 0 -or $unexpectedEntries.Count -gt 0) {
+        if ($entries.Count -ne 42 -or $missingEntries.Count -gt 0 -or $unexpectedEntries.Count -gt 0) {
             throw ('Package entry mismatch. Missing: ' + ($missingEntries -join ', ') + '; unexpected: ' + ($unexpectedEntries -join ', '))
         }
 
@@ -128,7 +129,7 @@ try {
     Write-Host ('File: ' + $output)
     Write-Host ('Size: ' + $fileInfo.Length + ' bytes')
     Write-Host ('SHA-256: ' + $hash)
-    Write-Host 'Contents: 39 UI modules + manifest.txt + LICENSE.txt'
+    Write-Host 'Contents: 40 UI modules + manifest.txt + LICENSE.txt'
 }
 catch {
     Write-Error ('The b4xlib could not be created or validated: ' + $_.Exception.Message)

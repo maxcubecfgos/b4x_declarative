@@ -1,4 +1,4 @@
-# Declarative UI for B4A — User Guide
+﻿# Declarative UI for B4A — User Guide
 
 This guide explains how to use the declarative UI classes included in this project and in the preliminary `.b4xlib` package.
 
@@ -73,6 +73,28 @@ End Sub
 ```
 
 For a real application, a layout container such as `UIColumn` or `UIPadding` is usually preferable to positioning every root child manually.
+
+### 4.1 The zero-ceremony factory (UI.*)
+
+Contract 2.0 ships a `UI` factory module that removes the `Dim`/`Initialize`
+ceremony. The minimal example above becomes:
+
+```basic
+Sub Activity_Create(FirstTime As Boolean)
+    Dim root As B4XView = Activity
+    root.Color = 0xFFF4F7FB
+    UI.Show(root, UI.Column(Null) _
+        .Spacing(12dip) _
+        .AddChild(UI.Text("Hello declarative UI").Size(24).Color(0xFF132238)) _
+        .AddChild(UI.Button("Save").OnClick(Me, "Save_Click")))
+End Sub
+```
+
+Every `UI.*` function creates, initializes and returns a widget; `UI.Show`
+mounts the whole tree in one call. Containers accept either a `List` of
+children or `Null` plus fluent `AddChild`. The complete three-screen example
+(counter, login, dashboard) lives in `examples/b4a_ui_quickstart` and is
+written 100% with the factory — no `Dim`/`Initialize`/`SetParent` anywhere.
 
 ## 5. Composing a screen
 

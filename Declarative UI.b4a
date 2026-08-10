@@ -40,6 +40,7 @@ Module36=UISwitch
 Module37=UITheme
 Module38=UIVisibility
 Module39=UIWidgetBridge
+Module40=UI
 Module4=UIAsyncState
 Module5=UIBottomNavigationBar
 Module6=UIBox
@@ -48,7 +49,7 @@ Module8=UICard
 Module9=UICenter
 NumberOfFiles=1
 NumberOfLibraries=4
-NumberOfModules=39
+NumberOfModules=40
 Version=13.62
 @EndOfDesignText@
 #Region  Project Attributes

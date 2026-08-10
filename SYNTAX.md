@@ -1,8 +1,8 @@
-# Declarative UI for B4A — Syntax and API Contract
+﻿# Declarative UI for B4A — Syntax and API Contract
 
-**Contract version:** 1.0  
-**Library baseline:** 0.1  
-**Status:** Stable syntax baseline for the preliminary release
+**Contract version:** 2.0  
+**Library baseline:** 0.2  
+**Status:** Stable syntax baseline; the `UI.*` factory (Contract 2.0) is the preferred entry point for new code
 
 This document defines the syntax and compatibility rules of Declarative UI for B4A. It is a contract for application authors and for future library development.
 
@@ -75,6 +75,56 @@ title.Color(0xFF132238)
 ```
 
 The fluent form is a convenience, not a separate language feature.
+
+## 3.1 The UI.* factory (Contract 2.0, preferred for new code)
+
+Contract 2.0 adds a single `UI` static-code module (`UI.bas`) that eliminates
+the `Dim` + `Initialize` + manual mount ceremony for application code. Every
+`UI.*` function creates, initializes and returns a widget, and the tree is
+mounted with one call.
+
+The two canonical forms from section 3 remain valid; the factory is now the
+preferred way to write them:
+
+```basic
+' One widget, mounted full-screen:
+UI.Show(Activity, UI.Text("Hola").Size(24))
+
+' A tree built with the fluent chain (no Dim/Initialize anywhere):
+UI.Show(Activity, UI.Column(Null) _
+    .Spacing(12dip) _
+    .AddChild(UI.Text("Titulo").Size(20)) _
+    .AddChild(UI.Button("Guardar").OnClick(Me, "Save_Click")))
+
+' A tree built from a List (data-driven screens):
+UI.Show(Activity, UI.Column(MyWidgetsList))
+```
+
+Rules:
+
+1. `UI.*` functions own `Initialize`. Application code never writes
+   `Dim x As UIxxx` + `x.Initialize` for a widget created by the factory.
+2. Trees are mounted with `UI.Show(Widget, Root)` (fills the root) or
+   `UI.Mount(Widget, Root, Left, Top, Width, Height)` (explicit bounds).
+   Manual `SetParent`/`SetPosition`/`SetSize`/`Render` is no longer required
+   for factory-built trees.
+3. `UI.Column(Children)` / `UI.Row(Children)` accept a `List` of widgets, or
+   `Null` when children are added fluently with `AddChild`.
+4. Callbacks keep the normal B4A event style (`OnClick(Me, "Save_Click")`).
+5. The factory exposes every widget: `Text`, `Button`, `Fab`, `Input`, `Icon`,
+   `IconFA`, `IconMaterial`, `ImageAsset`, `ImageNetwork`, `Progress`, `Switch`,
+   `Checkbox`, `Radio`, `Space`, `Divider`, `Column`, `Row`, `Stack`, `Padding`,
+   `Card`, `Center`, `Expanded`, `Scroll`, `Visibility`, `Scaffold`, `AppBar`,
+   `BottomNavigationBar`, `Navigator`, `ListView`, `State`, `AsyncState`,
+   `Theme`, `ThemeDark`, `ThemeWithScheme`, `ThemeWithSchemeAndMode`, `Snack`,
+   `Dialog`, `Animation`, `Native`.
+6. Shared diagnostics are available through `UI.Diagnostics`, `UI.Errors` and
+   `UI.HasErrors`; missing event callbacks are reported there instead of
+   failing silently.
+7. The `UI.*` names must not be redefined by application code.
+
+The full working app that demonstrates the factory (counter + login +
+dashboard in one navigable shell) is `examples/b4a_ui_quickstart`.
 
 ## 4. Naming rules
 

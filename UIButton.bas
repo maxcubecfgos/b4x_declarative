@@ -310,7 +310,19 @@ End Sub
 ' Dispatches the configured callback only when the target exposes it.
 Private Sub DispatchClick
 	If mTarget = Null Or mEventName.Trim = "" Then Return
-	If SubExists(mTarget, mEventName) Then CallSub(mTarget, mEventName)
+	If SubExists(mTarget, mEventName) Then
+		CallSub(mTarget, mEventName)
+	Else
+		ReportMissingCallback
+	End If
+End Sub
+
+' A missing callback is reported through the shared diagnostics instead of
+' failing silently - the classic B4A event-name typo becomes visible.
+Private Sub ReportMissingCallback
+	Dim diag As UIDiagnostics = UI.Diagnostics
+	Dim msg As String = "Callback sub '" & mEventName & "' was not found on " & GetType(mTarget) & ". Add Sub " & mEventName & " to the target or fix the event name."
+	diag.ReportError("UIButton.OnClick", msg)
 End Sub
 
 Public Sub TriggerClick

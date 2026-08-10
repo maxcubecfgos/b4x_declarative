@@ -206,10 +206,7 @@ Private Sub RunFrameLoop(RunId As Int) As ResumableSub
 	Next
 	If RunId <> mRunId Or mRunning = False Then Return Null
 	If mHasPosition Or mHasSize Then
-		Try
-			mView.SetLayoutAnimated(0, mTargetLeft, mTargetTop, mTargetWidth, mTargetHeight)
-		Catch
-		End Try
+		mView.SetLayoutAnimated(0, mTargetLeft, mTargetTop, mTargetWidth, mTargetHeight)
 	End If
 	If mHasAlpha Then ApplyAlpha(mTargetAlpha)
 	FinishRun(RunId)
@@ -304,11 +301,8 @@ End Sub
 Private Sub ApplyAlpha(Alpha As Float)
 	If mView = Null Then Return
 	If mView.IsInitialized = False Then Return
-	Try
-		Dim native As JavaObject = mView
-		native.RunMethod("setAlpha", Array(Alpha))
-	Catch
-	End Try
+	Dim native As JavaObject = mView
+	native.RunMethod("setAlpha", Array(Alpha))
 End Sub
 
 Private Sub ReadAlpha As Float

@@ -11,7 +11,11 @@ End Sub
 
 ' Creates a bridge for the common Object-based widget protocol.
 Public Sub Initialize As UIWidgetBridge
-	mDiagnostics.Initialize
+	Try
+		mDiagnostics = UI.Diagnostics
+	Catch
+		mDiagnostics.Initialize
+	End Try
 	mLastCallSucceeded = True
 	Return Me
 End Sub
