@@ -92,9 +92,23 @@ End Sub
 
 Every `UI.*` function creates, initializes and returns a widget; `UI.Show`
 mounts the whole tree in one call. Containers accept either a `List` of
-children or `Null` plus fluent `AddChild`. The complete three-screen example
-(counter, login, dashboard) lives in `examples/b4a_ui_quickstart` and is
-written 100% with the factory — no `Dim`/`Initialize`/`SetParent` anywhere.
+children or `Null` plus fluent `AddChild`.
+
+### Canonical copy-paste examples
+
+Three minimal, standalone projects are shipped under `examples/`, each written
+100% with the factory (no `Dim`/`Initialize`/`SetParent` anywhere):
+
+- `examples/b4a_ui_counter` — a state-bound counter (`UI.State` + `BindText`).
+- `examples/b4a_ui_login` — a login card with inputs and a themed button
+  (`UI.Theme(UI.THEME_LIGHT)`).
+- `examples/b4a_ui_dashboard` — stat cards and progress bars
+  (`UI.Theme(UI.THEME_DARK)`).
+
+`examples/b4a_ui_quickstart` remains the combined three-screen navigable app.
+Container `AddChild` reports actionable errors (Null child, non-widget object,
+widget already owned by another container) through `UI.Errors` instead of
+failing silently, and releases children on `Unmount`.
 
 ## 5. Composing a screen
 

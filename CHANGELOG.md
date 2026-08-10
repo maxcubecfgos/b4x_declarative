@@ -2,6 +2,20 @@
 
 # Declarative UI for B4A — Changelog
 
+## 0.3 — Self-explanatory errors, theme constants and canonical examples
+
+1. `AddChild` (UIColumn/UIRow/UIStack) now reports actionable errors through
+   the shared diagnostics: Null child, non-widget object, or a widget that
+   already belongs to another container ("call UI.Unmount or remove it
+   first"). No more silent drops. Children are released on `Unmount`, so
+   widgets can be re-added safely.
+2. Theme presets with constants: `UI.Theme(UI.THEME_LIGHT)` / `UI.Theme(UI.THEME_DARK)`.
+   `UI.ThemeDefault` and `UI.ThemeDark` remain for direct use.
+3. Added `UI.Render(Widget, Root)` as an alias of `UI.Show`.
+4. Added three canonical copy-paste examples: `examples/b4a_ui_counter`,
+   `examples/b4a_ui_login` and `examples/b4a_ui_dashboard` (each standalone,
+   100% factory code).
+
 ## 0.2 — UI.* factory (Contract 2.0)
 
 1. Added `UI.bas`, a static-code factory: every `UI.*` function creates,

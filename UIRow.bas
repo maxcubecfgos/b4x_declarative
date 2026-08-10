@@ -40,7 +40,16 @@ Public Sub ApplyTheme(Theme As UITheme) As UIRow
 End Sub
 
 Public Sub AddChild(Component As Object) As UIRow
-	If IsWidgetProtocol(Component) Then mChildren.Add(Component)
+	If Component = Null Then
+		mBridge.ReportError("UIRow.AddChild", Component, "child is Null; pass a widget created by UI.*")
+		Return Me
+	End If
+	If IsWidgetProtocol(Component) = False Then
+		mBridge.ReportError("UIRow.AddChild", Component, "the object does not implement the widget protocol (SetParent/SetPosition/SetSize/Render/GetContentSize); create widgets with UI.*")
+		Return Me
+	End If
+	If UI.RegisterChild(Component, Me) = False Then Return Me
+	mChildren.Add(Component)
 	Return Me
 End Sub
 
@@ -265,6 +274,7 @@ Public Sub Unmount
 	For Each child As Object In mChildren
 		If child <> Null Then
 			mBridge.Unmount(child)
+			UI.UnregisterChild(child)
 		End If
 	Next
 	mBaseView = Null

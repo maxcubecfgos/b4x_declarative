@@ -1,0 +1,72 @@
+﻿﻿Build1=Default,b4a.example
+Group=Default Group
+Library1=core
+Library2=declarativeui
+Library3=okhttputils2
+Library4=xui
+Library5=javaobject
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~AddPermission(android.permission.INTERNET)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
+NumberOfFiles=0
+NumberOfLibraries=5
+NumberOfModules=0
+Version=13.62
+@EndOfDesignText@
+#Region  Project Attributes
+    #ApplicationLabel: UI Dashboard
+    #VersionCode: 1
+    #VersionName: 1.0
+    #SupportedOrientations: portrait
+#End Region
+
+#Region  Activity Attributes
+    #FullScreen: False
+    #IncludeTitle: False
+#End Region
+
+' Minimal DeclarativeUI example: a dashboard with stat cards and bars.
+' 100% with the UI.* factory (see UI.bas for the API).
+
+Sub Process_Globals
+    Private Theme As UITheme
+End Sub
+
+Sub Globals
+    Private Root As B4XView
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+    Root = Activity
+    Theme = UI.Theme(UI.THEME_DARK)
+    Root.Color = Theme.Background
+    BuildAndMount
+End Sub
+
+Private Sub BuildAndMount
+    Dim stats As UIRow = UI.Row(Null).Spacing(12dip) _
+        .AddChild(StatCard("Ventas", "$1.240", Theme.Accent)) _
+        .AddChild(StatCard("Usuarios", "3.2k", Theme.Info))
+
+    Dim chart As UIColumn = UI.Column(Null).Spacing(10dip) _
+        .AddChild(UI.Text("Actividad semanal").Size(16)) _
+        .AddChild(UI.Progress(45).BarHeight(14dip).CornerRadius(7dip)) _
+        .AddChild(UI.Progress(72).BarHeight(14dip).CornerRadius(7dip)) _
+        .AddChild(UI.Progress(30).BarHeight(14dip).CornerRadius(7dip))
+
+    Dim content As UIColumn = UI.Column(Null).Spacing(16dip) _
+        .AddChild(stats) _
+        .AddChild(UI.Card(chart))
+
+    UI.Show(Root, UI.Scroll(content).ApplyTheme(Theme))
+End Sub
+
+Private Sub StatCard(Title As String, Value As String, Color As Int) As UICard
+    Return UI.Card(UI.Column(Null).Spacing(4dip) _
+        .AddChild(UI.Text(Title).Size(12)) _
+        .AddChild(UI.Text(Value).Size(22).Color(Color)))
+End Sub
+
+Sub Activity_Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+End Sub

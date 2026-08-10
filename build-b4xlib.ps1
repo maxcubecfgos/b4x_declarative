@@ -71,7 +71,7 @@ try {
 
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
     $manifest = @(
-        'Version=0.2'
+        'Version=0.3'
         'Title=Declarative UI for B4A'
         'Author=Maxel Chark Guzm' + [char]0xE1 + 'n'
         'Contact=maxelcfgos@gmail.com'

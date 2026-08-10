@@ -36,7 +36,16 @@ End Sub
 
 ' Adds one child. Later children are rendered above earlier children.
 Public Sub AddChild(Child As Object) As UIStack
-	If IsWidgetProtocol(Child) Then mChildren.Add(Child)
+	If Child = Null Then
+		mBridge.ReportError("UIStack.AddChild", Child, "child is Null; pass a widget created by UI.*")
+		Return Me
+	End If
+	If IsWidgetProtocol(Child) = False Then
+		mBridge.ReportError("UIStack.AddChild", Child, "the object does not implement the widget protocol (SetParent/SetPosition/SetSize/Render/GetContentSize); create widgets with UI.*")
+		Return Me
+	End If
+	If UI.RegisterChild(Child, Me) = False Then Return Me
+	mChildren.Add(Child)
 	Return Me
 End Sub
 
@@ -133,6 +142,7 @@ Public Sub Unmount
 	For Each child As Object In mChildren
 		If child <> Null Then
 			mBridge.Unmount(child)
+			UI.UnregisterChild(child)
 		End If
 	Next
 	If mBaseView <> Null Then

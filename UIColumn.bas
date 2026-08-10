@@ -40,7 +40,16 @@ Public Sub ApplyTheme(Theme As UITheme) As UIColumn
 End Sub
 
 Public Sub AddChild(child As Object) As UIColumn
-	If IsWidgetProtocol(child) Then mChildren.Add(child)
+	If child = Null Then
+		mBridge.ReportError("UIColumn.AddChild", child, "child is Null; pass a widget created by UI.*")
+		Return Me
+	End If
+	If IsWidgetProtocol(child) = False Then
+		mBridge.ReportError("UIColumn.AddChild", child, "the object does not implement the widget protocol (SetParent/SetPosition/SetSize/Render/GetContentSize); create widgets with UI.*")
+		Return Me
+	End If
+	If UI.RegisterChild(child, Me) = False Then Return Me
+	mChildren.Add(child)
 	Return Me
 End Sub
 
@@ -263,6 +272,7 @@ Public Sub Unmount
 	For Each child As Object In mChildren
 		If child <> Null Then
 			mBridge.Unmount(child)
+			UI.UnregisterChild(child)
 		End If
 	Next
 	mBaseView = Null

@@ -1,0 +1,76 @@
+﻿﻿Build1=Default,b4a.example
+Group=Default Group
+Library1=core
+Library2=declarativeui
+Library3=okhttputils2
+Library4=xui
+Library5=javaobject
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~AddPermission(android.permission.INTERNET)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
+NumberOfFiles=0
+NumberOfLibraries=5
+NumberOfModules=0
+Version=13.62
+@EndOfDesignText@
+#Region  Project Attributes
+    #ApplicationLabel: UI Login
+    #VersionCode: 1
+    #VersionName: 1.0
+    #SupportedOrientations: portrait
+#End Region
+
+#Region  Activity Attributes
+    #FullScreen: False
+    #IncludeTitle: False
+#End Region
+
+' Minimal DeclarativeUI example: a login screen.
+' 100% with the UI.* factory (see UI.bas for the API).
+
+Sub Process_Globals
+    Private Theme As UITheme
+End Sub
+
+Sub Globals
+    Private Root As B4XView
+    Private Email As UIInput
+    Private Password As UIInput
+    Private Message As UILabel
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+    Root = Activity
+    Theme = UI.Theme(UI.THEME_LIGHT)
+    Root.Color = Theme.Background
+    BuildAndMount
+End Sub
+
+Private Sub BuildAndMount
+    Email = UI.Input("Email")
+    Password = UI.Input("Contrasena").PasswordMode(True)
+    Message = UI.Text("").Size(14)
+
+    Dim card As UICard = UI.Card(UI.Column(Null).Spacing(12dip) _
+        .AddChild(UI.Text("Bienvenido").Size(24)) _
+        .AddChild(UI.Text("Accede a tu cuenta").Size(14)) _
+        .AddChild(UI.Space(8dip)) _
+        .AddChild(Email) _
+        .AddChild(Password) _
+        .AddChild(Message) _
+        .AddChild(UI.Button("Entrar").OnClick(Me, "Login_Click"))).ApplyTheme(Theme)
+
+    UI.Show(Root, UI.Center(UI.Padding(16dip, card)).ApplyTheme(Theme))
+End Sub
+
+Sub Login_Click
+    If Email.GetText.Trim.Length = 0 Then
+        Message.Text("Escribe tu email.")
+    Else
+        Message.Text("Bienvenido, " & Email.GetText & "!")
+    End If
+End Sub
+
+Sub Activity_Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+End Sub

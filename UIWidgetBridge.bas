@@ -167,10 +167,14 @@ Public Sub GetContentSize(Widget As Object, MaxWidth As Int, MaxHeight As Int) A
 	End Try
 End Sub
 
-Private Sub Report(Operation As String, Widget As Object, Message As String) As Boolean
+Public Sub ReportError(Operation As String, Widget As Object, Message As String) As Boolean
 	mLastCallSucceeded = False
 	Dim widgetName As String = "Object"
 	If Widget <> Null Then widgetName = GetType(Widget)
 	mDiagnostics.ReportError(Operation, widgetName & ": " & Message)
 	Return False
+End Sub
+
+Private Sub Report(Operation As String, Widget As Object, Message As String) As Boolean
+	Return ReportError(Operation, Widget, Message)
 End Sub

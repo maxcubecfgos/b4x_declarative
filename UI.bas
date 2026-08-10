@@ -46,6 +46,7 @@ Version=13.5
 
 Sub Process_Globals
 	Private mDiagnostics As UIDiagnostics
+	Private mChildOwner As Map
 End Sub
 
 ' ---------------------------------------------------------------------------
@@ -289,7 +290,23 @@ End Sub
 ' available on the returned UITheme for advanced use.
 ' ---------------------------------------------------------------------------
 
-Public Sub Theme As UITheme
+' Theme presets. Use UI.Theme(UI.THEME_LIGHT) or UI.Theme(UI.THEME_DARK).
+Public Sub Theme(Mode As Int) As UITheme
+	If Mode = THEME_DARK Then Return ThemeDark
+	Return ThemeDefault
+End Sub
+
+' Theme mode constants for UI.Theme(Mode). Light = 0, Dark = 1.
+Public Sub THEME_LIGHT As Int
+	Return 0
+End Sub
+
+Public Sub THEME_DARK As Int
+	Return 1
+End Sub
+
+' Default light theme.
+Public Sub ThemeDefault As UITheme
 	Dim t As UITheme
 	t.Initialize
 	Return t
@@ -351,6 +368,11 @@ Public Sub Show(Widget As Object, Root As B4XView)
 	Mount(Widget, Root, 0, 0, Root.Width, Root.Height)
 End Sub
 
+' Alias of Show for the one-expression tree model.
+Public Sub Render(Widget As Object, Root As B4XView)
+	Show(Widget, Root)
+End Sub
+
 ' Mounts a widget at explicit bounds and renders it.
 Public Sub Mount(Widget As Object, Root As B4XView, Left As Int, Top As Int, Width As Int, Height As Int)
 	If Widget = Null Then Return
@@ -377,6 +399,58 @@ Public Sub Unmount(Widget As Object)
 	bridge.Initialize
 	bridge.Unmount(Widget)
 End Sub
+
+
+' ---------------------------------------------------------------------------
+' Child-owner registry - powers the self-explanatory AddChild diagnostics.
+' ---------------------------------------------------------------------------
+
+' Returns the container that currently owns Child, or Null.
+Public Sub ChildOwner(Child As Object) As Object
+	If mChildOwner = Null Then Return Null
+	If mChildOwner.IsInitialized = False Then Return Null
+	If Child = Null Then Return Null
+	If mChildOwner.ContainsKey(Child) = False Then Return Null
+	Return mChildOwner.Get(Child)
+End Sub
+
+' Registers Child as owned by Owner. Returns False (and reports the reason)
+' when the child already belongs to a different container.
+Public Sub RegisterChild(Child As Object, Owner As Object) As Boolean
+	If mChildOwner = Null Then
+		mChildOwner.Initialize
+	End If
+	If mChildOwner.IsInitialized = False Then
+		mChildOwner.Initialize
+	End If
+	If Child = Null Then Return False
+	If mChildOwner.ContainsKey(Child) Then
+		Dim existing As Object = mChildOwner.Get(Child)
+		If existing = Owner Then
+			Report("AddChild", "the widget was already added to this container")
+			Return False
+		End If
+		Report("AddChild", "the widget already belongs to another container (" & GetType(existing) & "); call UI.Unmount or remove it first")
+		Return False
+	End If
+	mChildOwner.Put(Child, Owner)
+	Return True
+End Sub
+
+' Removes the ownership entry for Child (called by containers on Unmount).
+Public Sub UnregisterChild(Child As Object)
+	If mChildOwner = Null Then Return
+	If mChildOwner.IsInitialized = False Then Return
+	If Child = Null Then Return
+	If mChildOwner.ContainsKey(Child) Then mChildOwner.Remove(Child)
+End Sub
+
+' Private helper: reports through the shared collector, initializing it if needed.
+Private Sub Report(Operation As String, Message As String)
+	If mDiagnostics.IsInitialized = False Then mDiagnostics.Initialize
+	mDiagnostics.ReportError(Operation, Message)
+End Sub
+
 
 ' ---------------------------------------------------------------------------
 ' Internal helpers

@@ -121,7 +121,18 @@ Rules:
 6. Shared diagnostics are available through `UI.Diagnostics`, `UI.Errors` and
    `UI.HasErrors`; missing event callbacks are reported there instead of
    failing silently.
-7. The `UI.*` names must not be redefined by application code.
+7. Container `AddChild` is self-explanatory: a Null child, a non-widget object
+   or a widget that already belongs to another container is reported through
+   the shared diagnostics with an actionable message (for example "the widget
+   already belongs to another container (...); call UI.Unmount or remove it
+   first") instead of being dropped silently. Containers release their
+   children on `Unmount`, so the same widget can be re-added afterwards.
+8. Theme presets take a mode constant: `UI.Theme(UI.THEME_LIGHT)` or
+   `UI.Theme(UI.THEME_DARK)`. `UI.ThemeWithScheme`, `UI.ThemeDark` and the
+   advanced `UITheme` methods remain available.
+9. `UI.Render(Widget, Root)` is an alias of `UI.Show(Widget, Root)` for the
+   one-expression tree model.
+10. The `UI.*` names must not be redefined by application code.
 
 The full working app that demonstrates the factory (counter + login +
 dashboard in one navigable shell) is `examples/b4a_ui_quickstart`.
