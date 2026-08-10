@@ -66,32 +66,23 @@ Private Sub RebuildUI
 End Sub
 
 Private Sub CounterScreen As UIScaffold
-    Dim description As UILabel = UI.Text("You have pushed the button this many times:") _
-        .Size(AppTheme.BodyLarge).Color(AppTheme.SecondaryText).ApplyTheme(AppTheme)
-
-    Dim value As UILabel = UI.Text("").BindText(CounterState) _
-        .Size(52).Color(AppTheme.PrimaryText).ApplyTheme(AppTheme)
-
-    Dim content As UIColumn = UI.Column(Null).Spacing(12dip).MainAxisAlignment("center") _
-        .CrossAxisAlignment("stretch").AddChild(description).AddChild(value)
-
-    Dim center As UICenter = UI.Center(content).ApplyTheme(AppTheme)
-
-    Dim plus As UIFloatingActionButton = UI.Fab("+") _
-        .OnClick(Me, "Increment_Click").ApplyTheme(AppTheme)
-
-    Dim result As UIScaffold = UI.Scaffold(center) _
-        .AppBar(BuildAppBar).FloatingActionButtonRight(plus).ApplyTheme(AppTheme)
-    Return result
+    Return UI.Scaffold(UI.Center(UI.Column(Null) _
+        .Spacing(12dip).MainAxisAlignment("center").CrossAxisAlignment("stretch") _
+        .AddChild(UI.Text("You have pushed the button this many times:") _
+            .Size(AppTheme.BodyLarge).Color(AppTheme.SecondaryText).ApplyTheme(AppTheme)) _
+        .AddChild(UI.Text("").BindText(CounterState) _
+            .Size(52).Color(AppTheme.PrimaryText).ApplyTheme(AppTheme)))) _
+        .AppBar(BuildAppBar) _
+        .FloatingActionButtonRight(UI.Fab("+") _
+            .OnClick(Me, "Increment_Click").ApplyTheme(AppTheme)) _
+        .ApplyTheme(AppTheme)
 End Sub
 
 Private Sub BuildAppBar As UIAppBar
-    Dim bar As UIAppBar = UI.AppBar("Declarative Counter").ApplyTheme(AppTheme)
-
-    Dim themeIcon As UIIcon = UI.IconFA(ThemeIconGlyph).Size(24) _
-        .Color(AppTheme.DashboardBarText).OnClick(Me, "ToggleTheme_Click")
-    bar.Action(themeIcon)
-    Return bar
+    Return UI.AppBar("Declarative Counter") _
+        .Action(UI.IconFA(ThemeIconGlyph).Size(24) _
+            .Color(AppTheme.DashboardBarText).OnClick(Me, "ToggleTheme_Click")) _
+        .ApplyTheme(AppTheme)
 End Sub
 
 Private Sub ThemeIconGlyph As String
