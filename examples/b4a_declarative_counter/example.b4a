@@ -27,6 +27,7 @@ Version=13.62
 ' Minimal demo: one Activity, one screen and one observable state.
 ' The full widget showcase belongs in separate examples; this file only proves
 ' the main promise: a Flutter-style counter with very little application code.
+' Migrated to the UI.* factory: no Dim + Initialize in app code.
 
 Sub Process_Globals
     Private CounterState As UIState
@@ -43,10 +44,10 @@ End Sub
 Sub Activity_Create(FirstTime As Boolean)
     Root = Activity
     If FirstTime Then
-        CounterState.Initialize(0)
+        CounterState = UI.State(0)
     End If
 
-    AppTheme.Initialize.Scheme(0xFF6558D3)
+    AppTheme = UI.ThemeWithScheme(0xFF6558D3)
     Root.Color = AppTheme.Background
     RebuildUI
 End Sub
@@ -55,7 +56,7 @@ End Sub
 Private Sub RebuildUI
     If Navigator.IsInitialized Then Navigator.Unmount
 
-    Navigator.Initialize
+    Navigator = UI.Navigator
     Navigator.AddScreen("Counter", CounterScreen)
 
     UiMounted = False
@@ -65,35 +66,29 @@ Private Sub RebuildUI
 End Sub
 
 Private Sub CounterScreen As UIScaffold
-    Dim description As UILabel
-    description.Initialize.Text("You have pushed the button this many times:") _
+    Dim description As UILabel = UI.Text("You have pushed the button this many times:") _
         .Size(AppTheme.BodyLarge).Color(AppTheme.SecondaryText).ApplyTheme(AppTheme)
 
-    Dim value As UILabel
-    value.Initialize.BindText(CounterState).Size(52).Color(AppTheme.PrimaryText).ApplyTheme(AppTheme)
+    Dim value As UILabel = UI.Text("").BindText(CounterState) _
+        .Size(52).Color(AppTheme.PrimaryText).ApplyTheme(AppTheme)
 
-    Dim content As UIColumn
-    content.Initialize.Spacing(12dip).MainAxisAlignment("center") _
+    Dim content As UIColumn = UI.Column(Null).Spacing(12dip).MainAxisAlignment("center") _
         .CrossAxisAlignment("stretch").AddChild(description).AddChild(value)
 
-    Dim center As UICenter
-    center.Initialize.Child(content).ApplyTheme(AppTheme)
+    Dim center As UICenter = UI.Center(content).ApplyTheme(AppTheme)
 
-    Dim plus As UIFloatingActionButton
-    plus.Initialize.Text("+").OnClick(Me, "Increment_Click").ApplyTheme(AppTheme)
+    Dim plus As UIFloatingActionButton = UI.Fab("+") _
+        .OnClick(Me, "Increment_Click").ApplyTheme(AppTheme)
 
-    Dim result As UIScaffold
-    result.Initialize.AppBar(BuildAppBar).Body(center) _
-        .FloatingActionButtonRight(plus).ApplyTheme(AppTheme)
+    Dim result As UIScaffold = UI.Scaffold(center) _
+        .AppBar(BuildAppBar).FloatingActionButtonRight(plus).ApplyTheme(AppTheme)
     Return result
 End Sub
 
 Private Sub BuildAppBar As UIAppBar
-    Dim bar As UIAppBar
-    bar.Initialize.Title("Declarative Counter").ApplyTheme(AppTheme)
+    Dim bar As UIAppBar = UI.AppBar("Declarative Counter").ApplyTheme(AppTheme)
 
-    Dim themeIcon As UIIcon
-    themeIcon.Initialize.FontAwesome(ThemeIconGlyph).Size(24) _
+    Dim themeIcon As UIIcon = UI.IconFA(ThemeIconGlyph).Size(24) _
         .Color(AppTheme.DashboardBarText).OnClick(Me, "ToggleTheme_Click")
     bar.Action(themeIcon)
     Return bar
@@ -135,11 +130,3 @@ End Sub
 
 Sub Activity_Pause (UserClosed As Boolean)
 End Sub
-
-' Application code shown by this demo:
-' - one UIState for the source of truth;
-' - one declarative screen builder;
-' - automatic label updates after SetState;
-' - a theme action declared in the AppBar;
-' - a safe-area-aware Navigator used only as the root host.
-' No manual AddView, layout coordinates or label.Text updates are needed here.
