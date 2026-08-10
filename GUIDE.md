@@ -880,7 +880,7 @@ Navigate between registered screens:
 Navigator.NavigateTo("Settings")
 ```
 
-The navigator calculates the safe rectangle from Android `WindowInsets` through `JavaObject` and places the root below the Android status area. This keeps content away from the clock, battery and notification area without requiring every screen to calculate the top inset. Re-rendering the active route updates it in place. Moving to another registered route detaches the previous route so `GoBack` can restore its declarative/native identity; `Unmount` is used only when the navigator itself is discarded.
+Safe-area handling is automatic and lives in `UIScaffold`, not in the navigator: on every `Render` the scaffold reads Android `WindowInsets` through `UIWidgetBridge.GetSafeBounds` and offsets its appBar, body, FABs and bottom navigation below the status area, keeping content away from the clock, battery and notification region without any per-screen work. `UINavigator` only manages virtual screens: re-rendering the active route updates it in place; moving to another registered route detaches the previous route so `GoBack` can restore its declarative/native identity; `Unmount` is used only when the navigator itself is discarded.
 
 Screens registered with `UINavigator` are virtual widget trees. They are not physical B4A Activities and do not require separate `.bal` layouts.
 
@@ -977,7 +977,7 @@ Make sure:
 
 ### A screen overlaps the status bar
 
-Mount the root through `UINavigator`, or ensure the root uses the available content area. Do not make every screen independently guess the status-bar inset.
+Use `UIScaffold` as the root: it applies the safe area automatically on every `Render`. Do not make every screen independently guess the status-bar inset.
 
 ### A virtual screen does not navigate
 

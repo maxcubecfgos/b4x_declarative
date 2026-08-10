@@ -445,7 +445,7 @@ Navigator.Initialize _
 Navigator.NavigateTo("Activity")
 ```
 
-The host uses the available content rectangle calculated from Android `WindowInsets` through `JavaObject`. This keeps the declarative root below the Android status area, including the battery and clock region, without requiring every screen to calculate top insets independently.
+Safe-area handling is automatic and lives in `UIScaffold`: on every `Render` it reads Android `WindowInsets` (via `UIWidgetBridge.GetSafeBounds`) and offsets its appBar, body, FABs and bottom navigation below the Android status area, including the battery and clock region, without requiring every screen to calculate top insets independently. `UINavigator` is only a navigation host and no longer applies inset offsets itself.
 
 This is intentionally a single-Activity navigation model. It avoids pretending that a virtual declarative screen is a physical B4A Activity or layout file. A route change detaches the previous screen so its declarative/native identity can be restored by `GoBack`; `Unmount` is reserved for terminal cleanup. Native Activity behavior can still be added later when a real Activity is genuinely required.
 
@@ -540,6 +540,6 @@ The only community boundary is about source authorship: please do not copy the i
 - Reuse native B4A controls where they are appropriate.
 - Measure content before assigning layout bounds.
 - Keep virtual navigation separate from native Activity lifecycle.
-- Treat safe-area handling as a root-layout concern.
+- Safe-area handling is automatic in `UIScaffold`; keep it a root-layout concern, never per-screen.
 - Keep runtime diagnostics out of production code.
 - Add complexity only when a concrete UI problem requires it.

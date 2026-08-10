@@ -671,8 +671,8 @@ Rules:
 - Register a screen before navigating to it.
 - The navigator owns mounting, temporary detachment and terminal unmounting of virtual screens.
 - A route change detaches the previous screen so a later `GoBack` can restore its state; the active route is updated in place on ordinary renders.
-- The root content area is responsible for staying below the Android status area.
-- The current implementation uses one real Activity and Android `WindowInsets` accessed through `JavaObject`.
+- Safe-area handling is automatic: `UIScaffold` measures Android `WindowInsets` on every `Render` and offsets its appBar, body, FABs and bottom navigation below the Android status area. `UINavigator` no longer applies inset offsets itself; a scaffold mounted inside a navigator already protects its own content.
+- The current implementation uses one real Activity; insets are read through Android `WindowInsets` via `JavaObject` in `UIWidgetBridge.GetSafeBounds`.
 
 A future native multi-Activity integration must be additive and must not redefine virtual screens as Activities.
 

@@ -19,6 +19,7 @@ Sub Class_Globals
 	Private mParent As B4XView
 	Private mMounted As Boolean
 	Private mLeft, mTop, mWidth, mHeight As Int
+	Private mInsetLeft, mInsetTop, mInsetRight, mInsetBottom As Int
 End Sub
 
 Public Sub Initialize As UIScaffold
@@ -201,6 +202,7 @@ Public Sub Render
 	mMounted = True
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
 	mBaseView.Color = mBackgroundColor
+	MeasureInsets
     
 	' Calculate offsets for the app bar, body, and floating action buttons.
 	Dim topOffset As Int = 0
@@ -214,10 +216,10 @@ Public Sub Render
 	' Render the app bar first.
 	If mAppBar <> Null Then
 		mBridge.SetParent(mAppBar, mBaseView)
-		mBridge.SetPosition(mAppBar, 0, 0)
-		mBridge.SetSize(mAppBar, mWidth, appBarHeight)
+		mBridge.SetPosition(mAppBar, mInsetLeft, mInsetTop)
+		mBridge.SetSize(mAppBar, Max(0, mWidth - mInsetLeft - mInsetRight), appBarHeight)
 		mBridge.Render(mAppBar)
-		topOffset = appBarHeight ' The body starts below the app bar
+		topOffset = appBarHeight + mInsetTop ' The body starts below the app bar + status bar
 	End If
     
 	' Reserve bottom space when one or more floating action buttons are present.
@@ -228,34 +230,34 @@ Public Sub Render
     
 	' Render the body using the remaining height.
 	If mBody <> Null Then
-		Dim bodyHeight As Int = mHeight - topOffset - bottomOffset
+		Dim bodyHeight As Int = mHeight - topOffset - bottomOffset - mInsetBottom
 		If bodyHeight < 0 Then bodyHeight = 0
         
 		mBridge.SetParent(mBody, mBaseView)
-		mBridge.SetPosition(mBody, 0, topOffset)
-		mBridge.SetSize(mBody, mWidth, bodyHeight)
+		mBridge.SetPosition(mBody, mInsetLeft, topOffset)
+		mBridge.SetSize(mBody, Max(0, mWidth - mInsetLeft - mInsetRight), bodyHeight)
 		mBridge.Render(mBody)
 	End If
     
 	' Render the floating action buttons above the body layer.
 	If mFabRight <> Null Then
 		mBridge.SetParent(mFabRight, mBaseView)
-		mBridge.SetPosition(mFabRight, mWidth - fabSize - 16dip, mHeight - fabSize - 16dip - IfBottomBarOffset(mBottomNavigationBar, bottomNavigationHeight))
+		mBridge.SetPosition(mFabRight, mWidth - fabSize - 16dip - mInsetRight, mHeight - fabSize - 16dip - mInsetBottom - IfBottomBarOffset(mBottomNavigationBar, bottomNavigationHeight))
 		mBridge.SetSize(mFabRight, fabSize, fabSize)
 		mBridge.Render(mFabRight)
 	End If
     
 	If mFabLeft <> Null Then
 		mBridge.SetParent(mFabLeft, mBaseView)
-		mBridge.SetPosition(mFabLeft, 16dip, mHeight - fabSize - 16dip - IfBottomBarOffset(mBottomNavigationBar, bottomNavigationHeight))
+		mBridge.SetPosition(mFabLeft, mInsetLeft + 16dip, mHeight - fabSize - 16dip - mInsetBottom - IfBottomBarOffset(mBottomNavigationBar, bottomNavigationHeight))
 		mBridge.SetSize(mFabLeft, fabSize, fabSize)
 		mBridge.Render(mFabLeft)
 	End If
 
 	If mBottomNavigationBar <> Null Then
 		mBridge.SetParent(mBottomNavigationBar, mBaseView)
-		mBridge.SetPosition(mBottomNavigationBar, 0, mHeight - bottomNavigationHeight)
-		mBridge.SetSize(mBottomNavigationBar, mWidth, bottomNavigationHeight)
+		mBridge.SetPosition(mBottomNavigationBar, mInsetLeft, mHeight - mInsetBottom - bottomNavigationHeight)
+		mBridge.SetSize(mBottomNavigationBar, Max(0, mWidth - mInsetLeft - mInsetRight), bottomNavigationHeight)
 		mBridge.Render(mBottomNavigationBar)
 	End If
 End Sub
@@ -327,4 +329,33 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim flexibleSize As List
 	flexibleSize.Initialize
 	Return flexibleSize
+End Sub
+
+' Re-measures the system bars and re-renders only when an inset changed.
+' Safe-area protection is automatic: Render already measures, this is for
+' explicit re-checks (rotation, IME, multi-window).
+Public Sub RefreshInsets
+	If mParent = Null Then Return
+	If mParent.IsInitialized = False Then Return
+	Dim prevLeft, prevTop, prevRight, prevBottom As Int
+	prevLeft = mInsetLeft
+	prevTop = mInsetTop
+	prevRight = mInsetRight
+	prevBottom = mInsetBottom
+	MeasureInsets
+	If prevLeft <> mInsetLeft Or prevTop <> mInsetTop Or prevRight <> mInsetRight Or prevBottom <> mInsetBottom Then
+		Render
+	End If
+End Sub
+
+Private Sub MeasureInsets
+	If mParent = Null Then Return
+	If mParent.IsInitialized = False Then Return
+	Dim safe As List = mBridge.GetSafeBounds(mParent, mLeft, mTop, mWidth, mHeight)
+	If safe.Size = 4 Then
+		mInsetLeft = Max(0, safe.Get(0) - mLeft)
+		mInsetTop = Max(0, safe.Get(1) - mTop)
+		mInsetRight = Max(0, mLeft + mWidth - (safe.Get(0) + safe.Get(2)))
+		mInsetBottom = Max(0, mTop + mHeight - (safe.Get(1) + safe.Get(3)))
+	End If
 End Sub

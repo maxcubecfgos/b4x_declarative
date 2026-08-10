@@ -167,6 +167,90 @@ Public Sub GetContentSize(Widget As Object, MaxWidth As Int, MaxHeight As Int) A
 	End Try
 End Sub
 
+' Returns the safe content rectangle (system bars excluded) in the local
+' coordinate space of Root. Result list: (left, top, width, height).
+' Root is normally the Activity or the panel the widget is mounted on.
+
+' Returns the safe content rectangle (system bars excluded) in the local
+' coordinate space of Root. Result list: (left, top, width, height).
+' Root is normally the Activity or the panel the widget is mounted on.
+Public Sub GetSafeBounds(Root As B4XView, Left As Int, Top As Int, Width As Int, Height As Int) As List
+	Dim result As List
+	result.Initialize
+	result.Add(Left)
+	result.Add(Top)
+	result.Add(Max(0, Width))
+	result.Add(Max(0, Height))
+	If Root = Null Then Return result
+	If Root.IsInitialized = False Then Return result
+	Try
+		Dim context As JavaObject
+		context.InitializeContext
+		Dim window As JavaObject = context.RunMethod("getWindow", Null)
+		Dim decor As JavaObject = window.RunMethod("getDecorView", Null)
+		Dim rootInsets As JavaObject = decor.RunMethod("getRootWindowInsets", Null)
+		If rootInsets.IsInitialized = False Then Return result
+
+		Dim sdk As JavaObject
+		sdk.InitializeStatic("android.os.Build$VERSION")
+		Dim sdkInt As Int = sdk.GetField("SDK_INT")
+		Dim insetLeft, insetTop, insetRight, insetBottom As Int
+
+		If sdkInt >= 30 Then
+			Dim insetTypes As JavaObject
+			insetTypes.InitializeStatic("android.view.WindowInsets$Type")
+			Dim systemBars As Int = insetTypes.RunMethod("systemBars", Null)
+			Dim ime As Int = insetTypes.RunMethod("ime", Null)
+			Dim combinedTypes As Int = Bit.Or(systemBars, ime)
+			Dim nativeInsets As JavaObject = rootInsets.RunMethodJO("getInsets", Array As Object(combinedTypes))
+			If nativeInsets.IsInitialized Then
+				insetLeft = nativeInsets.GetField("left")
+				insetTop = nativeInsets.GetField("top")
+				insetRight = nativeInsets.GetField("right")
+				insetBottom = nativeInsets.GetField("bottom")
+			End If
+		Else If sdkInt >= 20 Then
+			insetLeft = rootInsets.RunMethod("getSystemWindowInsetLeft", Null)
+			insetTop = rootInsets.RunMethod("getSystemWindowInsetTop", Null)
+			insetRight = rootInsets.RunMethod("getSystemWindowInsetRight", Null)
+			insetBottom = rootInsets.RunMethod("getSystemWindowInsetBottom", Null)
+		End If
+
+		Dim decorLocation(2) As Int
+		Dim rootLocation(2) As Int
+		decor.RunMethod("getLocationOnScreen", Array(decorLocation))
+		Dim rootView As JavaObject = Root
+		rootView.RunMethod("getLocationOnScreen", Array(rootLocation))
+
+		Dim decorWidth As Int = decor.RunMethod("getWidth", Null)
+		Dim decorHeight As Int = decor.RunMethod("getHeight", Null)
+		If decorWidth <= 0 Or decorHeight <= 0 Then Return result
+
+		Dim safeLeft As Int = decorLocation(0) + insetLeft
+		Dim safeTop As Int = decorLocation(1) + insetTop
+		Dim safeRight As Int = decorLocation(0) + decorWidth - insetRight
+		Dim safeBottom As Int = decorLocation(1) + decorHeight - insetBottom
+
+		Dim contentLeft As Int = Left + Max(0, safeLeft - rootLocation(0))
+		Dim contentTop As Int = Top + Max(0, safeTop - rootLocation(1))
+		Dim contentRight As Int = Left + Width - Max(0, rootLocation(0) + Width - safeRight)
+		Dim contentBottom As Int = Top + Height - Max(0, rootLocation(1) + Height - safeBottom)
+
+		result.Clear
+		result.Add(contentLeft)
+		result.Add(contentTop)
+		result.Add(Max(0, contentRight - contentLeft))
+		result.Add(Max(0, contentBottom - contentTop))
+	Catch
+		result.Clear
+		result.Add(Left)
+		result.Add(Top)
+		result.Add(Max(0, Width))
+		result.Add(Max(0, Height))
+	End Try
+	Return result
+End Sub
+
 Public Sub ReportError(Operation As String, Widget As Object, Message As String) As Boolean
 	mLastCallSucceeded = False
 	Dim widgetName As String = "Object"

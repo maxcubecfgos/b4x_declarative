@@ -14,9 +14,6 @@ Sub Class_Globals
 	Private mMountedScreen As Object
 	Private mIsMounted As Boolean
 	Private mLeft, mTop, mWidth, mHeight As Int
-    Private mInsetLeft, mInsetTop, mInsetRight, mInsetBottom As Int
-    Private mBoundsLeft, mBoundsTop, mBoundsWidth, mBoundsHeight As Int
-    Private mBoundsReady As Boolean
 End Sub
 
 Public Sub Initialize As UINavigator
@@ -25,11 +22,6 @@ Public Sub Initialize As UINavigator
     mCurrentScreen = ""
     mMountedScreen = Null
     mIsMounted = False
-    mBoundsReady = False
-    mBoundsLeft = 0
-    mBoundsTop = 0
-    mBoundsWidth = 0
-    mBoundsHeight = 0
     Return Me
 End Sub
 
@@ -118,12 +110,10 @@ Public Sub Render
 		Return
 	End If
 
-	Dim bounds As List = GetSafeBounds
-    Dim contentLeft As Int = bounds.Get(0)
-    Dim contentTop As Int = bounds.Get(1)
-    Dim contentWidth As Int = bounds.Get(2)
-    Dim contentHeight As Int = bounds.Get(3)
-    RememberBounds(contentLeft, contentTop, contentWidth, contentHeight)
+    Dim contentLeft As Int = mLeft
+    Dim contentTop As Int = mTop
+    Dim contentWidth As Int = mWidth
+    Dim contentHeight As Int = mHeight
 
 	Dim needsCreate As Boolean = False
 	If mHost = Null Then
@@ -186,132 +176,15 @@ Private Sub IsWidgetProtocol(Widget As Object) As Boolean
 		And SubExists(Widget, "GetContentSize")
 End Sub
 
-' Re-measure the safe area and remount only when an inset changes.
+' Safe-area protection now lives in UIScaffold. Kept for compatibility:
+' a re-render of the current route is harmless and lets callers refresh.
+' Safe-area protection now lives in UIScaffold. Kept for compatibility:
+' a re-render of the current route is harmless and lets callers refresh.
 Public Sub RefreshInsets
-	If mParent = Null Then Return
-	If mHost = Null Then Return
-	If mParent.IsInitialized = False Then Return
-	If mHost.IsInitialized = False Then Return
-    Dim previousLeft As Int = mInsetLeft
-    Dim previousTop As Int = mInsetTop
-    Dim previousRight As Int = mInsetRight
-    Dim previousBottom As Int = mInsetBottom
-    Dim previousBoundsLeft As Int = mBoundsLeft
-    Dim previousBoundsTop As Int = mBoundsTop
-    Dim previousBoundsWidth As Int = mBoundsWidth
-    Dim previousBoundsHeight As Int = mBoundsHeight
-    Dim hadBounds As Boolean = mBoundsReady
-    Dim currentBounds As List = GetSafeBounds
-    Dim boundsChanged As Boolean = False
-    If hadBounds = False Then boundsChanged = True
-    If previousBoundsLeft <> currentBounds.Get(0) Then boundsChanged = True
-    If previousBoundsTop <> currentBounds.Get(1) Then boundsChanged = True
-    If previousBoundsWidth <> currentBounds.Get(2) Then boundsChanged = True
-    If previousBoundsHeight <> currentBounds.Get(3) Then boundsChanged = True
-    Dim insetsChanged As Boolean = False
-    If previousLeft <> mInsetLeft Then insetsChanged = True
-    If previousTop <> mInsetTop Then insetsChanged = True
-    If previousRight <> mInsetRight Then insetsChanged = True
-    If previousBottom <> mInsetBottom Then insetsChanged = True
-    If insetsChanged Or boundsChanged Then Render
+	If mIsMounted Then Render
 End Sub
 
-Private Sub GetSafeBounds As List
-    Dim result As List
-    result.Initialize
-    ResetInsets
 
-    ' WindowInsets are measured from the window/decor coordinate space.
-    ' Convert the safe rectangle to the local coordinate space of mParent.
-    ' This prevents a second offset when B4A has already inset the parent.
-    Try
-        Dim context As JavaObject
-        context.InitializeContext
-        Dim window As JavaObject = context.RunMethod("getWindow", Null)
-        Dim decor As JavaObject = window.RunMethod("getDecorView", Null)
-        Dim rootInsets As JavaObject = decor.RunMethod("getRootWindowInsets", Null)
-        If rootInsets.IsInitialized = False Then Return FullBounds(result)
-
-        Dim sdk As JavaObject
-        sdk.InitializeStatic("android.os.Build$VERSION")
-        Dim sdkInt As Int = sdk.GetField("SDK_INT")
-        Dim insetLeft, insetTop, insetRight, insetBottom As Int
-
-        If sdkInt >= 30 Then
-            Dim insetTypes As JavaObject
-            insetTypes.InitializeStatic("android.view.WindowInsets$Type")
-            Dim systemBars As Int = insetTypes.RunMethod("systemBars", Null)
-            Dim ime As Int = insetTypes.RunMethod("ime", Null)
-            Dim combinedTypes As Int = Bit.Or(systemBars, ime)
-            Dim nativeInsets As JavaObject = rootInsets.RunMethodJO("getInsets", Array As Object(combinedTypes))
-            If nativeInsets.IsInitialized Then
-                insetLeft = nativeInsets.GetField("left")
-                insetTop = nativeInsets.GetField("top")
-                insetRight = nativeInsets.GetField("right")
-                insetBottom = nativeInsets.GetField("bottom")
-            End If
-        Else If sdkInt >= 20 Then
-            insetLeft = rootInsets.RunMethod("getSystemWindowInsetLeft", Null)
-            insetTop = rootInsets.RunMethod("getSystemWindowInsetTop", Null)
-            insetRight = rootInsets.RunMethod("getSystemWindowInsetRight", Null)
-            insetBottom = rootInsets.RunMethod("getSystemWindowInsetBottom", Null)
-        Else
-            Return FullBounds(result)
-        End If
-
-        Dim decorLocation(2) As Int
-        Dim parentLocation(2) As Int
-        decor.RunMethod("getLocationOnScreen", Array(decorLocation))
-        Dim parentView As JavaObject = mParent
-        parentView.RunMethod("getLocationOnScreen", Array(parentLocation))
-
-        Dim decorWidth As Int = decor.RunMethod("getWidth", Null)
-        Dim decorHeight As Int = decor.RunMethod("getHeight", Null)
-        If decorWidth <= 0 Or decorHeight <= 0 Then Return FullBounds(result)
-
-        Dim safeLeft As Int = decorLocation(0) + insetLeft
-        Dim safeTop As Int = decorLocation(1) + insetTop
-        Dim safeRight As Int = decorLocation(0) + decorWidth - insetRight
-        Dim safeBottom As Int = decorLocation(1) + decorHeight - insetBottom
-
-        mInsetLeft = Max(0, safeLeft - parentLocation(0))
-        mInsetTop = Max(0, safeTop - parentLocation(1))
-        mInsetRight = Max(0, parentLocation(0) + mWidth - safeRight)
-        mInsetBottom = Max(0, parentLocation(1) + mHeight - safeBottom)
-    Catch
-        ResetInsets
-    End Try
-
-    result.Add(mLeft + mInsetLeft)
-    result.Add(mTop + mInsetTop)
-    result.Add(Max(0, mWidth - mInsetLeft - mInsetRight))
-    result.Add(Max(0, mHeight - mInsetTop - mInsetBottom))
-    Return result
-End Sub
-
-Private Sub FullBounds(Result As List) As List
-    ResetInsets
-    Result.Add(mLeft)
-    Result.Add(mTop)
-    Result.Add(Max(0, mWidth))
-    Result.Add(Max(0, mHeight))
-    Return Result
-End Sub
-
-Private Sub RememberBounds(Left As Int, Top As Int, Width As Int, Height As Int)
-    mBoundsLeft = Left
-    mBoundsTop = Top
-    mBoundsWidth = Width
-    mBoundsHeight = Height
-    mBoundsReady = True
-End Sub
-
-Private Sub ResetInsets
-    mInsetLeft = 0
-    mInsetTop = 0
-    mInsetRight = 0
-    mInsetBottom = 0
-End Sub
 
 Public Sub Unmount
 	If mMountedScreen <> Null Then

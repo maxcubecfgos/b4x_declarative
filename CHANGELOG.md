@@ -1,6 +1,16 @@
 ﻿# Declarative UI for B4A — Changelog
 
-# Declarative UI for B4A — Changelog
+## 0.4 — Automatic safe area in UIScaffold
+
+1. `UIScaffold` now measures Android `WindowInsets` automatically on every
+   `Render` (via `UIWidgetBridge.GetSafeBounds`) and offsets its appBar,
+   body, FABs and bottom navigation below the status area. Apps no longer
+   need the navigator (or any per-screen inset logic) to respect the
+   status bar — this is now the default behavior.
+2. `UINavigator` no longer applies inset offsets; it is purely a virtual
+   screen host. `RefreshInsets` remains as a compatibility no-op.
+3. Documentation (SYNTAX/GUIDE/README/FORUM_GUIDE) updated: safe area is a
+   root-layout concern handled automatically by `UIScaffold`.
 
 ## 0.3 — Self-explanatory errors, theme constants and canonical examples
 

@@ -9,7 +9,7 @@ ManifestCode='This code will be applied to the manifest file during compilation.
 NumberOfFiles=0
 NumberOfLibraries=5
 NumberOfModules=0
-Version=13.62
+Version=13.7
 @EndOfDesignText@
 
 #Region  Project Attributes

@@ -134,7 +134,7 @@ End Sub
 Private Sub MountUI
     If Root.Width <= 0 Or Root.Height <= 0 Then Return
     If UiMounted = False Or LastWidth <> Root.Width Or LastHeight <> Root.Height Then
-        UI.Show(Shell, Root)
+        UI.Show(Root, Shell)
         UiMounted = True
         LastWidth = Root.Width
         LastHeight = Root.Height

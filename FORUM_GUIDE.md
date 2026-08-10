@@ -153,7 +153,7 @@ icon.Initialize.FontAwesomeCode(0xF013).Size(22)
 | --- | --- | --- |
 | `UIAppBar` | Top bar with title and optional action widget. | `Title`, `BindTitle`, `UnbindTitle`, `Action`, `ClearAction`, `BackgroundColor`, `TitleColor`, `TitleSize`, `ApplyTheme` |
 | `UIScaffold` | Screen shell that reserves space for app bar, body, bottom navigation and FABs. | `AppBar`, `Body`, `BottomNavigationBar`, `FloatingActionButtonLeft`, `FloatingActionButtonRight`, `BackgroundColor`, `ApplyTheme` |
-| `UINavigator` | Virtual screen registration and single-Activity navigation with safe-area handling. | `AddScreen`, `NavigateTo`, `ApplyTheme`, `RefreshInsets` |
+| `UINavigator` | Virtual screen registration and single-Activity navigation (safe-area is automatic in `UIScaffold`). | `AddScreen`, `NavigateTo`, `ApplyTheme`, `RefreshInsets` |
 | `UIBottomNavigationBar` | Data-driven bottom navigation with selected state and callbacks. | `AddItem`, `BindSelectedIndex`, `OnSelected`, `SetSelectedIndex`, `GetSelectedIndex`, `GetSelectedId`, `ShowInactiveLabels`, `ApplyTheme` |
 
 A screen shell can be assembled as follows:
@@ -629,7 +629,7 @@ For a tiny one-label screen, traditional B4A may be equally short. The advantage
 
 **A scroll view does not scroll:** ensure the child is taller than the viewport and place the scroll view inside `UIExpanded` when it shares a Column with fixed content.
 
-**A screen overlaps the status bar:** mount the root through `UINavigator` and avoid independently guessing the top inset in every screen.
+**A screen overlaps the status bar:** use `UIScaffold` as the root — it applies the safe area automatically on every `Render`. Never guess the top inset in individual screens.
 
 **A theme change appears incomplete:** apply the same `UITheme` to the root scaffold/navigator and avoid hard-coded colors in custom widgets. Explicit per-widget overrides intentionally remain unchanged.
 

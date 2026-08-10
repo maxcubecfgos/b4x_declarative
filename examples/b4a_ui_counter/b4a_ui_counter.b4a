@@ -9,7 +9,7 @@ ManifestCode='This code will be applied to the manifest file during compilation.
 NumberOfFiles=0
 NumberOfLibraries=5
 NumberOfModules=0
-Version=13.62
+Version=13.7
 @EndOfDesignText@
 #Region  Project Attributes
     #ApplicationLabel: UI Counter
@@ -32,7 +32,7 @@ End Sub
 
 Sub Globals
     Private Root As B4XView
-    Private Label As UILabel
+    Private CounterLabel As UILabel
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
@@ -42,12 +42,12 @@ Sub Activity_Create(FirstTime As Boolean)
 End Sub
 
 Private Sub BuildAndMount
-    Label = UI.Text("0").Size(64)
-    Label.BindText(State)
+    CounterLabel = UI.Text("0").Size(64)
+    CounterLabel.BindText(State)
 
     Dim body As UIColumn = UI.Column(Null) _
         .Spacing(24dip).MainAxisAlignment("center").CrossAxisAlignment("center") _
-        .AddChild(Label) _
+        .AddChild(CounterLabel) _
         .AddChild(UI.Row(Null).Spacing(16dip) _
             .AddChild(UI.Button("Restar").OnClick(Me, "Minus_Click")) _
             .AddChild(UI.Button("Sumar").OnClick(Me, "Plus_Click")))
