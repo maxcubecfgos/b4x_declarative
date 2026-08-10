@@ -104,7 +104,7 @@ Rules:
 
 1. `UI.*` functions own `Initialize`. Application code never writes
    `Dim x As UIxxx` + `x.Initialize` for a widget created by the factory.
-2. Trees are mounted with `UI.Show(Widget, Root)` (fills the root) or
+2. Trees are mounted with `UI.Show(Root, Widget)` (fills the root) or
    `UI.Mount(Widget, Root, Left, Top, Width, Height)` (explicit bounds).
    Manual `SetParent`/`SetPosition`/`SetSize`/`Render` is no longer required
    for factory-built trees.
@@ -130,9 +130,60 @@ Rules:
 8. Theme presets take a mode constant: `UI.Theme(UI.THEME_LIGHT)` or
    `UI.Theme(UI.THEME_DARK)`. `UI.ThemeWithScheme`, `UI.ThemeDark` and the
    advanced `UITheme` methods remain available.
-9. `UI.Render(Widget, Root)` is an alias of `UI.Show(Widget, Root)` for the
+9. `UI.Render(Root, Widget)` is an alias of `UI.Show(Root, Widget)` for the
    one-expression tree model.
 10. The `UI.*` names must not be redefined by application code.
+
+### The single-tree standard
+
+For a screen of any size, prefer building the whole tree in **one expression**
+and mounting it with `UI.Show`. This is the reference form used by
+`examples/b4a_declarative_counter`:
+
+```basic
+Private Root As B4XView
+Private AppTheme As UITheme
+Private Screen As UIScaffold
+
+Sub Activity_Create(FirstTime As Boolean)
+    Root = Activity
+    If FirstTime Then CounterState = UI.State(0)
+    AppTheme = UI.ThemeWithScheme(0xFF6558D3)
+    Root.Color = AppTheme.Background
+    RebuildUI
+End Sub
+
+Private Sub RebuildUI
+    If Screen.IsInitialized Then UI.Unmount(Screen)
+    Screen = UI.Scaffold(UI.Center(UI.Column(Null) _
+        .Spacing(12dip).MainAxisAlignment("center").CrossAxisAlignment("stretch") _
+        .AddChild(UI.Text("You have pushed the button this many times:") _
+            .Size(AppTheme.BodyLarge).Color(AppTheme.SecondaryText).ApplyTheme(AppTheme)) _
+        .AddChild(UI.Text("").BindText(CounterState) _
+            .Size(52).Color(AppTheme.PrimaryText).ApplyTheme(AppTheme)))) _
+        .FloatingActionButtonRight(UI.Fab("+") _
+            .OnClick(Me, "Increment_Click").ApplyTheme(AppTheme)) _
+        .ApplyTheme(AppTheme)
+    UI.Show(Root, Screen)
+End Sub
+```
+
+Rules of the standard:
+
+1. Zero ceremony: no `Dim x As UIxxx` + `x.Initialize`, no `SetParent`,
+   `SetPosition`, `SetSize` or `Render` in application code. The factory and
+   `UI.Show` own all of it.
+2. Only declare globals that state or events need later (`Root`, the theme,
+   and the screen reference used by `UI.Unmount`). Everything else is inline
+   in the tree.
+3. Rebuilding the tree means `UI.Unmount(Screen)` + `UI.Show(Root, Screen)`.
+   `UI.Show` mounts on top and does **not** clear a previous tree.
+4. One screen, one tree expression. Split into builder functions only when
+   the tree becomes too large to read, never per-widget.
+5. Bound widgets re-layout automatically: when a value bound through
+   `BindText`/`BindValue` changes, the widget re-measures itself and the
+   mounted tree is re-laid out, so growing content ("9" to "10") is never
+   clipped and containers recompute their natural size. No app code needed.
 
 The full working app that demonstrates the factory (counter + login +
 dashboard in one navigable shell) is `examples/b4a_ui_quickstart`.

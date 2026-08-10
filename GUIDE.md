@@ -94,6 +94,18 @@ Every `UI.*` function creates, initializes and returns a widget; `UI.Show`
 mounts the whole tree in one call. Containers accept either a `List` of
 children or `Null` plus fluent `AddChild`.
 
+**Single-tree standard.** Build the whole screen as one `UI.*` expression and
+mount it with `UI.Show(Root, tree)`. Declare only the globals that state or
+events need later. To replace the tree (for example after a theme change),
+call `UI.Unmount(Screen)` first — `UI.Show` mounts on top and does not clear
+a previous tree. `examples/b4a_declarative_counter` is the canonical form.
+
+**Automatic re-layout.** When the content of a bound widget changes (a label
+with `BindText`, a progress bar with `BindValue`), the widget re-measures
+itself and the mounted tree is re-laid out automatically. Growing text such
+as "9" to "10" is never clipped, and containers recompute their natural size
+without any application code after `SetState`.
+
 ### Canonical copy-paste examples
 
 Three minimal, standalone projects are shipped under `examples/`, each written
@@ -669,7 +681,7 @@ End Sub
 CounterState.Unsubscribe(Me, "CounterState_Changed")
 ```
 
-`UIState.UnsubscribeTarget` removes every subscription owned by one widget or object. This milestone provides targeted observable updates, not a complete Flutter-style virtual-DOM diff engine: bound widgets update themselves, while structural changes still require updating and rendering the tree. State values are replacement values; mutating an existing `Map` or `List` does not automatically notify listeners. When several replacements should produce one UI update, call `CoalesceNotifications(True)` on that state; the callback is deferred to the next UI cycle and observes the final value. The default remains synchronous for compatibility.
+`UIState.UnsubscribeTarget` removes every subscription owned by one widget or object. This milestone provides targeted observable updates, not a complete Flutter-style virtual-DOM diff engine: bound widgets update their own content and the library re-lays out the mounted tree automatically (via `UI.Invalidate`) so natural sizes stay correct, while structural changes (adding or removing widgets) still require updating and rendering the tree. State values are replacement values; mutating an existing `Map` or `List` does not automatically notify listeners. When several replacements should produce one UI update, call `CoalesceNotifications(True)` on that state; the callback is deferred to the next UI cycle and observes the final value. The default remains synchronous for compatibility.
 
 ### UIInput
 

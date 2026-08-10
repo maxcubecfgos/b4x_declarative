@@ -47,6 +47,7 @@ Version=13.5
 Sub Process_Globals
 	Private mDiagnostics As UIDiagnostics
 	Private mChildOwner As Map
+	Private mRootWidget As Object
 End Sub
 
 ' ---------------------------------------------------------------------------
@@ -320,12 +321,14 @@ End Sub
 
 Public Sub ThemeWithScheme(SeedColor As Int) As UITheme
 	Dim t As UITheme
+	t.Initialize
 	t.InitializeWithScheme(SeedColor)
 	Return t
 End Sub
 
 Public Sub ThemeWithSchemeAndMode(SeedColor As Int, Dark As Boolean) As UITheme
 	Dim t As UITheme
+	t.Initialize
 	t.InitializeWithSchemeAndMode(SeedColor, Dark)
 	Return t
 End Sub
@@ -364,13 +367,14 @@ End Sub
 
 ' Mounts a widget at the full Root bounds and renders it. Use this for the
 ' root of an Activity (Activity is a B4XView).
-Public Sub Show(Widget As Object, Root As B4XView)
+Public Sub Show(Root As B4XView, Widget As Object)
+	mRootWidget = Widget
 	Mount(Widget, Root, 0, 0, Root.Width, Root.Height)
 End Sub
 
 ' Alias of Show for the one-expression tree model.
-Public Sub Render(Widget As Object, Root As B4XView)
-	Show(Widget, Root)
+Public Sub Render(Root As B4XView, Widget As Object)
+	Show(Root, Widget)
 End Sub
 
 ' Mounts a widget at explicit bounds and renders it.
@@ -392,9 +396,28 @@ Public Sub Refresh(Widget As Object)
 	bridge.Render(Widget)
 End Sub
 
+' Re-layouts the mounted tree after a widget's content changed (e.g. bound text).
+' Prefers re-rendering the UI.Show root so every ancestor re-measures; falls back
+' to re-rendering the highest registered owner container.
+Public Sub Invalidate(ChangedWidget As Object)
+	If mRootWidget <> Null Then
+		CallSub(mRootWidget, "Render")
+		Return
+	End If
+	Dim owner As Object = ChildOwner(ChangedWidget)
+	Dim topOwner As Object = owner
+	Dim current As Object = owner
+	Do While current <> Null
+		topOwner = current
+		current = ChildOwner(current)
+	Loop
+	If topOwner <> Null Then CallSub(topOwner, "Render")
+End Sub
+
 ' Permanently releases a mounted widget tree.
 Public Sub Unmount(Widget As Object)
 	If Widget = Null Then Return
+	If mRootWidget = Widget Then mRootWidget = Null
 	Dim bridge As UIWidgetBridge
 	bridge.Initialize
 	bridge.Unmount(Widget)

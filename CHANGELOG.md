@@ -1,5 +1,24 @@
 ﻿# Declarative UI for B4A — Changelog
 
+## 0.5 — Debug-mode theme fix, automatic re-layout, multi-line labels
+
+1. Theme factories now call `t.Initialize` before `InitializeWithScheme` and
+   `InitializeWithSchemeAndMode`. B4A binds the instance BA only on the method
+   named exactly `Initialize`; calling the scheme initializers first crashed
+   with "Class instance was not initialized" in debug mode (release was
+   unaffected). App code still writes only `UI.ThemeWithScheme(...)`.
+2. Bound widgets re-layout the mounted tree automatically: `UI.Show` records
+   the root and `UI.Invalidate` re-renders it, so a `BindText` label grows
+   correctly from "9" to "10" instead of clipping to the first digit.
+3. `UILabel.GetContentSize` estimates the wrapped line count from the text
+   width versus the available width and returns a multi-line height. Long
+   descriptions in narrow containers no longer "wrap but clip" at the bottom.
+4. Restored the documented `Show(Root, Widget)` / `Render(Root, Widget)`
+   signatures (the earlier fix had been accidentally reverted).
+5. Documentation (SYNTAX/GUIDE): added the single-tree standard (one
+   `UI.*` expression + `UI.Show`/`UI.Unmount`, zero ceremony) and the
+   automatic re-layout behavior of bound widgets.
+
 ## 0.4 — Automatic safe area in UIScaffold
 
 1. `UIScaffold` now measures Android `WindowInsets` automatically on every

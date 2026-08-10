@@ -48,7 +48,10 @@ Public Sub BindText(State As UIState) As UILabel
 			mText = StateText(mTextState.GetState)
 			mTextState.Subscribe(Me, "TextState_Changed")
 			If mParent <> Null Then
-				If mParent.IsInitialized Then Render
+				If mParent.IsInitialized Then
+					Render
+					UI.Invalidate(Me)
+				End If
 			End If
 		End If
 	End If
@@ -68,6 +71,7 @@ Private Sub TextState_Changed(State As UIState)
 	If State = Null Then Return
 	mText = StateText(State.GetState)
 	Render
+	UI.Invalidate(Me)
 End Sub
 
 ' Converts any state value to display text without relying on B4A type tests.
@@ -181,6 +185,12 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim result As List
 	result.Initialize
 	
+	' Clamp the available bounds before measuring.
+	Dim safeMaxWidth As Int = MaxWidth
+	Dim safeMaxHeight As Int = MaxHeight
+	If safeMaxWidth <= 0 Then safeMaxWidth = 10000
+	If safeMaxHeight <= 0 Then safeMaxHeight = 10000
+	
 	' Measure text width through the standard B4A Canvas API.
 	Dim bmp As Bitmap
 	bmp.InitializeMutable(1dip, 1dip)
@@ -188,15 +198,18 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	cvs.Initialize2(bmp)
 	Dim textWidth As Float = cvs.MeasureStringWidth(mText, Typeface.DEFAULT, mSize)
 	
-	' Android needs extra room for descenders and TextView padding.
-	' The minimum height prevents the lower part of labels from being clipped.
-	Dim textHeight As Int = Max(mSize * 1.6 + 10dip, 28dip)
+	' Estimate how many lines Android will wrap the text into at the available
+	' width. Reserving only one line clips wrapped content (long descriptions).
+	Dim lines As Int = 1
+	If textWidth > safeMaxWidth Then
+		lines = Ceil(textWidth / Max(1, safeMaxWidth))
+		If lines < 1 Then lines = 1
+	End If
 	
-	' Clamp the result to the available maximum bounds.
-	Dim safeMaxWidth As Int = MaxWidth
-	Dim safeMaxHeight As Int = MaxHeight
-	If safeMaxWidth <= 0 Then safeMaxWidth = 10000
-	If safeMaxHeight <= 0 Then safeMaxHeight = 10000
+	' Per-line box: font size plus descender and TextView padding headroom.
+	' The minimum height prevents the lower part of labels from being clipped.
+	Dim lineHeight As Int = Max(mSize * 1.5 + 6dip, 22dip)
+	Dim textHeight As Int = Max(lines * lineHeight + 4dip, 28dip)
 	
 	result.Add(Min(textWidth, safeMaxWidth))
 	result.Add(Min(textHeight, safeMaxHeight))
