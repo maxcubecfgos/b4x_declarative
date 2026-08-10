@@ -35,37 +35,27 @@ End Sub
 
 Sub Globals
     Private Root As B4XView
-    Private Navigator As UINavigator
     Private AppTheme As UITheme
-    Private UiMounted As Boolean
-    Private LastWidth, LastHeight As Int
+    Private Screen As UIScaffold
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
     Root = Activity
-    If FirstTime Then
-        CounterState = UI.State(0)
-    End If
-
+    If FirstTime Then CounterState = UI.State(0)
     AppTheme = UI.ThemeWithScheme(0xFF6558D3)
     Root.Color = AppTheme.Background
     RebuildUI
 End Sub
 
-' Rebuilds the declarative tree when the theme changes.
+' Replaces the mounted tree when the theme changes. UI.Show does the
+' SetParent/SetPosition/SetSize/Render ceremony that MountUI used to own.
 Private Sub RebuildUI
-    If Navigator.IsInitialized Then Navigator.Unmount
-
-    Navigator = UI.Navigator
-    Navigator.AddScreen("Counter", CounterScreen)
-
-    UiMounted = False
-    LastWidth = 0
-    LastHeight = 0
-    MountUI
+    If Screen.IsInitialized Then UI.Unmount(Screen)
+    Screen = BuildScreen
+    UI.Show(Root, Screen)
 End Sub
 
-Private Sub CounterScreen As UIScaffold
+Private Sub BuildScreen As UIScaffold
     Return UI.Scaffold(UI.Center(UI.Column(Null) _
         .Spacing(12dip).MainAxisAlignment("center").CrossAxisAlignment("stretch") _
         .AddChild(UI.Text("You have pushed the button this many times:") _
@@ -90,20 +80,6 @@ Private Sub ThemeIconGlyph As String
     Return Chr(0xF186) ' FontAwesome moon: switch to dark mode
 End Sub
 
-Private Sub MountUI
-    If Root.Width <= 0 Or Root.Height <= 0 Then Return
-
-    If UiMounted = False Or LastWidth <> Root.Width Or LastHeight <> Root.Height Then
-        Navigator.SetParent(Root)
-        Navigator.SetPosition(0, 0)
-        Navigator.SetSize(Root.Width, Root.Height)
-        Navigator.Render
-        UiMounted = True
-        LastWidth = Root.Width
-        LastHeight = Root.Height
-    End If
-    Navigator.RefreshInsets
-End Sub
 
 Sub Increment_Click
     CounterState.SetState(CounterState.GetState + 1)
@@ -116,7 +92,7 @@ Sub ToggleTheme_Click
 End Sub
 
 Sub Activity_Resume
-    MountUI
+    RebuildUI
 End Sub
 
 Sub Activity_Pause (UserClosed As Boolean)
