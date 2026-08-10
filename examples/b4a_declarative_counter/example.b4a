@@ -11,6 +11,7 @@ NumberOfLibraries=5
 NumberOfModules=0
 Version=13.62
 @EndOfDesignText@
+
 #Region  Project Attributes
     #ApplicationLabel: Declarative Counter
     #VersionCode: 1
@@ -24,10 +25,9 @@ Version=13.62
     #IncludeTitle: False
 #End Region
 
-' Minimal demo: one Activity, one screen and one observable state.
-' The full widget showcase belongs in separate examples; this file only proves
-' the main promise: a Flutter-style counter with very little application code.
-' Migrated to the UI.* factory: no Dim + Initialize in app code.
+' Minimal demo: one Activity, one observable state and ONE widget-tree
+' expression. The factory UI.* hides Initialize, Dim, SetParent and Render;
+' this whole app screen is a single Return/assignment statement.
 
 Sub Process_Globals
     Private CounterState As UIState
@@ -47,39 +47,25 @@ Sub Activity_Create(FirstTime As Boolean)
     RebuildUI
 End Sub
 
-' Replaces the mounted tree when the theme changes. UI.Show does the
-' SetParent/SetPosition/SetSize/Render ceremony that MountUI used to own.
+' Replaces the mounted tree. UI.Show does the SetParent/SetPosition/SetSize/Render
+' ceremony; UI.Unmount releases the previous tree before the new one mounts.
 Private Sub RebuildUI
     If Screen.IsInitialized Then UI.Unmount(Screen)
-    Screen = BuildScreen
-    UI.Show(Root, Screen)
-End Sub
-
-Private Sub BuildScreen As UIScaffold
-    Return UI.Scaffold(UI.Center(UI.Column(Null) _
+    Screen = UI.Scaffold(UI.Center(UI.Column(Null) _
         .Spacing(12dip).MainAxisAlignment("center").CrossAxisAlignment("stretch") _
         .AddChild(UI.Text("You have pushed the button this many times:") _
             .Size(AppTheme.BodyLarge).Color(AppTheme.SecondaryText).ApplyTheme(AppTheme)) _
         .AddChild(UI.Text("").BindText(CounterState) _
             .Size(52).Color(AppTheme.PrimaryText).ApplyTheme(AppTheme)))) _
-        .AppBar(BuildAppBar) _
+        .AppBar(UI.AppBar("Declarative Counter") _
+            .Action(UI.IconFA(Chr(IIf(AppTheme.IsDark, 0xF185, 0xF186))).Size(24) _
+                .Color(AppTheme.DashboardBarText).OnClick(Me, "ToggleTheme_Click")) _
+            .ApplyTheme(AppTheme)) _
         .FloatingActionButtonRight(UI.Fab("+") _
             .OnClick(Me, "Increment_Click").ApplyTheme(AppTheme)) _
         .ApplyTheme(AppTheme)
+    UI.Show(Root, Screen)
 End Sub
-
-Private Sub BuildAppBar As UIAppBar
-    Return UI.AppBar("Declarative Counter") _
-        .Action(UI.IconFA(ThemeIconGlyph).Size(24) _
-            .Color(AppTheme.DashboardBarText).OnClick(Me, "ToggleTheme_Click")) _
-        .ApplyTheme(AppTheme)
-End Sub
-
-Private Sub ThemeIconGlyph As String
-    If AppTheme.IsDark Then Return Chr(0xF185) ' FontAwesome sun: switch to light mode
-    Return Chr(0xF186) ' FontAwesome moon: switch to dark mode
-End Sub
-
 
 Sub Increment_Click
     CounterState.SetState(CounterState.GetState + 1)
