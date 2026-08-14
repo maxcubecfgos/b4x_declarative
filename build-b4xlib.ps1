@@ -50,6 +50,28 @@ $expectedModules = @(
 )
 
 try {
+    # --- B4X source validation gate ----------------------------------------
+    # Structural sanity for every B4X source file in the repository (.b4a and
+    # .bas: parenthesis balance per statement, ' _' continuation rules,
+    # Sub/Region/Type pairing, BOM/header sanity). Catches AI/author edits
+    # that would break the B4A compiler before packaging. The checker scans
+    # the repository itself, so it keeps working even if examples/ changes.
+    $checker = Join-Path $root 'check-b4x-source.py'
+    if (Test-Path -LiteralPath $checker) {
+        $python = Get-Command python -ErrorAction SilentlyContinue
+        if ($python) {
+            & python $checker
+            if ($LASTEXITCODE -ne 0) {
+                throw 'B4X source validation failed. Fix the reported issues or run: python check-b4x-source.py'
+            }
+            Write-Host 'B4X source validation passed (check-b4x-source.py).' -ForegroundColor Green
+        } else {
+            Write-Warning 'Python not found; skipping source validation (check-b4x-source.py).'
+        }
+    } else {
+        Write-Warning 'check-b4x-source.py not found; skipping source validation.'
+    }
+
     New-Item -ItemType Directory -Path $stage -Force | Out-Null
 
     $allSourceModules = @(Get-ChildItem -LiteralPath $root -Filter 'UI*.bas' -File | Sort-Object Name)

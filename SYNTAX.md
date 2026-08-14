@@ -149,7 +149,6 @@ Sub Activity_Create(FirstTime As Boolean)
     Root = Activity
     If FirstTime Then CounterState = UI.State(0)
     AppTheme = UI.ThemeWithScheme(0xFF6558D3)
-    Root.Color = AppTheme.Background
     RebuildUI
 End Sub
 
@@ -158,15 +157,21 @@ Private Sub RebuildUI
     Screen = UI.Scaffold(UI.Center(UI.Column(Null) _
         .Spacing(12dip).MainAxisAlignment("center").CrossAxisAlignment("stretch") _
         .AddChild(UI.Text("You have pushed the button this many times:") _
-            .Size(AppTheme.BodyLarge).Color(AppTheme.SecondaryText).ApplyTheme(AppTheme)) _
+            .Size(AppTheme.BodyLarge).Color(AppTheme.SecondaryText)) _
         .AddChild(UI.Text("").BindText(CounterState) _
-            .Size(52).Color(AppTheme.PrimaryText).ApplyTheme(AppTheme)))) _
+            .Size(52).Color(AppTheme.PrimaryText)))) _
         .FloatingActionButtonRight(UI.Fab("+") _
-            .OnClick(Me, "Increment_Click").ApplyTheme(AppTheme)) _
+            .OnClick(Me, "Increment_Click")) _
         .ApplyTheme(AppTheme)
     UI.Show(Root, Screen)
 End Sub
 ```
+
+The theme is applied once at the root: `UIScaffold.ApplyTheme` propagates it
+to the app bar, body and FABs, and containers forward it to their children.
+Explicit per-widget colors and sizes still win because `ApplyTheme` never
+replaces an overridden property, so leaf widgets do not need their own
+`ApplyTheme` call in a root-themed tree.
 
 Rules of the standard:
 

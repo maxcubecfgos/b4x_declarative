@@ -504,6 +504,14 @@ The remaining widgets are documented in `GUIDE.md` and can be explored without m
 3. Compile the project with B4A.
 4. Run it from the IDE on a device or emulator.
 
+Before packaging, `build-b4xlib.ps1` runs `check-b4x-source.py`, a
+dependency-free (Python standard library only) static gate over every B4X
+source file in the repository (`.b4a` projects and `.bas` modules, including
+the library modules themselves): parenthesis balance per statement (strings
+and comments ignored), ` _` continuation rules, `#Region`/`Sub`/`Type` pairing,
+and BOM/`@EndOfDesignText@` header sanity. The build aborts when a file fails;
+run `python check-b4x-source.py` directly to see the full report.
+
 The project currently uses the following B4A libraries:
 
 - `core`

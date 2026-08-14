@@ -7,3 +7,7 @@ AutoBackups/
 *.tmp
 *.log*.txt
 !LICENSE.txt
+
+# Python tooling (check-b4x-source.py)
+__pycache__/
+*.pyc
