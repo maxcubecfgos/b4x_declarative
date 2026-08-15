@@ -275,6 +275,15 @@ Public Sub Render
         mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
         mBuilt = False
     End If
+
+    ' Re-attach when the view was temporarily detached (e.g. the scaffold
+    ' recycled this screen): RemoveViewFromParent keeps IsInitialized True,
+    ' so the needsCreate branch alone would never re-add the view.
+    If mBaseView.Parent <> mParent Then
+        If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+        mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
+    End If
+
     mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     mBaseView.Color = mBackgroundColor
 

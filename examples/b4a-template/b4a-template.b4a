@@ -1,4 +1,4 @@
-﻿Build1=Default,b4a.example
+Build1=Default,b4a.example
 Group=Default Group
 Library1=core
 Library2=declarativeui
@@ -11,8 +11,9 @@ NumberOfLibraries=5
 NumberOfModules=0
 Version=13.7
 @EndOfDesignText@
+
 #Region  Project Attributes
-    #ApplicationLabel: Lumen Home
+    #ApplicationLabel: Ship It
     #VersionCode: 1
     #VersionName: 1.0
     #SupportedOrientations: portrait
@@ -23,17 +24,23 @@ Version=13.7
     #IncludeTitle: False
 #End Region
 
+' "Ship It" - a developer dashboard for a side project that will definitely
+' get released this year. Built entirely with the DeclarativeUI library:
+' one module, one scaffold, four screens, reactive state, theming, dialogs
+' and snacks. Read it like a code review: everything you see on screen is
+' declared in the widget trees below.
+
 Sub Process_Globals
     Private Darkmode As UIState
-    Private Devices As List
-    Private FilteredDevices As List
-    Private DevicesOn As UIState
-    Private Energy As UIState
-    Private Routines As List
-    Private RoutineOn As UIState
-    Private RoutineProgress As UIState
-    Private Sync As UIAsyncState
-    Private SyncLabel As UIState
+    Private Repos As List
+    Private FilteredRepos As List
+    Private ReposActive As UIState
+    Private BuildHealth As UIState
+    Private Pipelines As List
+    Private PipelineOn As UIState
+    Private PipelineProgress As UIState
+    Private Deploy As UIAsyncState
+    Private DeployLabel As UIState
     Private TitleState As UIState
     Private TabIndex As UIState
     Private SearchStatus As UIState
@@ -47,11 +54,11 @@ Sub Globals
     Private Shell As UIScaffold
     Private UiMounted As Boolean
     Private LastWidth, LastHeight As Int
-    Private DevicesList As UIListView
+    Private ReposList As UIListView
     Private AboutDialog As UIAlertDialog
     Private AddDialog As UIAlertDialog
     Private AddNameInput As UIInput
-    Private AddRoomInput As UIInput
+    Private AddBlurbInput As UIInput
 End Sub
 
 #Region  Lifecycle
@@ -60,22 +67,22 @@ Sub Activity_Create(FirstTime As Boolean)
     Root = Activity
     If FirstTime Then
         Darkmode = UI.State(False)
-        Devices = CreateDevices
-        FilteredDevices = Devices
-        DevicesOn = UI.State("0 of 0 on")
-        Energy = UI.State(0)
-        Routines = CreateRoutines
-        RoutineOn = UI.State("0 of 0 enabled")
-        RoutineProgress = UI.State(0)
-        Sync = UI.AsyncState
-        SyncLabel = UI.State("Tap Sync to refresh device data.")
-        TitleState = UI.State("Lumen Home")
+        Repos = CreateRepos
+        FilteredRepos = Repos
+        ReposActive = UI.State("0 of 0 active")
+        BuildHealth = UI.State(0)
+        Pipelines = CreatePipelines
+        PipelineOn = UI.State("0 of 0 enabled")
+        PipelineProgress = UI.State(0)
+        Deploy = UI.AsyncState
+        DeployLabel = UI.State("Tap Deploy to ship it.")
+        TitleState = UI.State("Ship It")
         TabIndex = UI.State(0)
-        SearchStatus = UI.State(Devices.Size & " devices")
+        SearchStatus = UI.State(Repos.Size & " repos")
         CurrentTab = ""
         UpdateStats
     End If
-    AppTheme = UI.ThemeWithScheme(0xFF4F46E5)
+    AppTheme = UI.ThemeWithScheme(0xFF2563EB)
     If ReadBool(Darkmode.GetState) Then AppTheme.DarkMode(True)
     RebuildUI
 End Sub
@@ -85,8 +92,8 @@ Private Sub RebuildUI
 
     Nav = UI.Navigator
     Nav.AddScreen("home", HomeScreen)
-    Nav.AddScreen("devices", DevicesScreen)
-    Nav.AddScreen("routines", RoutinesScreen)
+    Nav.AddScreen("repos", ReposScreen)
+    Nav.AddScreen("pipelines", PipelinesScreen)
     Nav.AddScreen("settings", SettingsScreen)
 
     If CurrentTab <> "" Then Nav.NavigateTo(CurrentTab)
@@ -102,16 +109,16 @@ Private Sub RebuildUI
         .BottomNavigationBar(UI.BottomNavigationBar _
             .UseFontAwesome(True) _
             .AddItem("home", Chr(0xF015), "Home") _
-            .AddItem("devices", Chr(0xF0E7), "Devices") _
-            .AddItem("routines", Chr(0xF017), "Routines") _
+            .AddItem("repos", Chr(0xF121), "Repos") _
+            .AddItem("pipelines", Chr(0xF233), "Pipelines") _
             .AddItem("settings", Chr(0xF013), "Settings") _
             .BindSelectedIndex(TabIndex) _
             .OnSelected(Me, "Nav_Selected")) _
-        .FloatingActionButtonRight(UI.Fab("+").OnClick(Me, "AddDevice_Click")) _
+        .FloatingActionButtonRight(UI.Fab("+").OnClick(Me, "AddRepo_Click")) _
         .ApplyTheme(AppTheme)
 
-    FilteredDevices = Devices
-    SearchStatus.SetState(Devices.Size & " devices")
+    FilteredRepos = Repos
+    SearchStatus.SetState(Repos.Size & " repos")
     UiMounted = False
     LastWidth = 0
     LastHeight = 0
@@ -142,113 +149,113 @@ End Sub
 Private Sub HomeScreen As Object
     Dim header As UIColumn = UI.Column(Null).Spacing(2dip) _
         .AddChild(UI.Text(Greeting).Size(24).Color(AppTheme.PrimaryText)) _
-        .AddChild(UI.Text("Here's what's happening in your home.").Size(13).Color(AppTheme.SecondaryText))
+        .AddChild(UI.Text("Here's what your side project did today.").Size(13).Color(AppTheme.SecondaryText))
 
     Dim hero As UICard = UI.Card(UI.Padding(18dip, UI.Column(Null).Spacing(12dip).CrossAxisAlignment("stretch") _
-        .AddChild(UI.Text("Energy today").Size(12).Color(AppTheme.MutedText)) _
-        .AddChild(UI.Text("").BindText(Energy).Size(40).Color(AppTheme.Accent)) _
-        .AddChild(UI.Progress(0).BarHeight(10dip).CornerRadius(5dip).BindValue(Energy)) _
-        .AddChild(UI.Text("estimated from the devices that are on").Size(12).Color(AppTheme.MutedText)))) _
+        .AddChild(UI.Text("Build health").Size(12).Color(AppTheme.MutedText)) _
+        .AddChild(UI.Text("").BindText(BuildHealth).Size(40).Color(AppTheme.Accent)) _
+        .AddChild(UI.Progress(0).BarHeight(10dip).CornerRadius(5dip).BindValue(BuildHealth)) _
+        .AddChild(UI.Text("from the builds that passed today").Size(12).Color(AppTheme.MutedText)))) _
         .CornerRadius(18dip)
 
     Dim actions As UIRow = UI.Row(Null).Spacing(12dip) _
-        .AddChild(UI.Expanded(UI.Button(Chr(0xF144) & "  Run routines").CornerRadius(12dip).OnClick(Me, "GoRoutines_Click"))) _
-        .AddChild(UI.Expanded(UI.Button(Chr(0xF067) & "  Add device").CornerRadius(12dip).OnClick(Me, "AddDevice_Click")))
+        .AddChild(UI.Expanded(UI.Button(Chr(0xF144) & "  Run pipelines").CornerRadius(12dip).OnClick(Me, "GoPipelines_Click"))) _
+        .AddChild(UI.Expanded(UI.Button(Chr(0xF067) & "  Add repo").CornerRadius(12dip).OnClick(Me, "AddRepo_Click")))
 
-    Dim devicesRow As UIRow = UI.Row(Null).Spacing(10dip).CrossAxisAlignment("center") _
-        .AddChild(UI.Card(UI.Padding(12dip, UI.IconFA(Chr(0xF0E7)).Size(16).Color(Colors.White))) _
+    Dim reposRow As UIRow = UI.Row(Null).Spacing(10dip).CrossAxisAlignment("center") _
+        .AddChild(UI.Card(UI.Padding(12dip, UI.IconFA(Chr(0xF121)).Size(16).Color(Colors.White))) _
             .BackgroundColor(AppTheme.Accent).CornerRadius(20dip)) _
         .AddChild(UI.Expanded(UI.Column(Null).Spacing(2dip) _
-            .AddChild(UI.Text("Devices").Size(14).Color(AppTheme.PrimaryText)) _
-            .AddChild(UI.Text("").BindText(DevicesOn).Size(12).Color(AppTheme.MutedText)))) _
+            .AddChild(UI.Text("Repos").Size(14).Color(AppTheme.PrimaryText)) _
+            .AddChild(UI.Text("").BindText(ReposActive).Size(12).Color(AppTheme.MutedText)))) _
         .AddChild(UI.IconFA(Chr(0xF105)).Size(18).Color(AppTheme.SecondaryText) _
-            .OnClick(Me, "GoDevices_Click"))
-    Dim devicesSummary As UICard = UI.Card(UI.Padding(14dip, devicesRow)).CornerRadius(16dip)
+            .OnClick(Me, "GoRepos_Click"))
+    Dim reposSummary As UICard = UI.Card(UI.Padding(14dip, reposRow)).CornerRadius(16dip)
 
-    Dim syncRow As UIRow = UI.Row(Null).Spacing(10dip).CrossAxisAlignment("center") _
+    Dim deployRow As UIRow = UI.Row(Null).Spacing(10dip).CrossAxisAlignment("center") _
         .AddChild(UI.IconFA(Chr(0xF021)).Size(16).Color(AppTheme.Info)) _
-        .AddChild(UI.Expanded(UI.Text("").BindText(SyncLabel).Size(13).Color(AppTheme.SecondaryText))) _
-        .AddChild(UI.Button("Sync").CornerRadius(10dip).OnClick(Me, "Sync_Click"))
+        .AddChild(UI.Expanded(UI.Text("").BindText(DeployLabel).Size(13).Color(AppTheme.SecondaryText))) _
+        .AddChild(UI.Button("Deploy").CornerRadius(10dip).OnClick(Me, "Deploy_Click"))
 
     Dim content As UIColumn = UI.Column(Null).Spacing(16dip).CrossAxisAlignment("stretch") _
         .AddChild(header) _
         .AddChild(hero) _
         .AddChild(actions) _
-        .AddChild(devicesSummary) _
-        .AddChild(UI.Card(UI.Padding(14dip, syncRow)))
+        .AddChild(reposSummary) _
+        .AddChild(UI.Card(UI.Padding(14dip, deployRow)))
     Return UI.Scroll(UI.Padding(16dip, content))
 End Sub
 
 Private Sub Greeting As String
     Dim ticks As Long = DateTime.Now
     Dim hourOfDay As Int = (ticks / 3600000) Mod 24
-    If hourOfDay < 12 Then Return "Good morning"
-    If hourOfDay < 18 Then Return "Good afternoon"
-    Return "Good evening"
+    If hourOfDay < 12 Then Return "Good morning, ship it"
+    If hourOfDay < 18 Then Return "Good afternoon, ship it"
+    Return "Good evening, ship it"
 End Sub
 
-Private Sub DevicesScreen As Object
-    DevicesList = UI.ListView(FilteredDevices) _
+Private Sub ReposScreen As Object
+    ReposList = UI.ListView(FilteredRepos) _
         .ItemHeight(84dip).Overscan(2) _
-        .CreateItem(Me, "DeviceItem")
+        .CreateItem(Me, "RepoItem")
 
     Dim header As UIRow = UI.Row(Null).Spacing(10dip).CrossAxisAlignment("center") _
-        .AddChild(UI.Text("All devices").Size(20).Color(AppTheme.PrimaryText)) _
+        .AddChild(UI.Text("All repos").Size(20).Color(AppTheme.PrimaryText)) _
         .AddChild(UI.Expanded(UI.Space(1))) _
-        .AddChild(UI.Card(UI.Padding(8dip, UI.Text("").BindText(DevicesOn).Size(12).Color(AppTheme.SecondaryText))) _
+        .AddChild(UI.Card(UI.Padding(8dip, UI.Text("").BindText(ReposActive).Size(12).Color(AppTheme.SecondaryText))) _
             .BackgroundColor(AppTheme.Surface).CornerRadius(10dip))
 
     Dim content As UIColumn = UI.Column(Null).Spacing(10dip).CrossAxisAlignment("stretch") _
-        .AddChild(UI.Input("Search by name or room") _
-            .OnTextChanged(Me, "DevicesSearch_TextChanged")) _
+        .AddChild(UI.Input("Search by name or blurb") _
+            .OnTextChanged(Me, "ReposSearch_TextChanged")) _
         .AddChild(UI.Text("").BindText(SearchStatus).Size(12).Color(AppTheme.MutedText)) _
         .AddChild(header) _
-        .AddChild(UI.Expanded(DevicesList))
+        .AddChild(UI.Expanded(ReposList))
     Return UI.Padding(16dip, content)
 End Sub
 
-Sub DeviceItem(Index As Int) As Object
-    Dim d As Map = FilteredDevices.Get(Index)
-    Dim name As String = d.Get("Name")
-    Dim room As String = d.Get("Room")
-    Dim glyph As String = d.Get("Glyph")
-    Dim badgeColor As Int = d.Get("Color")
-    Dim state As UIState = d.Get("On")
+Sub RepoItem(Index As Int) As Object
+    Dim r As Map = FilteredRepos.Get(Index)
+    Dim name As String = r.Get("Name")
+    Dim blurb As String = r.Get("Blurb")
+    Dim glyph As String = r.Get("Glyph")
+    Dim badgeColor As Int = r.Get("Color")
+    Dim active As UIState = r.Get("Active")
 
     Dim badge As UICard = UI.Card(UI.Padding(12dip, UI.IconFA(glyph).Size(16).Color(Colors.White))) _
         .BackgroundColor(badgeColor).CornerRadius(20dip)
     Dim info As UIColumn = UI.Column(Null).Spacing(2dip) _
         .AddChild(UI.Text(name).Size(15).Color(AppTheme.PrimaryText)) _
-        .AddChild(UI.Text(room).Size(12).Color(AppTheme.SecondaryText))
+        .AddChild(UI.Text(blurb).Size(12).Color(AppTheme.SecondaryText))
     Return UI.Card(UI.Padding(10dip, UI.Row(Null).Spacing(10dip).CrossAxisAlignment("center") _
         .AddChild(badge) _
         .AddChild(UI.Expanded(info)) _
-        .AddChild(UI.Switch("").BindChecked(state).OnChanged(Me, "DeviceSwitch_Changed"))))
+        .AddChild(UI.Switch("").BindChecked(active).OnChanged(Me, "RepoSwitch_Changed"))))
 End Sub
 
-Private Sub RoutinesScreen As Object
+Private Sub PipelinesScreen As Object
     Dim header As UIRow = UI.Row(Null).Spacing(10dip).CrossAxisAlignment("center") _
-        .AddChild(UI.Text("Your routines").Size(20).Color(AppTheme.PrimaryText)) _
+        .AddChild(UI.Text("Your pipelines").Size(20).Color(AppTheme.PrimaryText)) _
         .AddChild(UI.Expanded(UI.Space(1))) _
-        .AddChild(UI.Card(UI.Padding(8dip, UI.Text("").BindText(RoutineOn).Size(12).Color(AppTheme.SecondaryText))) _
+        .AddChild(UI.Card(UI.Padding(8dip, UI.Text("").BindText(PipelineOn).Size(12).Color(AppTheme.SecondaryText))) _
             .BackgroundColor(AppTheme.Surface).CornerRadius(10dip))
 
     Dim content As UIColumn = UI.Column(Null).Spacing(12dip).CrossAxisAlignment("stretch") _
         .AddChild(header)
-    For Each r As Map In Routines
-        content.AddChild(RoutineCard(r))
+    For Each p As Map In Pipelines
+        content.AddChild(PipelineCard(p))
     Next
-    content.AddChild(UI.Progress(0).BarHeight(10dip).CornerRadius(5dip).BindValue(RoutineProgress))
-    content.AddChild(UI.Button(Chr(0xF144) & "  Run all routines").CornerRadius(12dip).OnClick(Me, "RunAll_Click"))
+    content.AddChild(UI.Progress(0).BarHeight(10dip).CornerRadius(5dip).BindValue(PipelineProgress))
+    content.AddChild(UI.Button(Chr(0xF144) & "  Run all pipelines").CornerRadius(12dip).OnClick(Me, "RunAllPipelines_Click"))
     Return UI.Scroll(UI.Padding(16dip, content))
 End Sub
 
-Private Sub RoutineCard(R As Map) As UICard
-    Dim name As String = R.Get("Name")
-    Dim desc As String = R.Get("Desc")
-    Dim glyph As String = R.Get("Glyph")
-    Dim badgeColor As Int = R.Get("Color")
-    Dim state As UIState = R.Get("Enabled")
+Private Sub PipelineCard(P As Map) As UICard
+    Dim name As String = P.Get("Name")
+    Dim desc As String = P.Get("Desc")
+    Dim glyph As String = P.Get("Glyph")
+    Dim badgeColor As Int = P.Get("Color")
+    Dim enabled As UIState = P.Get("Enabled")
 
     Dim badge As UICard = UI.Card(UI.Padding(12dip, UI.IconFA(glyph).Size(16).Color(Colors.White))) _
         .BackgroundColor(badgeColor).CornerRadius(20dip)
@@ -258,22 +265,22 @@ Private Sub RoutineCard(R As Map) As UICard
     Return UI.Card(UI.Padding(10dip, UI.Row(Null).Spacing(10dip).CrossAxisAlignment("center") _
         .AddChild(badge) _
         .AddChild(UI.Expanded(info)) _
-        .AddChild(UI.Switch("").BindChecked(state).OnChanged(Me, "RoutineSwitch_Changed"))))
+        .AddChild(UI.Switch("").BindChecked(enabled).OnChanged(Me, "PipelineSwitch_Changed"))))
 End Sub
 
 Private Sub SettingsScreen As Object
     Dim profile As UICard = UI.Card(UI.Padding(14dip, UI.Row(Null).Spacing(10dip).CrossAxisAlignment("center") _
-        .AddChild(UI.Card(UI.Padding(12dip, UI.IconFA(Chr(0xF0EB)).Size(16).Color(Colors.White))) _
+        .AddChild(UI.Card(UI.Padding(12dip, UI.IconFA(Chr(0xF120)).Size(16).Color(Colors.White))) _
             .BackgroundColor(AppTheme.Accent).CornerRadius(20dip)) _
         .AddChild(UI.Expanded(UI.Column(Null).Spacing(2dip) _
-            .AddChild(UI.Text("Lumen Home").Size(15).Color(AppTheme.PrimaryText)) _
-            .AddChild(UI.Text("Version 1.0.0").Size(12).Color(AppTheme.MutedText)))))) _
+            .AddChild(UI.Text("Ship It").Size(15).Color(AppTheme.PrimaryText)) _
+            .AddChild(UI.Text("Version 1.0.0 - it compiles, ship it").Size(12).Color(AppTheme.MutedText)))))) _
         .CornerRadius(16dip)
 
     Dim darkCard As UICard = UI.Card(UI.Padding(14dip, UI.Row(Null).Spacing(10dip).CrossAxisAlignment("center") _
         .AddChild(UI.Expanded(UI.Column(Null).Spacing(2dip) _
             .AddChild(UI.Text("Dark mode").Size(14).Color(AppTheme.PrimaryText)) _
-            .AddChild(UI.Text("Switch the whole app theme").Size(11).Color(AppTheme.MutedText)))) _
+            .AddChild(UI.Text("For those who code at 3am").Size(11).Color(AppTheme.MutedText)))) _
         .AddChild(UI.Switch("").BindChecked(Darkmode).OnChanged(Me, "DarkSwitch_Changed"))))
 
     Dim aboutCard As UICard = UI.Card(UI.Padding(14dip, UI.Row(Null).Spacing(10dip).CrossAxisAlignment("center") _
@@ -300,12 +307,12 @@ Sub Nav_Selected(Index As Int, Id As String)
     SwitchTab(Id)
 End Sub
 
-Sub GoDevices_Click
-    SwitchTab("devices")
+Sub GoRepos_Click
+    SwitchTab("repos")
 End Sub
 
-Sub GoRoutines_Click
-    SwitchTab("routines")
+Sub GoPipelines_Click
+    SwitchTab("pipelines")
 End Sub
 
 Private Sub SwitchTab(Id As String)
@@ -319,9 +326,9 @@ Private Sub IndexFor(Id As String) As Int
     Select Id
         Case "home"
             Return 0
-        Case "devices"
+        Case "repos"
             Return 1
-        Case "routines"
+        Case "pipelines"
             Return 2
         Case "settings"
             Return 3
@@ -332,46 +339,46 @@ End Sub
 Private Sub TitleFor(Id As String) As String
     Select Id
         Case "home"
-            Return "Lumen Home"
-        Case "devices"
-            Return "Devices"
-        Case "routines"
-            Return "Routines"
+            Return "Ship It"
+        Case "repos"
+            Return "Repos"
+        Case "pipelines"
+            Return "Pipelines"
         Case "settings"
             Return "Settings"
     End Select
-    Return "Lumen Home"
+    Return "Ship It"
 End Sub
 
 #End Region
 
 #Region  Events
 
-Sub DeviceSwitch_Changed(Checked As Boolean)
+Sub RepoSwitch_Changed(Checked As Boolean)
     UpdateStats
 End Sub
 
-Sub RoutineSwitch_Changed(Checked As Boolean)
+Sub PipelineSwitch_Changed(Checked As Boolean)
     UpdateStats
 End Sub
 
-Sub DevicesSearch_TextChanged(Text As String)
-    FilteredDevices.Initialize
+Sub ReposSearch_TextChanged(Text As String)
+    FilteredRepos.Initialize
     Dim q As String = Text.Trim.ToLowerCase
-    For Each d As Map In Devices
-        Dim name As String = d.Get("Name")
-        Dim room As String = d.Get("Room")
-        If q.Length = 0 Or name.ToLowerCase.Contains(q) Or room.ToLowerCase.Contains(q) Then
-            FilteredDevices.Add(d)
+    For Each r As Map In Repos
+        Dim name As String = r.Get("Name")
+        Dim blurb As String = r.Get("Blurb")
+        If q.Length = 0 Or name.ToLowerCase.Contains(q) Or blurb.ToLowerCase.Contains(q) Then
+            FilteredRepos.Add(r)
         End If
     Next
-    DevicesList.Items(FilteredDevices)
-    If FilteredDevices.Size = 0 Then
-        SearchStatus.SetState("No devices match " & Chr(34) & q & Chr(34))
+    ReposList.Items(FilteredRepos)
+    If FilteredRepos.Size = 0 Then
+        SearchStatus.SetState("No repos match " & Chr(34) & q & Chr(34))
     Else If q.Length = 0 Then
-        SearchStatus.SetState(Devices.Size & " devices")
+        SearchStatus.SetState(Repos.Size & " repos")
     Else
-        SearchStatus.SetState(FilteredDevices.Size & " of " & Devices.Size & " match")
+        SearchStatus.SetState(FilteredRepos.Size & " of " & Repos.Size & " match")
     End If
 End Sub
 
@@ -387,48 +394,48 @@ Sub ToggleTheme_Click
     RebuildUI
 End Sub
 
-Sub Sync_Click
-    If Sync.IsLoading Then Return
-    Sync.SetLoading
-    SyncLabel.SetState("Syncing...")
+Sub Deploy_Click
+    If Deploy.IsLoading Then Return
+    Deploy.SetLoading
+    DeployLabel.SetState("Building, testing, crossing fingers...")
     Sleep(1600)
-    Sync.SetSuccess(Null)
+    Deploy.SetSuccess(Null)
 
-    ' Deterministic hub simulation: device state follows the time of day,
-    ' so the same sync always reports the same result for a given hour.
+    ' Deterministic deploy simulation: repo activity follows the time of day,
+    ' so the same deploy always reports the same result for a given hour.
     Dim now As Long = DateTime.Now
     Dim hour As Int = DateTime.GetHour(now)
     Dim updated As Int = 0
-    For Each d As Map In Devices
-        Dim st As UIState = d.Get("On")
-        Dim expected As Boolean = HubState(d, hour)
+    For Each r As Map In Repos
+        Dim st As UIState = r.Get("Active")
+        Dim expected As Boolean = HubState(r, hour)
         If ReadBool(st.GetState) <> expected Then
             st.SetState(expected)
             updated = updated + 1
         End If
     Next
     UpdateStats
-    SyncLabel.SetState("Last synced " & FormatTime(now) & " - " & updated & " device(s) updated.")
-    UI.Snack("Devices synced").Duration(2000).ApplyTheme(AppTheme).Show(Root)
+    DeployLabel.SetState("Last deploy " & FormatTime(now) & " - " & updated & " repo(s) updated.")
+    UI.Snack("Deployed to prod. Pray.").Duration(2000).ApplyTheme(AppTheme).Show(Root)
 End Sub
 
-Sub RunAll_Click
-    RoutineProgress.SetState(0)
+Sub RunAllPipelines_Click
+    PipelineProgress.SetState(0)
     For i = 1 To 10
         Sleep(120)
-        RoutineProgress.SetState(i * 10)
+        PipelineProgress.SetState(i * 10)
     Next
-    For Each r As Map In Routines
-        ApplyRoutine(r)
+    For Each p As Map In Pipelines
+        ApplyPipeline(p)
     Next
     UpdateStats
-    UI.Snack("Routines applied").Duration(2000).ApplyTheme(AppTheme).Show(Root)
+    UI.Snack("Pipelines green").Duration(2000).ApplyTheme(AppTheme).Show(Root)
 End Sub
 
 Sub About_Click
     AboutDialog.Initialize
-    AboutDialog.Title("Lumen Home") _
-        .Message("A smart-home demo built with the DeclarativeUI library for B4X.") _
+    AboutDialog.Title("Ship It") _
+        .Message("A developer dashboard demo built with the DeclarativeUI library for B4X. Deployed with love and a little fear.") _
         .PositiveButton("Close", Me, "AboutDismiss") _
         .ApplyTheme(AppTheme) _
         .Show(Root)
@@ -438,27 +445,27 @@ Sub AboutDismiss
     If AboutDialog.IsInitialized Then AboutDialog.Dismiss
 End Sub
 
-Sub AddDevice_Click
-    AddNameInput = UI.Input("Device name").ApplyTheme(AppTheme)
-    AddRoomInput = UI.Input("Room").ApplyTheme(AppTheme)
+Sub AddRepo_Click
+    AddNameInput = UI.Input("Repo name").ApplyTheme(AppTheme)
+    AddBlurbInput = UI.Input("One-line blurb").ApplyTheme(AppTheme)
     AddDialog.Initialize
-    AddDialog.Title("Add device") _
+    AddDialog.Title("Add repo") _
         .Content(UI.Column(Null).Spacing(10dip).CrossAxisAlignment("stretch") _
             .AddChild(AddNameInput) _
-            .AddChild(AddRoomInput)) _
-        .PositiveButton("Add", Me, "AddDeviceConfirm") _
-        .NegativeButton("Cancel", Me, "AddDeviceCancel") _
+            .AddChild(AddBlurbInput)) _
+        .PositiveButton("Add", Me, "AddRepoConfirm") _
+        .NegativeButton("Cancel", Me, "AddRepoCancel") _
         .ApplyTheme(AppTheme) _
         .Show(Root)
 End Sub
 
-Sub AddDeviceConfirm
+Sub AddRepoConfirm
     Dim newName As String = AddNameInput.GetText.Trim
     If newName.Length = 0 Then
-        UI.Snack("A device needs a name").Duration(1800).ApplyTheme(AppTheme).Show(Root)
+        UI.Snack("A repo without a name is just a folder").Duration(1800).ApplyTheme(AppTheme).Show(Root)
         Return
     End If
-    Dim idx As Int = Devices.Size Mod 4
+    Dim idx As Int = Repos.Size Mod 4
     Dim color As Int
     Select idx
         Case 0
@@ -470,16 +477,16 @@ Sub AddDeviceConfirm
         Case 3
             color = 0xFFDB4437
     End Select
-    Devices.Add(NewDevice(newName, AddRoomInput.GetText.Trim, Chr(0xF0EB), color, False))
-    FilteredDevices = Devices
-    SearchStatus.SetState(Devices.Size & " devices")
-    DevicesList.Items(FilteredDevices)
+    Repos.Add(NewRepo(newName, AddBlurbInput.GetText.Trim, Chr(0xF121), color, False))
+    FilteredRepos = Repos
+    SearchStatus.SetState(Repos.Size & " repos")
+    ReposList.Items(FilteredRepos)
     UpdateStats
     AddDialog.Dismiss
-    UI.Snack("Device added").Duration(1500).ApplyTheme(AppTheme).Show(Root)
+    UI.Snack("Repo added - one more thing to maintain").Duration(1500).ApplyTheme(AppTheme).Show(Root)
 End Sub
 
-Sub AddDeviceCancel
+Sub AddRepoCancel
     If AddDialog.IsInitialized Then AddDialog.Dismiss
 End Sub
 
@@ -487,38 +494,38 @@ End Sub
 
 #Region  Data
 
-Private Sub CreateDevices As List
+Private Sub CreateRepos As List
     Dim list As List
     list.Initialize
-    list.Add(NewDevice("Living room lamp", "Living room", Chr(0xF0EB), 0xFFF4B400, True))
-    list.Add(NewDevice("Bedroom lamp", "Bedroom", Chr(0xF0EB), 0xFFF4B400, False))
-    list.Add(NewDevice("Kitchen light", "Kitchen", Chr(0xF0E7), 0xFF4285F4, True))
-    list.Add(NewDevice("Coffee maker", "Kitchen", Chr(0xF1E6), 0xFF34A853, False))
-    list.Add(NewDevice("Air purifier", "Bedroom", Chr(0xF0E7), 0xFF34A853, False))
+    list.Add(NewRepo("declarative-ui", "The library that builds itself", Chr(0xF121), 0xFF6366F1, True))
+    list.Add(NewRepo("todo-app", "Finished after 4 years. It works. Probably.", Chr(0xF14A), 0xFF22C55E, False))
+    list.Add(NewRepo("portfolio-site", "Redesigned 3 times this year. Still no blog.", Chr(0xF0AC), 0xFF3B82F6, True))
+    list.Add(NewRepo("game-jam", "One day we will actually ship it", Chr(0xF11B), 0xFFEF4444, False))
+    list.Add(NewRepo("dotfiles", "1200 commits. Zero features. Precious.", Chr(0xF120), 0xFFA855F7, False))
     Return list
 End Sub
 
-Private Sub NewDevice(Name As String, Room As String, Glyph As String, GlyphColor As Int, IsOn As Boolean) As Map
+Private Sub NewRepo(Name As String, Blurb As String, Glyph As String, GlyphColor As Int, IsActive As Boolean) As Map
     Dim m As Map
     m.Initialize
     m.Put("Name", Name)
-    m.Put("Room", Room)
+    m.Put("Blurb", Blurb)
     m.Put("Glyph", Glyph)
     m.Put("Color", GlyphColor)
-    m.Put("On", UI.State(IsOn))
+    m.Put("Active", UI.State(IsActive))
     Return m
 End Sub
 
-Private Sub CreateRoutines As List
+Private Sub CreatePipelines As List
     Dim list As List
     list.Initialize
-    list.Add(NewRoutine("Morning", "Warm up the kitchen lights", Chr(0xF185), 0xFFF4B400, True))
-    list.Add(NewRoutine("Movie night", "Dim the living room", Chr(0xF008), 0xFF4285F4, False))
-    list.Add(NewRoutine("Good night", "Turn everything off", Chr(0xF186), 0xFF6750A4, True))
+    list.Add(NewPipeline("Ship It", "lint -> test -> build -> pray", Chr(0xF135), 0xFF22C55E, True))
+    list.Add(NewPipeline("Deploy to prod", "Friday deploys only. What could go wrong?", Chr(0xF233), 0xFF3B82F6, False))
+    list.Add(NewPipeline("Kill the tech debt", "Someday. Probably not this sprint.", Chr(0xF0AD), 0xFFA855F7, True))
     Return list
 End Sub
 
-Private Sub NewRoutine(Name As String, Desc As String, Glyph As String, GlyphColor As Int, IsEnabled As Boolean) As Map
+Private Sub NewPipeline(Name As String, Desc As String, Glyph As String, GlyphColor As Int, IsEnabled As Boolean) As Map
     Dim m As Map
     m.Initialize
     m.Put("Name", Name)
@@ -529,26 +536,23 @@ Private Sub NewRoutine(Name As String, Desc As String, Glyph As String, GlyphCol
     Return m
 End Sub
 
-Private Sub ApplyRoutine(R As Map)
-    Dim routineName As String = R.Get("Name")
-    Select routineName
-        Case "Morning"
-            SetDeviceByName("Kitchen light", True)
-            SetDeviceByName("Coffee maker", True)
-        Case "Movie night"
-            SetDeviceByName("Living room lamp", False)
-        Case "Good night"
-            For Each d As Map In Devices
-                Dim st As UIState = d.Get("On")
-                st.SetState(False)
-            Next
+Private Sub ApplyPipeline(P As Map)
+    Dim pipelineName As String = P.Get("Name")
+    Select pipelineName
+        Case "Ship It"
+            SetRepoActive("declarative-ui", True)
+            SetRepoActive("todo-app", True)
+        Case "Deploy to prod"
+            SetRepoActive("portfolio-site", True)
+        Case "Kill the tech debt"
+            SetRepoActive("dotfiles", False)
     End Select
 End Sub
 
-Private Sub SetDeviceByName(DeviceName As String, Value As Boolean)
-    For Each d As Map In Devices
-        If d.Get("Name") = DeviceName Then
-            Dim st As UIState = d.Get("On")
+Private Sub SetRepoActive(RepoName As String, Value As Boolean)
+    For Each r As Map In Repos
+        If r.Get("Name") = RepoName Then
+            Dim st As UIState = r.Get("Active")
             st.SetState(Value)
             Return
         End If
@@ -556,35 +560,35 @@ Private Sub SetDeviceByName(DeviceName As String, Value As Boolean)
 End Sub
 
 Private Sub UpdateStats
-    Dim onCount As Int = 0
-    For Each d As Map In Devices
-        Dim st As UIState = d.Get("On")
-        If ReadBool(st.GetState) Then onCount = onCount + 1
+    Dim activeCount As Int = 0
+    For Each r As Map In Repos
+        Dim st As UIState = r.Get("Active")
+        If ReadBool(st.GetState) Then activeCount = activeCount + 1
     Next
-    DevicesOn.SetState(onCount & " of " & Devices.Size & " on")
-    If Devices.Size > 0 Then Energy.SetState(onCount * 100 / Devices.Size)
+    ReposActive.SetState(activeCount & " of " & Repos.Size & " active")
+    If Repos.Size > 0 Then BuildHealth.SetState(activeCount * 100 / Repos.Size)
 
-    Dim onRoutines As Int = 0
-    For Each r As Map In Routines
-        Dim rs As UIState = r.Get("Enabled")
-        If ReadBool(rs.GetState) Then onRoutines = onRoutines + 1
+    Dim onPipelines As Int = 0
+    For Each p As Map In Pipelines
+        Dim ps As UIState = p.Get("Enabled")
+        If ReadBool(ps.GetState) Then onPipelines = onPipelines + 1
     Next
-    RoutineOn.SetState(onRoutines & " of " & Routines.Size & " enabled")
+    PipelineOn.SetState(onPipelines & " of " & Pipelines.Size & " enabled")
 End Sub
 
-Private Sub HubState(Device As Map, Hour As Int) As Boolean
-    Dim name As String = Device.Get("Name")
+Private Sub HubState(Repo As Map, Hour As Int) As Boolean
+    Dim name As String = Repo.Get("Name")
     Select name
-        Case "Living room lamp"
-            Return Hour >= 18 Or Hour < 7
-        Case "Bedroom lamp"
-            Return Hour >= 21 Or Hour < 6
-        Case "Kitchen light"
+        Case "declarative-ui"
             Return Hour >= 7 And Hour < 21
-        Case "Coffee maker"
-            Return Hour >= 6 And Hour < 9
-        Case "Air purifier"
+        Case "todo-app"
+            Return Hour >= 21 Or Hour < 6
+        Case "portfolio-site"
+            Return Hour >= 9 And Hour < 17
+        Case "game-jam"
             Return True
+        Case "dotfiles"
+            Return Hour < 5
     End Select
     Return False
 End Sub

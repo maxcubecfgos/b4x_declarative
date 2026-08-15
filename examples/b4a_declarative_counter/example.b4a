@@ -2,9 +2,9 @@
 Group=Default Group
 Library1=core
 Library2=declarativeui
-Library3=okhttputils2
-Library4=xui
-Library5=javaobject
+Library3=javaobject
+Library4=okhttputils2
+Library5=xui
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~AddPermission(android.permission.INTERNET)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
 NumberOfFiles=0
 NumberOfLibraries=5
@@ -17,17 +17,12 @@ Version=13.7
     #VersionCode: 1
     #VersionName: 1.0
     #SupportedOrientations: portrait
-'    #EdgeToEdgeOldDevices: True
 #End Region
 
 #Region  Activity Attributes
     #FullScreen: False
     #IncludeTitle: False
 #End Region
-
-' Minimal demo: one Activity, one observable state and ONE widget-tree
-' expression. The factory UI.* hides Initialize, Dim, SetParent and Render;
-' this whole app screen is a single Return/assignment statement.
 
 Sub Process_Globals
     Private CounterState As UIState
@@ -46,12 +41,8 @@ Sub Activity_Create(FirstTime As Boolean)
     RebuildUI
 End Sub
 
-' Replaces the mounted tree. UI.Show does the SetParent/SetPosition/SetSize/Render
-' ceremony; UI.Unmount releases the previous tree before the new one mounts.
 Private Sub RebuildUI
     If Screen.IsInitialized Then UI.Unmount(Screen)
-    ' The theme is applied once at the root: UIScaffold propagates it to the
-    ' app bar, body and FAB, and the containers forward it to their children.
     Screen = UI.Scaffold(UI.Center(UI.Column(Null) _
         .Spacing(12dip).MainAxisAlignment("center").CrossAxisAlignment("stretch") _
         .AddChild(UI.Text("You have pushed the button this many times:") _
