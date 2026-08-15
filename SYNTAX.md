@@ -263,6 +263,12 @@ button.Initialize _
     .OnClick(Me, "Save_Click")
 ```
 
+Icon+text buttons need no extra API: FontAwesome glyphs in the text (U+F000..U+F8FF) are rendered with the FontAwesome typeface while the label keeps the default one.
+
+```basic
+UI.Button(Chr(0xF04B) & "  Run")   ' play icon + label
+```
+
 The normal order is:
 
 1. `Dim` the widget.

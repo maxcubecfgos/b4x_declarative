@@ -224,7 +224,7 @@ Public Sub Render
 	' Keep content buttons above remounted siblings so their touch surface remains available.
 	mBaseView.BringToFront
     
-	If mBaseView.Text <> mText Then mBaseView.Text = mText
+	SetButtonText(mBaseView, mText)
 	mBaseView.TextSize = mTextSize
 	If mCornerRadius > 0 Or mBorderWidth > 0 Then
 		Dim nativeButton As Button = mBaseView
@@ -273,6 +273,53 @@ Private Sub SetRoundedRippleBackground(ButtonView As Button)
 	ripple.InitializeNewInstance("android.graphics.drawable.RippleDrawable", Array(rippleColor, shape, mask))
 	Dim nativeView As JavaObject = ButtonView
 	nativeView.RunMethod("setBackground", Array(ripple))
+End Sub
+
+' Assigns the button text, rendering any FontAwesome glyphs (private use
+' area U+F000..U+F8FF) with the FontAwesome typeface while the surrounding
+' label text keeps the default typeface. Icon+text buttons therefore just
+' work: UI.Button(Chr(0xF04B) & "  Run") shows a play icon and the label.
+Private Sub SetButtonText(ButtonView As B4XView, ButtonText As String)
+    If HasFontAwesomeGlyph(ButtonText) = False Then
+        ButtonView.Text = ButtonText
+        Return
+    End If
+    Dim csb As CSBuilder
+    csb.Initialize
+    Dim runStart As Int = 0
+    Dim currentFont As String = "text"
+    For i = 0 To ButtonText.Length - 1
+        Dim runFont As String = IIf(IsFontAwesomeGlyph(ButtonText, i), "icon", "text")
+        If runFont <> currentFont Then
+            AppendFontRun(csb, ButtonText.SubString2(runStart, i), currentFont)
+            runStart = i
+            currentFont = runFont
+        End If
+    Next
+    AppendFontRun(csb, ButtonText.SubString2(runStart, ButtonText.Length), currentFont)
+    ButtonView.Text = csb
+End Sub
+
+' Appends a run of characters with the typeface chosen by FontName.
+Private Sub AppendFontRun(csb As CSBuilder, RunText As String, FontName As String)
+    If RunText.Length = 0 Then Return
+    If FontName = "icon" Then
+        csb.Typeface(Typeface.FONTAWESOME).Append(RunText).Pop
+    Else
+        csb.Append(RunText)
+    End If
+End Sub
+
+Private Sub IsFontAwesomeGlyph(GlyphText As String, Index As Int) As Boolean
+    Dim code As Int = Asc(GlyphText.CharAt(Index))
+    Return code >= 0xF000 And code <= 0xF8FF
+End Sub
+
+Private Sub HasFontAwesomeGlyph(GlyphText As String) As Boolean
+    For i = 0 To GlyphText.Length - 1
+        If IsFontAwesomeGlyph(GlyphText, i) Then Return True
+    Next
+    Return False
 End Sub
 
 ' Returns the mounted native view, or Null before the first Render

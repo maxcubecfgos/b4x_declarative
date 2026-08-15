@@ -1,5 +1,14 @@
 ﻿# Declarative UI for B4A — Changelog
 
+## 0.6 — FontAwesome icons in UIButton
+
+1. `UIButton` now renders FontAwesome glyphs in its text with the correct
+   typeface. Characters in the FontAwesome private use area (U+F000..U+F8FF)
+   are applied `Typeface.FONTAWESOME` via `CSBuilder`, while the surrounding
+   label keeps the default typeface. Icon+text buttons just work without any
+   new API: `UI.Button(Chr(0xF04B) & "  Run")` shows a play icon and the
+   label.
+
 ## 0.5 — Debug-mode theme fix, automatic re-layout, multi-line labels
 
 1. Theme factories now call `t.Initialize` before `InitializeWithScheme` and
