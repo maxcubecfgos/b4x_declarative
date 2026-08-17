@@ -1,7 +1,7 @@
 # Declarative UI for B4A
 ## Forum Guide and Quick API Tour
 
-Version 0.1 demo | Contract version 1.0
+Version 0.6 | Contract version 2.0
 Copyright (c) 2026 Maxel Chark Guzman
 
 ## 1. What this project is
@@ -28,7 +28,7 @@ The result is still a native B4A UI. The library provides composition and layout
 
 ## 2. Current scope
 
-This is an early B4A-only development/demo release. It currently provides:
+This is an early B4A-only development release. It currently provides:
 
 - declarative containers: UIColumn, UIRow, UIStack, UIPadding, UIBox, UICard, UICenter and UIExpanded;
 - native controls: UILabel, UIButton, UIFloatingActionButton, UIInput, UIIcon, UIImage and UIProgressBar;
@@ -43,7 +43,7 @@ The project does not currently promise complete Flutter compatibility, automatic
 
 ## 3. Available widgets and building blocks
 
-The following catalog describes the complete set of classes included in the current demo library. Methods listed here are the application-facing API; `SetParent`, `SetPosition`, `SetSize`, `Render`, optional `Detach`, `Unmount` and `GetContentSize` are the shared composition protocol and are normally called by parent containers.
+The following catalog describes the complete set of classes included in the current library. Methods listed here are the application-facing API; `SetParent`, `SetPosition`, `SetSize`, `Render`, optional `Detach`, `Unmount` and `GetContentSize` are the shared composition protocol and are normally called by parent containers.
 
 ### Layout and composition widgets
 
@@ -146,6 +146,8 @@ icon.Initialize.FontAwesomeCode(0xF013).Size(22)
 ```
 
 `UIIcon.MaterialCode` and `UIIcon.FontAwesomeCode` accept integer code points, so code such as `FontAwesomeCode(0xF186)` is supported directly. `UIImage.Network` is intended for public URLs; the host remains responsible for network permissions and for handling failures through `OnError` or `PlaceholderAsset`.
+
+`UIButton` renders FontAwesome glyphs in its text with the correct typeface: characters in the private use area (U+F000..U+F8FF) are drawn with `Typeface.FONTAWESOME` while the label keeps the default one. Icon+text buttons work without extra API: `Text(Chr(0xF04B) & "  Run")` shows a play icon and the label in the same button.
 
 ### Screen structure and navigation widgets
 

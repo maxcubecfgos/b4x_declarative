@@ -1,7 +1,7 @@
 ﻿# Declarative UI for B4A — Syntax and API Contract
 
 **Contract version:** 2.0  
-**Library baseline:** 0.2  
+**Library baseline:** 0.6  
 **Status:** Stable syntax baseline; the `UI.*` factory (Contract 2.0) is the preferred entry point for new code
 
 This document defines the syntax and compatibility rules of Declarative UI for B4A. It is a contract for application authors and for future library development.
@@ -32,7 +32,7 @@ When ordinary B4A is the clearest solution, application code may use ordinary B4
 
 ## 2. License boundary
 
-This project and its `.b4xlib` package are shared under the Public Development Demo Notice. Use the demo freely in personal, educational, client, employer, internal-business, commercial and monetized applications. Source inspection, debugging and local modification are welcome, and resulting applications may be published as the user's own work.
+This project and its `.b4xlib` package are shared under the Public Development Notice. Use the release freely in personal, educational, client, employer, internal-business, commercial and monetized applications. Source inspection, debugging and local modification are welcome, and resulting applications may be published as the user's own work.
 
 The only community boundary is about source authorship: please do not copy the implementation into another library, framework, toolkit or standalone source project and publish it under your own name. This does not restrict applications, original code built around the API, tutorials, reviews, small credited snippets or local experiments. The complete notice is in [`LICENSE.txt`](LICENSE.txt), which is included inside the `.b4xlib`.
 
@@ -190,8 +190,9 @@ Rules of the standard:
    mounted tree is re-laid out, so growing content ("9" to "10") is never
    clipped and containers recompute their natural size. No app code needed.
 
-The full working app that demonstrates the factory (counter + login +
-dashboard in one navigable shell) is `examples/b4a_ui_quickstart`.
+The canonical working app that demonstrates the factory (a state-bound
+counter built as a single `UI.*` tree expression) is
+`examples/b4a_declarative_counter`.
 
 ## 4. Naming rules
 
@@ -746,10 +747,10 @@ The syntax contract is more important than internal implementation details.
 
 These are two related but different version numbers:
 
-- **Library version** (`Version=0.1` in `manifest.txt`) identifies the packaged implementation and release.
-- **Contract version** (`1.0` at the top of this file) identifies the public syntax/API rules that application authors rely on.
+- **Library version** (`Version=0.6` in `manifest.txt`) identifies the packaged implementation and release.
+- **Contract version** (`2.0` at the top of this file) identifies the public syntax/API rules that application authors rely on.
 
-The preliminary package may therefore be library `0.1` while implementing contract `1.0`. This means the syntax baseline is considered defined, not that the implementation is a mature 1.x product.
+The package may therefore be library `0.6` while implementing contract `2.0`. This means the syntax baseline is considered defined, not that the implementation is a mature 1.x product.
 
 Rules for changing the numbers:
 
@@ -800,7 +801,7 @@ Before merging a library change:
 4. Update this contract if a new public rule is introduced.
 5. Update `GUIDE.md` and the public API tables.
 6. Add a migration note for any behavior change.
-7. Compile the demo with B4A.
+7. Compile the example project with B4A.
 8. Regenerate and validate the `.b4xlib`.
 9. Test runtime changes through **IDE focus → F5 → Ctrl+R → bundle inspection**.
 10. Do not publish a new syntax convention only in an example or in a private implementation comment.

@@ -20,7 +20,7 @@ The repository documentation also covers the complete widget set, including natu
 
 | File | Responsibility |
 | --- | --- |
-| `examples/example.b4a` | Minimal counter demonstration Activity |
+| `examples/b4a_declarative_counter/example.b4a` | Minimal counter demonstration Activity |
 | `UITheme.bas` | Reusable light/dark seed-color scheme and semantic palette |
 | `UIState.bas` | Observable state holder with selective callbacks |
 | `UIAsyncState.bas` | Observable idle/loading/success/error state for asynchronous operations |
@@ -41,7 +41,7 @@ The repository documentation also covers the complete widget set, including natu
 | `UIBox.bas` | Lightweight padded child container |
 | `UICenter.bas` | Centers a child using its measured natural size |
 | `UILabel.bas` | Native label wrapper with optional `UIState` text binding |
-| `UIButton.bas` | Native button wrapper with safe callbacks, optional state binding and configurable corners/borders |
+| `UIButton.bas` | Native button wrapper with safe callbacks, optional state binding, configurable corners/borders and FontAwesome glyphs in its text |
 | `UIFloatingActionButton.bas` | Compact native floating action button with safe callbacks and optional `UIState` text binding |
 | `UIInput.bas` | Native text input with natural measurement, optional state binding, safe callbacks and configurable corners/borders |
 | `UISwitch.bas` | Declarative switch with explicit checked state and label |
@@ -526,7 +526,7 @@ For a forum presentation, use this sequence:
 1. Run the example and observe the initial counter.
 2. Tap `+` and show that `UIState` updates the bound label.
 3. Tap the app-bar theme icon and show that the palette changes without resetting state.
-4. Open `examples/example.b4a` and compare the small declarative tree with an equivalent manual `AddView` implementation.
+4. Open `examples/b4a_declarative_counter/example.b4a` and compare the small declarative tree with an equivalent manual `AddView` implementation.
 5. Use `GUIDE.md` as the extended API tour for scroll views, snackbars, animations, themes, inputs and other widgets.
 
 The most important comparison with imperative UI code is that the demo describes a reusable tree of widgets. Native views are still used underneath, but screen composition, measurement, and mounting are handled consistently by the declarative layer.
@@ -537,9 +537,9 @@ The public syntax and compatibility rules are maintained in [SYNTAX.md](SYNTAX.m
 
 ## License and usage
 
-This project is shared under the friendly public development/demo notice in [`LICENSE.txt`](LICENSE.txt). It is open for testing and feedback: use it freely in personal, client, employer, internal-business, commercial and monetized applications; inspect and modify the source while developing; and publish applications built with it as your own work.
+This project is shared under the friendly public development notice in [`LICENSE.txt`](LICENSE.txt). It is open for testing and feedback: use it freely in personal, client, employer, internal-business, commercial and monetized applications; inspect and modify the source while developing; and publish applications built with it as your own work.
 
-The only community boundary is about source authorship: please do not copy the implementation into another library, framework, toolkit or standalone source project and publish it under your own name. This does not restrict applications, original code built around the API, tutorials, reviews, small credited snippets or local experiments. A future Pro version may have separate terms, but those terms do not retroactively restrict this demo. The copyright holder and contact are listed in `LICENSE.txt`.
+The only community boundary is about source authorship: please do not copy the implementation into another library, framework, toolkit or standalone source project and publish it under your own name. This does not restrict applications, original code built around the API, tutorials, reviews, small credited snippets or local experiments. A future Pro version may have separate terms, but those terms do not retroactively restrict this release. The copyright holder and contact are listed in `LICENSE.txt`.
 
 ## Design principles
 

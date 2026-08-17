@@ -16,12 +16,12 @@ endobj
 << /Type /Font /Subtype /Type1 /BaseFont /Courier >>
 endobj
 6 0 obj
-<< /Length 5023 >>
+<< /Length 5008 >>
 stream
 q
 BT /F2 18 Tf 0.16 0.20 0.28 rg 48 790 Td (Declarative UI for B4A) Tj ET
 BT /F2 13 Tf 0.24 0.20 0.50 rg 48 762 Td (Forum Guide and Quick API Tour) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 735 Td (Version 0.1 demo | Contract version 1.0) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 735 Td (Version 0.6 | Contract version 2.0) Tj ET
 BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 723 Td (Copyright \(c\) 2026 Maxel Chark Guzman) Tj ET
 BT /F2 13 Tf 0.24 0.20 0.50 rg 48 706 Td (1. What this project is) Tj ET
 BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 679 Td (Declarative UI for B4A is a small, code-first composition layer for native B4A applications.) Tj ET
@@ -45,7 +45,7 @@ BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 472 Td (The result is still a native B4A UI. 
 BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 460 Td (conventions; it does not hide the Android platform or pretend that a virtual screen is a) Tj ET
 BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 448 Td (physical Activity.) Tj ET
 BT /F2 13 Tf 0.24 0.20 0.50 rg 48 431 Td (2. Current scope) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 404 Td (This is an early B4A-only development/demo release. It currently provides:) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 404 Td (This is an early B4A-only development release. It currently provides:) Tj ET
 BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 387 Td (- declarative containers: UIColumn, UIRow, UIStack, UIPadding, UIBox, UICard, UICenter and) Tj ET
 BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 375 Td (UIExpanded;) Tj ET
 BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 363 Td (- native controls: UILabel, UIButton, UIFloatingActionButton, UIInput, UIIcon, UIImage and) Tj ET
@@ -60,10 +60,10 @@ BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 262 Td (The project does not currently promis
 BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 250 Td (diffing, automatic two-way binding, variable-height virtualization or cross-platform B4X) Tj ET
 BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 238 Td (behavior.) Tj ET
 BT /F2 13 Tf 0.24 0.20 0.50 rg 48 221 Td (3. Available widgets and building blocks) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 194 Td (The following catalog describes the complete set of classes included in the current demo) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 182 Td (library. Methods listed here are the application-facing API; SetParent, SetPosition,) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 170 Td (SetSize, Render, optional Detach, Unmount and GetContentSize are the shared composition) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 158 Td (protocol and are normally called by parent containers.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 194 Td (The following catalog describes the complete set of classes included in the current library.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 182 Td (Methods listed here are the application-facing API; SetParent, SetPosition, SetSize, Render,) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 170 Td (optional Detach, Unmount and GetContentSize are the shared composition protocol and are) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 158 Td (normally called by parent containers.) Tj ET
 BT /F2 10.5 Tf 0.16 0.20 0.28 rg 48 141 Td (Layout and composition widgets) Tj ET
 BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 119 Td (Widget Purpose Main methods) Tj ET
 BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 107 Td (--- --- ---) Tj ET
@@ -147,7 +147,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 8 0 R >>
 endobj
 10 0 obj
-<< /Length 6172 >>
+<< /Length 6355 >>
 stream
 q
 BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 790 Td (`UIFloatingActionButton` Compact floating action button for a primary screen action. `Text`,) Tj ET
@@ -190,26 +190,25 @@ BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 365 Td (UIIcon.MaterialCode and UIIcon.FontAw
 BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 353 Td (FontAwesomeCode\(0xF186\) is supported directly. UIImage.Network is intended for public URLs;) Tj ET
 BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 341 Td (the host remains responsible for network permissions and for handling failures through) Tj ET
 BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 329 Td (OnError or PlaceholderAsset.) Tj ET
-BT /F2 10.5 Tf 0.16 0.20 0.28 rg 48 312 Td (Screen structure and navigation widgets) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 290 Td (Widget Purpose Main methods) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 278 Td (--- --- ---) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 266 Td (`UIAppBar` Top bar with title and optional action widget. `Title`, `BindTitle`,) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 254 Td (`UnbindTitle`, `Action`, `ClearAction`, `BackgroundColor`, `TitleColor`, `TitleSize`,) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 242 Td (`ApplyTheme`) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 230 Td (`UIScaffold` Screen shell that reserves space for app bar, body, bottom navigation and FABs.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 218 Td (`AppBar`, `Body`, `BottomNavigationBar`, `FloatingActionButtonLeft`,) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 206 Td (`FloatingActionButtonRight`, `BackgroundColor`, `ApplyTheme`) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 194 Td (`UINavigator` Virtual screen registration and single-Activity navigation with safe-area) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 182 Td (handling. `AddScreen`, `NavigateTo`, `ApplyTheme`, `RefreshInsets`) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 170 Td (`UIBottomNavigationBar` Data-driven bottom navigation with selected state and callbacks.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 158 Td (`AddItem`, `BindSelectedIndex`, `OnSelected`, `SetSelectedIndex`, `GetSelectedIndex`,) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 146 Td (`GetSelectedId`, `ShowInactiveLabels`, `ApplyTheme`) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 129 Td (A screen shell can be assembled as follows:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 107 Td (Dim bar As UIAppBar) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 97 Td (bar.Initialize.Title\("Home"\).Action\(themeIcon\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 87 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 77 Td (Dim screen As UIScaffold) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 67 Td (screen.Initialize _) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 312 Td (UIButton renders FontAwesome glyphs in its text with the correct typeface: characters in the) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 300 Td (private use area \(U+F000..U+F8FF\) are drawn with Typeface.FONTAWESOME while the label keeps) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 288 Td (the default one. Icon+text buttons work without extra API: Text\(Chr\(0xF04B\) & " Run"\) shows) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 276 Td (a play icon and the label in the same button.) Tj ET
+BT /F2 10.5 Tf 0.16 0.20 0.28 rg 48 259 Td (Screen structure and navigation widgets) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 237 Td (Widget Purpose Main methods) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 225 Td (--- --- ---) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 213 Td (`UIAppBar` Top bar with title and optional action widget. `Title`, `BindTitle`,) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 201 Td (`UnbindTitle`, `Action`, `ClearAction`, `BackgroundColor`, `TitleColor`, `TitleSize`,) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 189 Td (`ApplyTheme`) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 177 Td (`UIScaffold` Screen shell that reserves space for app bar, body, bottom navigation and FABs.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 165 Td (`AppBar`, `Body`, `BottomNavigationBar`, `FloatingActionButtonLeft`,) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 153 Td (`FloatingActionButtonRight`, `BackgroundColor`, `ApplyTheme`) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 141 Td (`UINavigator` Virtual screen registration and single-Activity navigation \(safe-area is) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 129 Td (automatic in `UIScaffold`\). `AddScreen`, `NavigateTo`, `ApplyTheme`, `RefreshInsets`) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 117 Td (`UIBottomNavigationBar` Data-driven bottom navigation with selected state and callbacks.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 105 Td (`AddItem`, `BindSelectedIndex`, `OnSelected`, `SetSelectedIndex`, `GetSelectedIndex`,) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 93 Td (`GetSelectedId`, `ShowInactiveLabels`, `ApplyTheme`) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 76 Td (A screen shell can be assembled as follows:) Tj ET
 BT /F1 8 Tf 0.45 0.45 0.45 rg 512 25 Td (3) Tj ET
 Q
 endstream
@@ -218,69 +217,69 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 10 0 R >>
 endobj
 12 0 obj
-<< /Length 5634 >>
+<< /Length 5381 >>
 stream
 q
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 790 Td (.AppBar\(bar\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 780 Td (.Body\(body\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 770 Td (.FloatingActionButtonRight\(addButton\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 760 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 750 Td (Navigator.Initialize _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 740 Td (.AddScreen\("Home", screen\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 730 Td (.AddScreen\("Settings", settingsScreen\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 720 Td (Navigator.SetParent\(Activity\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 710 Td (Navigator.SetPosition\(0, 0\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 700 Td (Navigator.SetSize\(Activity.Width, Activity.Height\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 690 Td (Navigator.NavigateTo\("Home"\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 680 Td (Navigator.Render) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 660 Td (Bottom navigation items are data rather than separate native screens:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 638 Td (Dim tabs As UIBottomNavigationBar) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 628 Td (tabs.Initialize _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 618 Td (.AddItem\("home", "?", "Home"\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 608 Td (.AddItem\("settings", "?", "Settings"\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 598 Td (.OnSelected\(Me, "Tab_Selected"\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 588 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 578 Td (Sub Tab_Selected\(Index As Int, Id As String\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 568 Td (Navigator.NavigateTo\(Id\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 558 Td (End Sub) Tj ET
-BT /F2 10.5 Tf 0.16 0.20 0.28 rg 48 538 Td (Overlay and feedback widgets) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 516 Td (Widget Purpose Main methods) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 504 Td (--- --- ---) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 492 Td (`UISnackBar` Temporary message overlay with an optional action. `Message`, `Action`,) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 480 Td (`Duration`, `AnimationDuration`, `BackgroundColor`, `TextColor`, `ActionColor`,) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 468 Td (`CornerRadius`, `Margin`, `Show`, `Dismiss`) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 456 Td (`UIAlertDialog` Modal overlay with title, message, optional declarative content and) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 444 Td (positive/negative actions. `Title`, `Message`, `Content`, `PositiveButton`,) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 432 Td (`NegativeButton`, `DismissOnOutside`, `ButtonColor`, `ButtonTextColor`, `CornerRadius`,) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 420 Td (`ApplyTheme`, `Show`, `Dismiss`) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 408 Td (`UIAnimation` Explicit bounds animation for an already-mounted native view. `TargetView`,) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 396 Td (`MoveTo`, `SizeTo`, `MoveAndResize`, `Duration`, `OnCompleted`, `Start`, `Cancel`,) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 384 Td (`IsRunning`) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 367 Td (Example dialog and feedback flow:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 345 Td (Dim dialog As UIAlertDialog) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 335 Td (dialog.Initialize _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 325 Td (.Title\("Delete item?"\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 315 Td (.Message\("This action cannot be undone."\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 305 Td (.NegativeButton\("Cancel", Me, "DialogCancel"\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 295 Td (.PositiveButton\("Delete", Me, "DialogDelete"\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 285 Td (.ApplyTheme\(AppTheme\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 275 Td (.Show\(Activity\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 265 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 255 Td (Dim snack As UISnackBar) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 245 Td (snack.Initialize.Message\("Item deleted"\).Duration\(2500\).Show\(Activity\)) Tj ET
-BT /F2 10.5 Tf 0.16 0.20 0.28 rg 48 225 Td (Scrolling, lists and native interoperability) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 203 Td (Widget Purpose Main methods) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 191 Td (--- --- ---) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 179 Td (`UIScrollView` Native vertical ScrollView hosting one declarative child. `Child`,) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 167 Td (`GetChild`, `ScrollTo`, `GetScrollPosition`, `ApplyTheme`) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 155 Td (`UIListView` Fixed-height virtualized list with pooled declarative rows. `Items`,) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 143 Td (`ItemCount`, `ItemHeight`, `Overscan`, `CreateItem`, `BindItem`, `NotifyDataSetChanged`,) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 131 Td (`GetItem`, `ApplyTheme`) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 119 Td (`UINative` Adapter that inserts an existing native B4A view into a declarative container.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 107 Td (`Initialize\(nativeView, naturalWidth, naturalHeight\)`, `GetView`, `ApplyTheme`) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 90 Td (UIScrollView is suitable for small or variable-height content. UIListView is suitable for) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 78 Td (long collections with a fixed row height. UINative keeps ownership and event handling with) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 66 Td (the host Activity:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 790 Td (Dim bar As UIAppBar) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 780 Td (bar.Initialize.Title\("Home"\).Action\(themeIcon\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 770 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 760 Td (Dim screen As UIScaffold) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 750 Td (screen.Initialize _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 740 Td (.AppBar\(bar\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 730 Td (.Body\(body\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 720 Td (.FloatingActionButtonRight\(addButton\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 710 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 700 Td (Navigator.Initialize _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 690 Td (.AddScreen\("Home", screen\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 680 Td (.AddScreen\("Settings", settingsScreen\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 670 Td (Navigator.SetParent\(Activity\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 660 Td (Navigator.SetPosition\(0, 0\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 650 Td (Navigator.SetSize\(Activity.Width, Activity.Height\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 640 Td (Navigator.NavigateTo\("Home"\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 630 Td (Navigator.Render) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 610 Td (Bottom navigation items are data rather than separate native screens:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 588 Td (Dim tabs As UIBottomNavigationBar) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 578 Td (tabs.Initialize _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 568 Td (.AddItem\("home", "?", "Home"\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 558 Td (.AddItem\("settings", "?", "Settings"\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 548 Td (.OnSelected\(Me, "Tab_Selected"\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 538 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 528 Td (Sub Tab_Selected\(Index As Int, Id As String\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 518 Td (Navigator.NavigateTo\(Id\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 508 Td (End Sub) Tj ET
+BT /F2 10.5 Tf 0.16 0.20 0.28 rg 48 488 Td (Overlay and feedback widgets) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 466 Td (Widget Purpose Main methods) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 454 Td (--- --- ---) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 442 Td (`UISnackBar` Temporary message overlay with an optional action. `Message`, `Action`,) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 430 Td (`Duration`, `AnimationDuration`, `BackgroundColor`, `TextColor`, `ActionColor`,) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 418 Td (`CornerRadius`, `Margin`, `Show`, `Dismiss`) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 406 Td (`UIAlertDialog` Modal overlay with title, message, optional declarative content and) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 394 Td (positive/negative actions. `Title`, `Message`, `Content`, `PositiveButton`,) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 382 Td (`NegativeButton`, `DismissOnOutside`, `ButtonColor`, `ButtonTextColor`, `CornerRadius`,) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 370 Td (`ApplyTheme`, `Show`, `Dismiss`) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 358 Td (`UIAnimation` Explicit bounds animation for an already-mounted native view. `TargetView`,) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 346 Td (`MoveTo`, `SizeTo`, `MoveAndResize`, `Duration`, `OnCompleted`, `Start`, `Cancel`,) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 334 Td (`IsRunning`) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 317 Td (Example dialog and feedback flow:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 295 Td (Dim dialog As UIAlertDialog) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 285 Td (dialog.Initialize _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 275 Td (.Title\("Delete item?"\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 265 Td (.Message\("This action cannot be undone."\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 255 Td (.NegativeButton\("Cancel", Me, "DialogCancel"\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 245 Td (.PositiveButton\("Delete", Me, "DialogDelete"\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 235 Td (.ApplyTheme\(AppTheme\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 225 Td (.Show\(Activity\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 215 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 205 Td (Dim snack As UISnackBar) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 195 Td (snack.Initialize.Message\("Item deleted"\).Duration\(2500\).Show\(Activity\)) Tj ET
+BT /F2 10.5 Tf 0.16 0.20 0.28 rg 48 175 Td (Scrolling, lists and native interoperability) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 153 Td (Widget Purpose Main methods) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 141 Td (--- --- ---) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 129 Td (`UIScrollView` Native vertical ScrollView hosting one declarative child. `Child`,) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 117 Td (`GetChild`, `ScrollTo`, `GetScrollPosition`, `ApplyTheme`) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 105 Td (`UIListView` Fixed-height virtualized list with pooled declarative rows. `Items`,) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 93 Td (`ItemCount`, `ItemHeight`, `Overscan`, `CreateItem`, `BindItem`, `NotifyDataSetChanged`,) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 81 Td (`GetItem`, `ApplyTheme`) Tj ET
 BT /F1 8 Tf 0.45 0.45 0.45 rg 512 25 Td (4) Tj ET
 Q
 endstream
@@ -289,63 +288,61 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 12 0 R >>
 endobj
 14 0 obj
-<< /Length 5340 >>
+<< /Length 5297 >>
 stream
 q
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 790 Td (Dim nativeButton As Button) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 780 Td (nativeButton.Initialize\("NativeButton"\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 770 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 760 Td (Dim nativeWidget As UINative) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 750 Td (nativeWidget.Initialize\(nativeButton, 140dip, 48dip\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 740 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 730 Td (Dim row As UIRow) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 720 Td (row.Initialize.AddChild\(nativeWidget\).AddChild\(saveButton\)) Tj ET
-BT /F2 10.5 Tf 0.16 0.20 0.28 rg 48 700 Td (State and design-token classes) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 678 Td (These are not visual widgets, but they are part of the public building-block set:) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 661 Td (Class Purpose Main methods) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 649 Td (--- --- ---) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 637 Td (`UIState` Observable replacement-value state for labels, inputs, visibility and custom) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 625 Td (callbacks. `Initialize`, `GetState`, `SetState`, `Subscribe`, `Unsubscribe`,) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 613 Td (`UnsubscribeTarget`, `ClearListeners`) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 601 Td (`UIAsyncState` Idle/loading/success/error snapshot for operations that complete later.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 589 Td (`Initialize`, `SetIdle`, `SetLoading`, `SetSuccess`, `SetError`, `Reset`, `GetStatus`,) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 577 Td (`GetValue`, `GetErrorMessage`, `Subscribe`) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 565 Td (`UITheme` Material-like semantic colors, typography, shapes and layout tokens. `Initialize`,) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 553 Td (`InitializeDark`, `InitializeWithScheme`, `InitializeWithSchemeAndMode`, `Scheme`, `Toggle`,) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 541 Td (`DarkMode`) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 524 Td (UIAsyncState does not perform HTTP requests. It exposes the operation state while the host) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 512 Td (continues to use normal B4A Wait For, ResumableSub, HttpJob, database or file code.) Tj ET
-BT /F2 13 Tf 0.24 0.20 0.50 rg 48 495 Td (4. Installation) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 468 Td (1. Copy `DeclarativeUI.b4xlib` to the B4A Additional Libraries folder.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 456 Td (2. Refresh the Libraries Manager in the B4A IDE.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 444 Td (3. Enable the `DeclarativeUI` library.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 432 Td (4. Enable the required B4A libraries used by the host project: `XUI` and `JavaObject`; add) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 420 Td (`OkHttpUtils2` when using `UIImage.Network`.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 408 Td (5. Create a normal B4A Activity project and use the UI classes from the library.) Tj ET
-BT /F2 13 Tf 0.24 0.20 0.50 rg 48 391 Td (4. The basic lifecycle) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 364 Td (A layout-aware widget follows this lifecycle:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 342 Td (Initialize -> configure -> compose -> mount -> Render) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 332 Td (|) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 322 Td (Unmount) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 302 Td (The public composition protocol is:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 280 Td (SetParent\(parent As B4XView\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 270 Td (SetPosition\(left As Int, top As Int\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 260 Td (SetSize\(width As Int, height As Int\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 250 Td (Render) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 240 Td (Detach) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 230 Td (Unmount) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 220 Td (GetContentSize\(maxWidth As Int, maxHeight As Int\) As List) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 200 Td (Render updates a stable native tree. Detach is temporary: it removes the native view from) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 188 Td (the current parent while preserving widget configuration, bindings and reusable controls.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 176 Td (Unmount is terminal cleanup and releases native references/subscriptions. Custom widgets may) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 164 Td (omit Detach; the bridge falls back safely to Unmount for compatibility.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 147 Td (Application code normally configures a root tree and renders only that root. Containers call) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 135 Td (the protocol on their children. Custom widgets can participate when they implement the same) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 123 Td (methods.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 106 Td (A direct root example:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 84 Td (Sub Activity_Create\(FirstTime As Boolean\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 74 Td (Dim root As B4XView = Activity) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 64 Td (root.Color = 0xFFF4F7FB) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 790 Td (`UINative` Adapter that inserts an existing native B4A view into a declarative container.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 778 Td (`Initialize\(nativeView, naturalWidth, naturalHeight\)`, `GetView`, `ApplyTheme`) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 761 Td (UIScrollView is suitable for small or variable-height content. UIListView is suitable for) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 749 Td (long collections with a fixed row height. UINative keeps ownership and event handling with) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 737 Td (the host Activity:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 715 Td (Dim nativeButton As Button) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 705 Td (nativeButton.Initialize\("NativeButton"\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 695 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 685 Td (Dim nativeWidget As UINative) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 675 Td (nativeWidget.Initialize\(nativeButton, 140dip, 48dip\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 665 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 655 Td (Dim row As UIRow) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 645 Td (row.Initialize.AddChild\(nativeWidget\).AddChild\(saveButton\)) Tj ET
+BT /F2 10.5 Tf 0.16 0.20 0.28 rg 48 625 Td (State and design-token classes) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 603 Td (These are not visual widgets, but they are part of the public building-block set:) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 586 Td (Class Purpose Main methods) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 574 Td (--- --- ---) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 562 Td (`UIState` Observable replacement-value state for labels, inputs, visibility and custom) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 550 Td (callbacks. `Initialize`, `GetState`, `SetState`, `Subscribe`, `Unsubscribe`,) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 538 Td (`UnsubscribeTarget`, `ClearListeners`) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 526 Td (`UIAsyncState` Idle/loading/success/error snapshot for operations that complete later.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 514 Td (`Initialize`, `SetIdle`, `SetLoading`, `SetSuccess`, `SetError`, `Reset`, `GetStatus`,) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 502 Td (`GetValue`, `GetErrorMessage`, `Subscribe`) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 490 Td (`UITheme` Material-like semantic colors, typography, shapes and layout tokens. `Initialize`,) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 478 Td (`InitializeDark`, `InitializeWithScheme`, `InitializeWithSchemeAndMode`, `Scheme`, `Toggle`,) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 466 Td (`DarkMode`) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 449 Td (UIAsyncState does not perform HTTP requests. It exposes the operation state while the host) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 437 Td (continues to use normal B4A Wait For, ResumableSub, HttpJob, database or file code.) Tj ET
+BT /F2 13 Tf 0.24 0.20 0.50 rg 48 420 Td (4. Installation) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 393 Td (1. Copy `DeclarativeUI.b4xlib` to the B4A Additional Libraries folder.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 381 Td (2. Refresh the Libraries Manager in the B4A IDE.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 369 Td (3. Enable the `DeclarativeUI` library.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 357 Td (4. Enable the required B4A libraries used by the host project: `XUI` and `JavaObject`; add) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 345 Td (`OkHttpUtils2` when using `UIImage.Network`.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 333 Td (5. Create a normal B4A Activity project and use the UI classes from the library.) Tj ET
+BT /F2 13 Tf 0.24 0.20 0.50 rg 48 316 Td (4. The basic lifecycle) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 289 Td (A layout-aware widget follows this lifecycle:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 267 Td (Initialize -> configure -> compose -> mount -> Render) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 257 Td (|) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 247 Td (Unmount) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 227 Td (The public composition protocol is:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 205 Td (SetParent\(parent As B4XView\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 195 Td (SetPosition\(left As Int, top As Int\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 185 Td (SetSize\(width As Int, height As Int\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 175 Td (Render) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 165 Td (Detach) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 155 Td (Unmount) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 145 Td (GetContentSize\(maxWidth As Int, maxHeight As Int\) As List) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 125 Td (Render updates a stable native tree. Detach is temporary: it removes the native view from) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 113 Td (the current parent while preserving widget configuration, bindings and reusable controls.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 101 Td (Unmount is terminal cleanup and releases native references/subscriptions. Custom widgets may) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 89 Td (omit Detach; the bridge falls back safely to Unmount for compatibility.) Tj ET
 BT /F1 8 Tf 0.45 0.45 0.45 rg 512 25 Td (5) Tj ET
 Q
 endstream
@@ -354,67 +351,68 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 14 0 R >>
 endobj
 16 0 obj
-<< /Length 5071 >>
+<< /Length 5172 >>
 stream
 q
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 790 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 780 Td (Dim title As UILabel) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 770 Td (title.Initialize.Text\("Hello declarative UI"\).Size\(24\).Color\(0xFF132238\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 760 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 750 Td (title.SetParent\(root\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 740 Td (title.SetPosition\(24dip, 40dip\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 730 Td (title.SetSize\(root.Width - 48dip, 48dip\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 720 Td (title.Render) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 710 Td (End Sub) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 690 Td (For real screens, use a container instead of manually positioning every child.) Tj ET
-BT /F2 13 Tf 0.24 0.20 0.50 rg 48 673 Td (5. Composition and natural layout) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 646 Td (UIColumn lays out children vertically. UIRow lays them out horizontally. UIPadding adds) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 634 Td (insets, UICard provides a rounded surface, and UIExpanded consumes remaining space.) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 612 Td (Dim heading As UILabel) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 602 Td (heading.Initialize.Text\("Daily routine"\).Size\(22\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 592 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 582 Td (Dim save As UIButton) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 572 Td (save.Initialize.Text\("SAVE"\).OnClick\(Me, "Save_Click"\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 562 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 552 Td (Dim content As UIColumn) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 542 Td (content.Initialize _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 532 Td (.Spacing\(10dip\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 522 Td (.CrossAxisAlignment\("stretch"\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 512 Td (.AddChild\(heading\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 502 Td (.AddChild\(save\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 492 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 482 Td (Dim screenBody As UIPadding) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 472 Td (screenBody.Initialize.All\(16dip\).Child\(content\)) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 452 Td (Useful layout options are:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 430 Td (column.MainAxisSize\("min"\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 420 Td (column.MainAxisAlignment\("center"\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 410 Td (column.CrossAxisAlignment\("stretch"\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 400 Td (row.MainAxisAlignment\("spaceBetween"\)) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 380 Td (Supported main-axis alignment values are start, center, end, spaceBetween, spaceAround and) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 368 Td (spaceEvenly. Cross-axis values are stretch, start, center and end. Values are) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 356 Td (case-insensitive.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 339 Td (A child reports its natural size through GetContentSize, returning List\(width, height\). An) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 327 Td (empty list means flexible. UIColumn and UIRow measure natural children first and give) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 315 Td (remaining space to UIExpanded children. This is why text and cards can grow naturally) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 303 Td (instead of depending on arbitrary fixed heights.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 286 Td (A scrollable body normally uses UIExpanded:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 264 Td (Dim scroll As UIScrollView) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 254 Td (scroll.Initialize.Child\(content\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 244 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 234 Td (Dim expandedScroll As UIExpanded) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 224 Td (expandedScroll.Initialize.Child\(scroll\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 214 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 204 Td (Dim body As UIColumn) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 194 Td (body.Initialize _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 184 Td (.AddChild\(header\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 174 Td (.AddChild\(expandedScroll\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 164 Td (.AddChild\(footer\)) Tj ET
-BT /F2 13 Tf 0.24 0.20 0.50 rg 48 144 Td (6. State-driven UI) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 117 Td (UIState is an explicit observable value holder. It is intentionally small: it does not) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 105 Td (replace the application model and it does not observe mutations inside an existing Map or) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 93 Td (List.) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 71 Td (Private CounterState As UIState) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 61 Td (Private CounterLabel As UILabel) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 790 Td (Application code normally configures a root tree and renders only that root. Containers call) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 778 Td (the protocol on their children. Custom widgets can participate when they implement the same) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 766 Td (methods.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 749 Td (A direct root example:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 727 Td (Sub Activity_Create\(FirstTime As Boolean\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 717 Td (Dim root As B4XView = Activity) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 707 Td (root.Color = 0xFFF4F7FB) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 697 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 687 Td (Dim title As UILabel) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 677 Td (title.Initialize.Text\("Hello declarative UI"\).Size\(24\).Color\(0xFF132238\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 667 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 657 Td (title.SetParent\(root\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 647 Td (title.SetPosition\(24dip, 40dip\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 637 Td (title.SetSize\(root.Width - 48dip, 48dip\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 627 Td (title.Render) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 617 Td (End Sub) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 597 Td (For real screens, use a container instead of manually positioning every child.) Tj ET
+BT /F2 13 Tf 0.24 0.20 0.50 rg 48 580 Td (5. Composition and natural layout) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 553 Td (UIColumn lays out children vertically. UIRow lays them out horizontally. UIPadding adds) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 541 Td (insets, UICard provides a rounded surface, and UIExpanded consumes remaining space.) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 519 Td (Dim heading As UILabel) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 509 Td (heading.Initialize.Text\("Daily routine"\).Size\(22\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 499 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 489 Td (Dim save As UIButton) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 479 Td (save.Initialize.Text\("SAVE"\).OnClick\(Me, "Save_Click"\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 469 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 459 Td (Dim content As UIColumn) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 449 Td (content.Initialize _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 439 Td (.Spacing\(10dip\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 429 Td (.CrossAxisAlignment\("stretch"\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 419 Td (.AddChild\(heading\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 409 Td (.AddChild\(save\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 399 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 389 Td (Dim screenBody As UIPadding) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 379 Td (screenBody.Initialize.All\(16dip\).Child\(content\)) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 359 Td (Useful layout options are:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 337 Td (column.MainAxisSize\("min"\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 327 Td (column.MainAxisAlignment\("center"\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 317 Td (column.CrossAxisAlignment\("stretch"\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 307 Td (row.MainAxisAlignment\("spaceBetween"\)) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 287 Td (Supported main-axis alignment values are start, center, end, spaceBetween, spaceAround and) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 275 Td (spaceEvenly. Cross-axis values are stretch, start, center and end. Values are) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 263 Td (case-insensitive.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 246 Td (A child reports its natural size through GetContentSize, returning List\(width, height\). An) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 234 Td (empty list means flexible. UIColumn and UIRow measure natural children first and give) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 222 Td (remaining space to UIExpanded children. This is why text and cards can grow naturally) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 210 Td (instead of depending on arbitrary fixed heights.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 193 Td (A scrollable body normally uses UIExpanded:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 171 Td (Dim scroll As UIScrollView) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 161 Td (scroll.Initialize.Child\(content\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 151 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 141 Td (Dim expandedScroll As UIExpanded) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 131 Td (expandedScroll.Initialize.Child\(scroll\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 121 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 111 Td (Dim body As UIColumn) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 101 Td (body.Initialize _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 91 Td (.AddChild\(header\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 81 Td (.AddChild\(expandedScroll\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 71 Td (.AddChild\(footer\)) Tj ET
 BT /F1 8 Tf 0.45 0.45 0.45 rg 512 25 Td (6) Tj ET
 Q
 endstream
@@ -423,62 +421,59 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 16 0 R >>
 endobj
 18 0 obj
-<< /Length 4896 >>
+<< /Length 4769 >>
 stream
 q
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 790 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 780 Td (CounterState.Initialize\(0\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 770 Td (CounterLabel.Initialize.BindText\(CounterState\).Size\(52\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 760 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 750 Td (Sub Increment_Click) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 740 Td (Dim currentValue As Int = CounterState.GetState) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 730 Td (CounterState.SetState\(currentValue + 1\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 720 Td (End Sub) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 700 Td (BindText applies the current value immediately and updates the label when the state changes.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 688 Td (Text\(...\) replaces the binding and makes the text static. The same pattern is available on) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 676 Td (UIButton, UIFloatingActionButton, UIInput and UIAppBar through BindText or BindTitle.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 659 Td (For custom reactions:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 637 Td (CounterState.Subscribe\(Me, "CounterChanged"\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 627 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 617 Td (Sub CounterChanged\(State As UIState\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 607 Td (Log\("Counter = " & State.GetState\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 597 Td (End Sub) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 577 Td (State updates are selective, not a full virtual-DOM diff. A bound widget can update itself;) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 565 Td (structural changes still require rendering the affected root.) Tj ET
-BT /F2 13 Tf 0.24 0.20 0.50 rg 48 548 Td (7. Themes and customization) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 521 Td (UITheme supplies complete light/dark defaults for colors, typography, shapes and common) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 509 Td (dimensions. A seed color can be used without configuring every widget individually.) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 487 Td (Private AppTheme As UITheme) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 477 Td (AppTheme.Initialize.Scheme\(0xFF6750A4\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 467 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 457 Td (Dim primary As UIButton) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 447 Td (primary.Initialize.Text\("Continue"\).ApplyTheme\(AppTheme\)) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 427 Td (Other initialization forms are:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 405 Td (AppTheme.InitializeDark) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 395 Td (AppTheme.InitializeWithScheme\(0xFF6750A4\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 385 Td (AppTheme.InitializeWithSchemeAndMode\(0xFF6750A4, True\)) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 365 Td (Switching mode keeps application state intact:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 343 Td (AppTheme.Toggle) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 333 Td (activeScreen.ApplyTheme\(AppTheme\)) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 313 Td (Theme properties include Background, Surface, SurfaceVariant, PrimaryText, SecondaryText,) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 301 Td (Accent, Negative, Divider, Border, ButtonText, DashboardBar and their readable Text) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 289 Td (counterparts. Shape tokens include ButtonRadius, CardRadius, InputRadius, FabRadius and) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 277 Td (SnackbarRadius.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 260 Td (Explicit setters override only the property they change:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 238 Td (primary.CornerRadius\(8dip\).TextSize\(16\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 228 Td (primary.ApplyTheme\(AppTheme\)) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 208 Td (The button keeps following the theme for other properties. Containers forward ApplyTheme to) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 196 Td (their descendants.) Tj ET
-BT /F2 13 Tf 0.24 0.20 0.50 rg 48 179 Td (8. Buttons, inputs and callbacks) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 152 Td (Callbacks use normal B4A target-plus-sub-name conventions. No lambda or custom event) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 140 Td (language is required.) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 118 Td (Dim saveButton As UIButton) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 108 Td (saveButton.Initialize _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 98 Td (.Text\("SAVE"\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 88 Td (.CornerRadius\(12dip\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 78 Td (.OnClick\(Me, "Save_Click"\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 68 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 58 Td (Sub Save_Click) Tj ET
+BT /F2 13 Tf 0.24 0.20 0.50 rg 48 790 Td (6. State-driven UI) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 763 Td (UIState is an explicit observable value holder. It is intentionally small: it does not) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 751 Td (replace the application model and it does not observe mutations inside an existing Map or) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 739 Td (List.) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 717 Td (Private CounterState As UIState) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 707 Td (Private CounterLabel As UILabel) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 697 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 687 Td (CounterState.Initialize\(0\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 677 Td (CounterLabel.Initialize.BindText\(CounterState\).Size\(52\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 667 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 657 Td (Sub Increment_Click) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 647 Td (Dim currentValue As Int = CounterState.GetState) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 637 Td (CounterState.SetState\(currentValue + 1\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 627 Td (End Sub) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 607 Td (BindText applies the current value immediately and updates the label when the state changes.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 595 Td (Text\(...\) replaces the binding and makes the text static. The same pattern is available on) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 583 Td (UIButton, UIFloatingActionButton, UIInput and UIAppBar through BindText or BindTitle.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 566 Td (For custom reactions:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 544 Td (CounterState.Subscribe\(Me, "CounterChanged"\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 534 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 524 Td (Sub CounterChanged\(State As UIState\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 514 Td (Log\("Counter = " & State.GetState\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 504 Td (End Sub) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 484 Td (State updates are selective, not a full virtual-DOM diff. A bound widget can update itself;) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 472 Td (structural changes still require rendering the affected root.) Tj ET
+BT /F2 13 Tf 0.24 0.20 0.50 rg 48 455 Td (7. Themes and customization) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 428 Td (UITheme supplies complete light/dark defaults for colors, typography, shapes and common) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 416 Td (dimensions. A seed color can be used without configuring every widget individually.) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 394 Td (Private AppTheme As UITheme) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 384 Td (AppTheme.Initialize.Scheme\(0xFF6750A4\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 374 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 364 Td (Dim primary As UIButton) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 354 Td (primary.Initialize.Text\("Continue"\).ApplyTheme\(AppTheme\)) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 334 Td (Other initialization forms are:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 312 Td (AppTheme.InitializeDark) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 302 Td (AppTheme.InitializeWithScheme\(0xFF6750A4\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 292 Td (AppTheme.InitializeWithSchemeAndMode\(0xFF6750A4, True\)) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 272 Td (Switching mode keeps application state intact:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 250 Td (AppTheme.Toggle) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 240 Td (activeScreen.ApplyTheme\(AppTheme\)) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 220 Td (Theme properties include Background, Surface, SurfaceVariant, PrimaryText, SecondaryText,) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 208 Td (Accent, Negative, Divider, Border, ButtonText, DashboardBar and their readable Text) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 196 Td (counterparts. Shape tokens include ButtonRadius, CardRadius, InputRadius, FabRadius and) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 184 Td (SnackbarRadius.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 167 Td (Explicit setters override only the property they change:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 145 Td (primary.CornerRadius\(8dip\).TextSize\(16\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 135 Td (primary.ApplyTheme\(AppTheme\)) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 115 Td (The button keeps following the theme for other properties. Containers forward ApplyTheme to) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 103 Td (their descendants.) Tj ET
+BT /F2 13 Tf 0.24 0.20 0.50 rg 48 86 Td (8. Buttons, inputs and callbacks) Tj ET
 BT /F1 8 Tf 0.45 0.45 0.45 rg 512 25 Td (7) Tj ET
 Q
 endstream
@@ -487,68 +482,68 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 18 0 R >>
 endobj
 20 0 obj
-<< /Length 5334 >>
+<< /Length 5311 >>
 stream
 q
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 790 Td (Log\("Saved"\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 780 Td (End Sub) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 760 Td (The callback must be a parameterless sub for UIButton and UIFloatingActionButton. Invalid) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 748 Td (callback names are ignored safely.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 731 Td (UIInput exposes a native B4A EditText while participating in declarative layout:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 709 Td (Private NameState As UIState) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 699 Td (NameState.Initialize\(""\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 689 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 679 Td (Dim nameInput As UIInput) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 669 Td (nameInput.Initialize _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 659 Td (.Hint\("Your name"\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 649 Td (.BindText\(NameState\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 639 Td (.OnTextChanged\(Me, "Name_Changed"\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 629 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 619 Td (Sub Name_Changed\(NewText As String\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 609 Td (NameState.SetState\(NewText\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 599 Td (End Sub) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 579 Td (The input binding is one-way. User edits arrive through OnTextChanged; the host decides) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 567 Td (whether to update state. Programmatic changes do not invoke the user-edit callback.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 550 Td (Rounded controls use the same fluent style:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 528 Td (nameInput.CornerRadius\(10dip\).Border\(1dip, 0xFFD0D7E2\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 518 Td (saveButton.BackgroundColor\(0xFF6750A4\).TextColor\(Colors.White\)) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 498 Td (CornerRadius\(0\) preserves the native background. Custom backgrounds can replace the native) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 486 Td (ripple; use the default background when platform ripple feedback is more important than) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 474 Td (custom shaping.) Tj ET
-BT /F2 13 Tf 0.24 0.20 0.50 rg 48 457 Td (9. App structure, navigation and safe area) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 430 Td (The recommended structure is one real B4A Activity containing virtual screens:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 408 Td (Dim appBar As UIAppBar) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 398 Td (appBar.Initialize.Title\("Home"\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 388 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 378 Td (Dim screen As UIScaffold) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 368 Td (screen.Initialize _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 358 Td (.AppBar\(appBar\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 348 Td (.Body\(screenBody\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 338 Td (.FloatingActionButtonRight\(actionButton\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 328 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 318 Td (Navigator.Initialize _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 308 Td (.AddScreen\("Home", screen\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 298 Td (.AddScreen\("Settings", settingsScreen\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 288 Td (Navigator.SetParent\(Activity\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 278 Td (Navigator.SetPosition\(0, 0\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 268 Td (Navigator.SetSize\(Activity.Width, Activity.Height\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 258 Td (Navigator.NavigateTo\("Home"\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 248 Td (Navigator.Render) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 228 Td (UINavigator manages virtual widget trees, not physical Activities or .bal files. It uses the) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 216 Td (available B4A content rectangle so the root stays below the Android status area. UIScaffold) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 204 Td (lays out the app bar, body, optional bottom navigation and FABs without making each screen) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 192 Td (calculate those offsets. Re-rendering the same route is in-place; switching routes detaches) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 180 Td (the old tree so back navigation can restore it, while terminal navigator unmount releases) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 168 Td (it.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 151 Td (Bottom navigation is data-driven:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 129 Td (Dim tabs As UIBottomNavigationBar) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 119 Td (tabs.Initialize _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 109 Td (.AddItem\("home", "?", "Home"\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 99 Td (.AddItem\("settings", "?", "Settings"\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 89 Td (.OnSelected\(Me, "Tab_Selected"\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 79 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 69 Td (Sub Tab_Selected\(Index As Int, Id As String\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 59 Td (Navigator.NavigateTo\(Id\)) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 790 Td (Callbacks use normal B4A target-plus-sub-name conventions. No lambda or custom event) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 778 Td (language is required.) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 756 Td (Dim saveButton As UIButton) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 746 Td (saveButton.Initialize _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 736 Td (.Text\("SAVE"\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 726 Td (.CornerRadius\(12dip\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 716 Td (.OnClick\(Me, "Save_Click"\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 706 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 696 Td (Sub Save_Click) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 686 Td (Log\("Saved"\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 676 Td (End Sub) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 656 Td (The callback must be a parameterless sub for UIButton and UIFloatingActionButton. Invalid) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 644 Td (callback names are ignored safely.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 627 Td (UIInput exposes a native B4A EditText while participating in declarative layout:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 605 Td (Private NameState As UIState) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 595 Td (NameState.Initialize\(""\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 585 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 575 Td (Dim nameInput As UIInput) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 565 Td (nameInput.Initialize _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 555 Td (.Hint\("Your name"\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 545 Td (.BindText\(NameState\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 535 Td (.OnTextChanged\(Me, "Name_Changed"\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 525 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 515 Td (Sub Name_Changed\(NewText As String\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 505 Td (NameState.SetState\(NewText\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 495 Td (End Sub) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 475 Td (The input binding is one-way. User edits arrive through OnTextChanged; the host decides) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 463 Td (whether to update state. Programmatic changes do not invoke the user-edit callback.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 446 Td (Rounded controls use the same fluent style:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 424 Td (nameInput.CornerRadius\(10dip\).Border\(1dip, 0xFFD0D7E2\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 414 Td (saveButton.BackgroundColor\(0xFF6750A4\).TextColor\(Colors.White\)) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 394 Td (CornerRadius\(0\) preserves the native background. Custom backgrounds can replace the native) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 382 Td (ripple; use the default background when platform ripple feedback is more important than) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 370 Td (custom shaping.) Tj ET
+BT /F2 13 Tf 0.24 0.20 0.50 rg 48 353 Td (9. App structure, navigation and safe area) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 326 Td (The recommended structure is one real B4A Activity containing virtual screens:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 304 Td (Dim appBar As UIAppBar) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 294 Td (appBar.Initialize.Title\("Home"\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 284 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 274 Td (Dim screen As UIScaffold) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 264 Td (screen.Initialize _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 254 Td (.AppBar\(appBar\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 244 Td (.Body\(screenBody\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 234 Td (.FloatingActionButtonRight\(actionButton\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 224 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 214 Td (Navigator.Initialize _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 204 Td (.AddScreen\("Home", screen\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 194 Td (.AddScreen\("Settings", settingsScreen\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 184 Td (Navigator.SetParent\(Activity\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 174 Td (Navigator.SetPosition\(0, 0\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 164 Td (Navigator.SetSize\(Activity.Width, Activity.Height\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 154 Td (Navigator.NavigateTo\("Home"\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 144 Td (Navigator.Render) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 124 Td (UINavigator manages virtual widget trees, not physical Activities or .bal files. It uses the) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 112 Td (available B4A content rectangle so the root stays below the Android status area. UIScaffold) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 100 Td (lays out the app bar, body, optional bottom navigation and FABs without making each screen) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 88 Td (calculate those offsets. Re-rendering the same route is in-place; switching routes detaches) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 76 Td (the old tree so back navigation can restore it, while terminal navigator unmount releases) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 64 Td (it.) Tj ET
 BT /F1 8 Tf 0.45 0.45 0.45 rg 512 25 Td (8) Tj ET
 Q
 endstream
@@ -557,65 +552,64 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 20 0 R >>
 endobj
 22 0 obj
-<< /Length 4699 >>
+<< /Length 4725 >>
 stream
 q
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 790 Td (End Sub) Tj ET
-BT /F2 13 Tf 0.24 0.20 0.50 rg 48 770 Td (10. Feedback, dialogs and animation) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 743 Td (A snackbar is an overlay, not a permanent child of a Column:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 721 Td (Dim snack As UISnackBar) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 711 Td (snack.Initialize _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 701 Td (.Message\("Settings saved"\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 691 Td (.Action\("UNDO", Me, "Undo_Click"\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 681 Td (.Duration\(3000\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 671 Td (.Show\(Activity\)) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 651 Td (Duration\(0\) keeps it visible until Dismiss. AnimationDuration\(0\) disables its entrance and) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 639 Td (exit transition.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 622 Td (UIAlertDialog uses normal B4A callbacks:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 600 Td (Dim dialog As UIAlertDialog) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 590 Td (dialog.Initialize _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 580 Td (.Title\("Delete item?"\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 570 Td (.Message\("This action cannot be undone."\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 560 Td (.NegativeButton\("Cancel", Me, "DialogCancel"\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 550 Td (.PositiveButton\("Delete", Me, "DialogDelete"\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 540 Td (.ApplyTheme\(AppTheme\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 530 Td (.Show\(Activity\)) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 510 Td (Dialog buttons follow the theme shape and color tokens. The dialog is an overlay and can) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 498 Td (also host a declarative content widget through Content\(widget\).) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 481 Td (UIAnimation is deliberately opt-in and animates bounds of an already-mounted native view:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 459 Td (Dim animation As UIAnimation) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 449 Td (animation.Initialize _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 439 Td (.TargetView\(cardView\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 429 Td (.MoveTo\(cardView.Left, cardView.Top + 8dip\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 419 Td (.Duration\(220\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 409 Td (.OnCompleted\(Me, "AnimationDone"\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 399 Td (.Start) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 379 Td (It does not replace the layout system or imply automatic animation of colors, opacity or) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 367 Td (arbitrary properties.) Tj ET
-BT /F2 13 Tf 0.24 0.20 0.50 rg 48 350 Td (11. Lists and scrolling) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 323 Td (Use UIScrollView for small or variable-height content:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 301 Td (Dim feed As UIColumn) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 291 Td (feed.Initialize.Spacing\(8dip\).AddChild\(cardOne\).AddChild\(cardTwo\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 281 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 271 Td (Dim scroll As UIScrollView) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 261 Td (scroll.Initialize.Child\(feed\)) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 241 Td (Use UIListView for long, fixed-height collections. It keeps a visible window and reuses item) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 229 Td (widgets:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 207 Td (Private Records As List) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 197 Td (Private RecordsView As UIListView) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 187 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 177 Td (RecordsView.Initialize _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 167 Td (.Items\(Records\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 157 Td (.ItemHeight\(68dip\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 147 Td (.CreateItem\(Me, "CreateRow"\) _) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 137 Td (.BindItem\(Me, "BindRow"\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 127 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 117 Td (Sub CreateRow\(Index As Int\) As Object) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 107 Td (Dim label As UILabel) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 97 Td (label.Initialize.Size\(16\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 87 Td (Return label) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 77 Td (End Sub) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 67 Td () Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 790 Td (Bottom navigation is data-driven:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 768 Td (Dim tabs As UIBottomNavigationBar) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 758 Td (tabs.Initialize _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 748 Td (.AddItem\("home", "?", "Home"\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 738 Td (.AddItem\("settings", "?", "Settings"\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 728 Td (.OnSelected\(Me, "Tab_Selected"\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 718 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 708 Td (Sub Tab_Selected\(Index As Int, Id As String\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 698 Td (Navigator.NavigateTo\(Id\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 688 Td (End Sub) Tj ET
+BT /F2 13 Tf 0.24 0.20 0.50 rg 48 668 Td (10. Feedback, dialogs and animation) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 641 Td (A snackbar is an overlay, not a permanent child of a Column:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 619 Td (Dim snack As UISnackBar) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 609 Td (snack.Initialize _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 599 Td (.Message\("Settings saved"\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 589 Td (.Action\("UNDO", Me, "Undo_Click"\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 579 Td (.Duration\(3000\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 569 Td (.Show\(Activity\)) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 549 Td (Duration\(0\) keeps it visible until Dismiss. AnimationDuration\(0\) disables its entrance and) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 537 Td (exit transition.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 520 Td (UIAlertDialog uses normal B4A callbacks:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 498 Td (Dim dialog As UIAlertDialog) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 488 Td (dialog.Initialize _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 478 Td (.Title\("Delete item?"\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 468 Td (.Message\("This action cannot be undone."\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 458 Td (.NegativeButton\("Cancel", Me, "DialogCancel"\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 448 Td (.PositiveButton\("Delete", Me, "DialogDelete"\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 438 Td (.ApplyTheme\(AppTheme\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 428 Td (.Show\(Activity\)) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 408 Td (Dialog buttons follow the theme shape and color tokens. The dialog is an overlay and can) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 396 Td (also host a declarative content widget through Content\(widget\).) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 379 Td (UIAnimation is deliberately opt-in and animates bounds of an already-mounted native view:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 357 Td (Dim animation As UIAnimation) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 347 Td (animation.Initialize _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 337 Td (.TargetView\(cardView\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 327 Td (.MoveTo\(cardView.Left, cardView.Top + 8dip\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 317 Td (.Duration\(220\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 307 Td (.OnCompleted\(Me, "AnimationDone"\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 297 Td (.Start) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 277 Td (It does not replace the layout system or imply automatic animation of colors, opacity or) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 265 Td (arbitrary properties.) Tj ET
+BT /F2 13 Tf 0.24 0.20 0.50 rg 48 248 Td (11. Lists and scrolling) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 221 Td (Use UIScrollView for small or variable-height content:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 199 Td (Dim feed As UIColumn) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 189 Td (feed.Initialize.Spacing\(8dip\).AddChild\(cardOne\).AddChild\(cardTwo\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 179 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 169 Td (Dim scroll As UIScrollView) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 159 Td (scroll.Initialize.Child\(feed\)) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 139 Td (Use UIListView for long, fixed-height collections. It keeps a visible window and reuses item) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 127 Td (widgets:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 105 Td (Private Records As List) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 95 Td (Private RecordsView As UIListView) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 85 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 75 Td (RecordsView.Initialize _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 65 Td (.Items\(Records\) _) Tj ET
 BT /F1 8 Tf 0.45 0.45 0.45 rg 512 25 Td (9) Tj ET
 Q
 endstream
@@ -624,61 +618,64 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 22 0 R >>
 endobj
 24 0 obj
-<< /Length 5665 >>
+<< /Length 5585 >>
 stream
 q
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 790 Td (Sub BindRow\(Index As Int, ItemView As Object\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 780 Td (Dim label As UILabel = ItemView) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 770 Td (label.Text\("" & Records.Get\(Index\)\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 760 Td (End Sub) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 740 Td (UIListView is fixed-height and is not a full RecyclerView replacement. With BindItem, rows) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 728 Td (leaving the viewport are detached into the pool and their native controls can be reused;) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 716 Td (permanent pool release unmounts them. Without BindItem, rows are recreated to avoid stale) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 704 Td (data. Use NotifyDataSetChanged after changing the data source.) Tj ET
-BT /F2 13 Tf 0.24 0.20 0.50 rg 48 687 Td (12. Native views are still possible) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 660 Td (The library does not create a closed ecosystem. Existing B4A controls can be inserted) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 648 Td (through UINative:) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 626 Td (Dim nativeButton As Button) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 616 Td (nativeButton.Initialize\("NativeButton"\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 606 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 596 Td (Dim native As UINative) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 586 Td (native.Initialize\(nativeButton, 140dip, 48dip\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 576 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 566 Td (Dim row As UIRow) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 556 Td (row.Initialize.AddChild\(native\).AddChild\(saveButton\)) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 536 Td (The native view remains a normal B4A control, so its event sub and properties remain) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 524 Td (available in the host Activity. This is important for drawers, WebViews, specialized) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 512 Td (controls and platform APIs that do not need a declarative wrapper yet.) Tj ET
-BT /F2 13 Tf 0.24 0.20 0.50 rg 48 495 Td (13. Why use this instead of manual AddView?) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 468 Td (The goal is not to claim that every screen becomes shorter. The practical benefits are) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 456 Td (consistency and reuse:) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 439 Td (- screen structure is visible as a tree instead of scattered coordinates;) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 427 Td (- natural measurement reduces clipping and manual height calculations;) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 415 Td (- theme tokens avoid repeating colors, text sizes and corner radii;) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 403 Td (- state bindings keep simple display values synchronized;) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 391 Td (- the same containers can host different widgets;) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 379 Td (- virtual screens can live inside one real Activity;) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 367 Td (- native B4A views remain available when a wrapper is unnecessary.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 350 Td (For a tiny one-label screen, traditional B4A may be equally short. The advantage becomes) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 338 Td (clearer as screens gain repeated cards, spacing, state, theming, navigation and responsive) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 326 Td (layout.) Tj ET
-BT /F2 13 Tf 0.24 0.20 0.50 rg 48 309 Td (14. Troubleshooting) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 282 Td (A button does nothing: verify the target, exact callback name, parameter signature and that) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 270 Td (the button is not covered by another native view. UIButton callbacks are parameterless;) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 258 Td (UIInput callbacks receive NewText As String.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 241 Td (A label is clipped: avoid arbitrary fixed heights. Let UIColumn, UIRow, UIPadding and UICard) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 229 Td (measure the child naturally. Use UIExpanded for the flexible part of a screen.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 212 Td (A scroll view does not scroll: ensure the child is taller than the viewport and place the) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 200 Td (scroll view inside UIExpanded when it shares a Column with fixed content.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 183 Td (A screen overlaps the status bar: mount the root through UINavigator and avoid independently) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 171 Td (guessing the top inset in every screen.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 154 Td (A theme change appears incomplete: apply the same UITheme to the root scaffold/navigator and) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 142 Td (avoid hard-coded colors in custom widgets. Explicit per-widget overrides intentionally) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 130 Td (remain unchanged.) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 113 Td (The runtime still shows old behavior: regenerate DeclarativeUI.b4xlib, replace the installed) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 101 Td (copy, refresh the B4A Libraries Manager and compile again. The IDE does not use changed) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 89 Td (source files that are absent from the active package.) Tj ET
-BT /F2 13 Tf 0.24 0.20 0.50 rg 48 72 Td (15. Minimal counter example) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 790 Td (.ItemHeight\(68dip\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 780 Td (.CreateItem\(Me, "CreateRow"\) _) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 770 Td (.BindItem\(Me, "BindRow"\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 760 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 750 Td (Sub CreateRow\(Index As Int\) As Object) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 740 Td (Dim label As UILabel) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 730 Td (label.Initialize.Size\(16\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 720 Td (Return label) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 710 Td (End Sub) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 700 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 690 Td (Sub BindRow\(Index As Int, ItemView As Object\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 680 Td (Dim label As UILabel = ItemView) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 670 Td (label.Text\("" & Records.Get\(Index\)\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 660 Td (End Sub) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 640 Td (UIListView is fixed-height and is not a full RecyclerView replacement. With BindItem, rows) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 628 Td (leaving the viewport are detached into the pool and their native controls can be reused;) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 616 Td (permanent pool release unmounts them. Without BindItem, rows are recreated to avoid stale) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 604 Td (data. Use NotifyDataSetChanged after changing the data source.) Tj ET
+BT /F2 13 Tf 0.24 0.20 0.50 rg 48 587 Td (12. Native views are still possible) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 560 Td (The library does not create a closed ecosystem. Existing B4A controls can be inserted) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 548 Td (through UINative:) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 526 Td (Dim nativeButton As Button) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 516 Td (nativeButton.Initialize\("NativeButton"\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 506 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 496 Td (Dim native As UINative) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 486 Td (native.Initialize\(nativeButton, 140dip, 48dip\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 476 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 466 Td (Dim row As UIRow) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 456 Td (row.Initialize.AddChild\(native\).AddChild\(saveButton\)) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 436 Td (The native view remains a normal B4A control, so its event sub and properties remain) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 424 Td (available in the host Activity. This is important for drawers, WebViews, specialized) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 412 Td (controls and platform APIs that do not need a declarative wrapper yet.) Tj ET
+BT /F2 13 Tf 0.24 0.20 0.50 rg 48 395 Td (13. Why use this instead of manual AddView?) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 368 Td (The goal is not to claim that every screen becomes shorter. The practical benefits are) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 356 Td (consistency and reuse:) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 339 Td (- screen structure is visible as a tree instead of scattered coordinates;) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 327 Td (- natural measurement reduces clipping and manual height calculations;) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 315 Td (- theme tokens avoid repeating colors, text sizes and corner radii;) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 303 Td (- state bindings keep simple display values synchronized;) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 291 Td (- the same containers can host different widgets;) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 279 Td (- virtual screens can live inside one real Activity;) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 267 Td (- native B4A views remain available when a wrapper is unnecessary.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 250 Td (For a tiny one-label screen, traditional B4A may be equally short. The advantage becomes) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 238 Td (clearer as screens gain repeated cards, spacing, state, theming, navigation and responsive) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 226 Td (layout.) Tj ET
+BT /F2 13 Tf 0.24 0.20 0.50 rg 48 209 Td (14. Troubleshooting) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 182 Td (A button does nothing: verify the target, exact callback name, parameter signature and that) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 170 Td (the button is not covered by another native view. UIButton callbacks are parameterless;) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 158 Td (UIInput callbacks receive NewText As String.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 141 Td (A label is clipped: avoid arbitrary fixed heights. Let UIColumn, UIRow, UIPadding and UICard) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 129 Td (measure the child naturally. Use UIExpanded for the flexible part of a screen.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 112 Td (A scroll view does not scroll: ensure the child is taller than the viewport and place the) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 100 Td (scroll view inside UIExpanded when it shares a Column with fixed content.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 83 Td (A screen overlaps the status bar: use UIScaffold as the root - it applies the safe area) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 71 Td (automatically on every Render. Never guess the top inset in individual screens.) Tj ET
 BT /F1 8 Tf 0.45 0.45 0.45 rg 512 25 Td (10) Tj ET
 Q
 endstream
@@ -687,43 +684,50 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 24 0 R >>
 endobj
 26 0 obj
-<< /Length 2775 >>
+<< /Length 3585 >>
 stream
 q
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 790 Td (Sub Process_Globals) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 780 Td (Private CounterState As UIState) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 770 Td (End Sub) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 760 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 750 Td (Sub Activity_Create\(FirstTime As Boolean\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 740 Td (Dim root As B4XView = Activity) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 730 Td (Dim theme As UITheme) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 720 Td (theme.Initialize.Scheme\(0xFF6750A4\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 710 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 700 Td (If FirstTime Then CounterState.Initialize\(0\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 690 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 680 Td (Dim value As UILabel) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 670 Td (value.Initialize.BindText\(CounterState\).Size\(52\).ApplyTheme\(theme\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 660 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 650 Td (Dim plus As UIFloatingActionButton) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 640 Td (plus.Initialize.Text\("+"\).OnClick\(Me, "Increment_Click"\).ApplyTheme\(theme\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 630 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 620 Td (Dim center As UICenter) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 610 Td (center.Initialize.Child\(value\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 600 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 590 Td (Dim screen As UIScaffold) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 580 Td (screen.Initialize.Body\(center\).FloatingActionButtonRight\(plus\).ApplyTheme\(theme\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 570 Td (screen.SetParent\(root\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 560 Td (screen.SetPosition\(0, 0\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 550 Td (screen.SetSize\(root.Width, root.Height\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 540 Td (screen.Render) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 530 Td (End Sub) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 520 Td () Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 510 Td (Sub Increment_Click) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 500 Td (Dim currentValue As Int = CounterState.GetState) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 490 Td (CounterState.SetState\(currentValue + 1\)) Tj ET
-BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 480 Td (End Sub) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 460 Td (This small example demonstrates the central idea: ordinary B4A code describes state, widgets) Tj ET
-BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 448 Td (and composition, while the library owns native mounting and layout.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 790 Td (A theme change appears incomplete: apply the same UITheme to the root scaffold/navigator and) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 778 Td (avoid hard-coded colors in custom widgets. Explicit per-widget overrides intentionally) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 766 Td (remain unchanged.) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 749 Td (The runtime still shows old behavior: regenerate DeclarativeUI.b4xlib, replace the installed) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 737 Td (copy, refresh the B4A Libraries Manager and compile again. The IDE does not use changed) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 725 Td (source files that are absent from the active package.) Tj ET
+BT /F2 13 Tf 0.24 0.20 0.50 rg 48 708 Td (15. Minimal counter example) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 676 Td (Sub Process_Globals) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 666 Td (Private CounterState As UIState) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 656 Td (End Sub) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 646 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 636 Td (Sub Activity_Create\(FirstTime As Boolean\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 626 Td (Dim root As B4XView = Activity) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 616 Td (Dim theme As UITheme) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 606 Td (theme.Initialize.Scheme\(0xFF6750A4\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 596 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 586 Td (If FirstTime Then CounterState.Initialize\(0\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 576 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 566 Td (Dim value As UILabel) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 556 Td (value.Initialize.BindText\(CounterState\).Size\(52\).ApplyTheme\(theme\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 546 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 536 Td (Dim plus As UIFloatingActionButton) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 526 Td (plus.Initialize.Text\("+"\).OnClick\(Me, "Increment_Click"\).ApplyTheme\(theme\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 516 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 506 Td (Dim center As UICenter) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 496 Td (center.Initialize.Child\(value\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 486 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 476 Td (Dim screen As UIScaffold) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 466 Td (screen.Initialize.Body\(center\).FloatingActionButtonRight\(plus\).ApplyTheme\(theme\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 456 Td (screen.SetParent\(root\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 446 Td (screen.SetPosition\(0, 0\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 436 Td (screen.SetSize\(root.Width, root.Height\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 426 Td (screen.Render) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 416 Td (End Sub) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 406 Td () Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 396 Td (Sub Increment_Click) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 386 Td (Dim currentValue As Int = CounterState.GetState) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 376 Td (CounterState.SetState\(currentValue + 1\)) Tj ET
+BT /F3 8.1 Tf 0.08 0.08 0.08 rg 48 366 Td (End Sub) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 346 Td (This small example demonstrates the central idea: ordinary B4A code describes state, widgets) Tj ET
+BT /F1 9.2 Tf 0.08 0.08 0.08 rg 48 334 Td (and composition, while the library owns native mounting and layout.) Tj ET
 BT /F1 8 Tf 0.45 0.45 0.45 rg 512 25 Td (11) Tj ET
 Q
 endstream
@@ -740,29 +744,29 @@ xref
 0000000261 00000 n 
 0000000336 00000 n 
 0000000404 00000 n 
-0000005479 00000 n 
-0000005625 00000 n 
-0000010997 00000 n 
-0000011143 00000 n 
-0000017368 00000 n 
-0000017516 00000 n 
-0000023203 00000 n 
-0000023351 00000 n 
-0000028744 00000 n 
-0000028892 00000 n 
-0000034016 00000 n 
-0000034164 00000 n 
-0000039113 00000 n 
-0000039261 00000 n 
-0000044648 00000 n 
-0000044796 00000 n 
-0000049548 00000 n 
-0000049696 00000 n 
-0000055414 00000 n 
-0000055562 00000 n 
-0000058390 00000 n 
+0000005464 00000 n 
+0000005610 00000 n 
+0000010982 00000 n 
+0000011128 00000 n 
+0000017536 00000 n 
+0000017684 00000 n 
+0000023118 00000 n 
+0000023266 00000 n 
+0000028616 00000 n 
+0000028764 00000 n 
+0000033989 00000 n 
+0000034137 00000 n 
+0000038959 00000 n 
+0000039107 00000 n 
+0000044471 00000 n 
+0000044619 00000 n 
+0000049397 00000 n 
+0000049545 00000 n 
+0000055183 00000 n 
+0000055331 00000 n 
+0000058969 00000 n 
 trailer
 << /Size 28 /Root 1 0 R >>
 startxref
-58538
+59117
 %%EOF

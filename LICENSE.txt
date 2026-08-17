@@ -1,8 +1,8 @@
-Declarative UI for B4A — Public Development Demo Notice
+Declarative UI for B4A — Public Development Notice
 Copyright (c) 2026 Maxel Chark Guzmán
 Contact: maxelcfgos@gmail.com
 
-This is an early development/demo release shared with the B4A community to
+This is an early development release shared with the B4A community to
 invite testing, ideas, bug reports and feedback. The project and its API may
 change as the library improves.
 
@@ -15,9 +15,9 @@ You are welcome to:
 - modify or adapt it locally while testing or building your application; and
 - publish an application or product that uses the library as your own work.
 
-No payment or commercial license is required for this development/demo
+No payment or commercial license is required for this development
 release. A future Pro version may include additional features and may have
-separate terms, but those terms will not retroactively restrict this demo.
+separate terms, but those terms will not retroactively restrict this release.
 
 Community request
 
@@ -49,4 +49,4 @@ own licenses.
 
 This notice is a plain-language development policy and not legal advice. The
 copyright holder may revise the terms for future releases, but will keep the
-current demo permissions clear in the release distributed to the community.
+current permissions clear in the release distributed to the community.

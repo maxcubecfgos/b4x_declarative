@@ -8,6 +8,13 @@
    label keeps the default typeface. Icon+text buttons just work without any
    new API: `UI.Button(Chr(0xF04B) & "  Run")` shows a play icon and the
    label.
+2. Packaged and documented as release 0.6: the `.b4xlib` manifest now reports
+   `Version=0.6` (the package is no longer a demo), the license notice was
+   renamed to the Public Development Notice, and the documentation was
+   brought in line with the current project: `SYNTAX.md` baseline 0.6,
+   `FORUM_GUIDE.md`/PDF header, UIButton FontAwesome coverage in GUIDE/README/
+   FORUM_GUIDE, and the examples sections now reference only the shipped
+   projects (`b4a_declarative_counter`, `b4a-template`).
 
 ## 0.5 — Debug-mode theme fix, automatic re-layout, multi-line labels
 

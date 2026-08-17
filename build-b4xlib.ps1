@@ -93,13 +93,13 @@ try {
 
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
     $manifest = @(
-        'Version=0.3'
+        'Version=0.6'
         'Title=Declarative UI for B4A'
         'Author=Maxel Chark Guzm' + [char]0xE1 + 'n'
         'Contact=maxelcfgos@gmail.com'
-        'License=Public Development Demo - see LICENSE.txt'
+        'License=Public Development Release - see LICENSE.txt'
         'Usage=Free personal and commercial application use; testing and local modification welcome'
-        'CommercialUse=Permitted for this demo; please respect source authorship'
+        'CommercialUse=Permitted for this release; please respect source authorship'
         'Modification=Testing and local project modifications welcome'
         'ReverseEngineering=Study, debugging and experimentation welcome'
         'Redistribution=Please do not repackage the implementation as your own library'

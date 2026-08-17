@@ -27,9 +27,9 @@ It is inspired by declarative UI systems such as Flutter, but it is intentionall
 
 ## 2. License and permitted use
 
-This is a public development/demo release shared to invite testing, ideas, bug reports and feedback. The complete plain-language notice is in [`LICENSE.txt`](LICENSE.txt) and the same file is included inside the `.b4xlib` package.
+This is a public development release shared to invite testing, ideas, bug reports and feedback. The complete plain-language notice is in [`LICENSE.txt`](LICENSE.txt) and the same file is included inside the `.b4xlib` package.
 
-Use the demo freely in personal, educational, client, employer, internal-business, commercial and monetized applications. You may inspect, debug and modify the source while developing, and publish applications built with it as your own work. No payment or commercial license is required for this development/demo release.
+Use the library freely in personal, educational, client, employer, internal-business, commercial and monetized applications. You may inspect, debug and modify the source while developing, and publish applications built with it as your own work. No payment or commercial license is required for this development release.
 
 The only community boundary is about source authorship: please do not copy the implementation into another library, framework, toolkit or standalone source project and publish it under your own name. This does not restrict applications, original code built around the API, tutorials, reviews, small credited snippets or local experiments. The copyright holder and contact are listed in `LICENSE.txt`.
 
@@ -46,7 +46,7 @@ The only community boundary is about source authorship: please do not copy the i
    - `OkHttpUtils2` (required when using `UIImage.Network`)
 5. Create or open a B4A Activity project and use the classes from the package.
 
-The package contains only the reusable `.bas` UI classes, `manifest.txt` and `LICENSE.txt`. Project documentation such as `README.md`, `GUIDE.md` and `SYNTAX.md` remains in the source repository and is not copied into the `.b4xlib`. The package intentionally excludes the NOVA demo Activity and `Starter.bas`.
+The package contains only the reusable `.bas` UI classes, `manifest.txt` and `LICENSE.txt`. Project documentation such as `README.md`, `GUIDE.md` and `SYNTAX.md` remains in the source repository and is not copied into the `.b4xlib`.
 
 The host project should use the installed library through normal B4A library usage. Local source changes and adapted components are welcome for personal, educational, client, employer, internal-business and commercial projects. Please do not publish the implementation itself as another library or standalone source project under your own name. Publishing an application that uses or adapts the library as your own work is allowed. Keep the notice and original copyright information with any shared library source or modified package.
 
@@ -108,16 +108,18 @@ without any application code after `SetState`.
 
 ### Canonical copy-paste examples
 
-Three minimal, standalone projects are shipped under `examples/`, each written
-100% with the factory (no `Dim`/`Initialize`/`SetParent` anywhere):
+The shipped example projects under `examples/` are written 100% with the
+factory (no `Dim`/`Initialize`/`SetParent` anywhere):
 
-- `examples/b4a_ui_counter` — a state-bound counter (`UI.State` + `BindText`).
-- `examples/b4a_ui_login` — a login card with inputs and a themed button
-  (`UI.Theme(UI.THEME_LIGHT)`).
-- `examples/b4a_ui_dashboard` — stat cards and progress bars
-  (`UI.Theme(UI.THEME_DARK)`).
+- `examples/b4a_declarative_counter` — a state-bound counter (`UI.State` +
+  `BindText`) built as a single `UI.*` tree expression: one Activity, one
+  `UIState`, one bound `UILabel`, one `UIAppBar` theme action and one
+  `UIFloatingActionButton`. Globals hold only the state, the root and the
+  screen reference used by `UI.Unmount`.
+- `examples/b4a-template` — "Ship It", a complete multi-screen sample app
+  (four screens, reactive state, theming, dialogs and snacks) that shows the
+  factory scale on a real dashboard.
 
-`examples/b4a_ui_quickstart` remains the combined three-screen navigable app.
 Container `AddChild` reports actionable errors (Null child, non-widget object,
 widget already owned by another container) through `UI.Errors` instead of
 failing silently, and releases children on `Unmount`.
@@ -161,7 +163,7 @@ The important idea is that `body` describes the child tree. The parent is respon
 | Widget | Main purpose | Main configuration methods |
 | --- | --- | --- |
 | `UILabel` | Native label | `Text`, `BindText`, `UnbindText`, `Size`, `Color` |
-| `UIButton` | Native clickable button | `Text`, `BindText`, `UnbindText`, `BackgroundColor`, `TextColor`, `CornerRadius`, `Border`, `OnClick` |
+| `UIButton` | Native clickable button | `Text`, `BindText`, `UnbindText`, `BackgroundColor`, `TextColor`, `TextSize`, `CornerRadius`, `Border`, `OnClick`, `TriggerClick` |
 | `UIFloatingActionButton` | Compact circular-style native button | `Text`, `BindText`, `UnbindText`, `BackgroundColor`, `OnClick` |
 | `UIInput` | Native text input | `Hint`, `Text`, `BindText`, `UnbindText`, `OnTextChanged`, `TextColor`, `BackgroundColor`, `CornerRadius`, `Border`, `GetText` |
 | `UISwitch` | Declarative switch with label and checked state | `Text`, `Checked`, `BindChecked`, `OnChanged` |
@@ -191,7 +193,7 @@ The important idea is that `body` describes the child tree. The parent is respon
 | `UIListView` | Fixed-height virtualized list | `Items`, `ItemCount`, `ItemHeight`, `CreateItem`, `BindItem`, `NotifyDataSetChanged`, `ScrollTo`, `GetScrollPosition` |
 | `UIScaffold` | App bar, body, bottom navigation and optional FABs | `AppBar`, `Body`, `BottomNavigationBar`, `FloatingActionButtonLeft`, `FloatingActionButtonRight` |
 | `UIBottomNavigationBar` | Declarative bottom navigation | `AddItem`, `BindSelectedIndex`, `OnSelected`, `ActiveColor`, `InactiveColor`, `IndicatorColor` |
-| `UINavigator` | Virtual screens and safe-area host | `AddScreen`, `NavigateTo` |
+| `UINavigator` | Virtual screen host (safe area is automatic in `UIScaffold`) | `AddScreen`, `NavigateTo` |
 
 All widget classes expose the internal layout lifecycle methods described in [Lifecycle and rendering](#12-lifecycle-and-rendering). Application code normally configures the tree and calls `Render` only on its root.
 
@@ -216,6 +218,17 @@ input.Initialize _
 ```
 
 Both methods return the same widget for fluent chaining. `CornerRadius(0)` and `Border(0, color)` leave the control in its default unshaped mode. A custom `UIInput` background receives library-managed internal padding so its text does not touch the border.
+
+`UIButton` also renders FontAwesome glyphs inside its text with the correct typeface: characters in the FontAwesome private use area (U+F000..U+F8FF) are drawn with `Typeface.FONTAWESOME` while the surrounding label keeps the default one. Icon+text buttons need no extra API:
+
+```basic
+Dim run As UIButton
+run.Initialize _
+    .Text(Chr(0xF04B) & "  Run") _
+    .OnClick(Me, "Run_Click")
+```
+
+The play glyph is rendered with the icon font and the "Run" label with the default typeface, in the same button.
 
 ## 8. Icons and icon fonts
 
@@ -1021,7 +1034,7 @@ Suggested demonstration flow:
 1. Run the example and observe the initial counter.
 2. Tap the `+` floating action button and verify the bound label updates.
 3. Tap the app-bar theme icon and verify the palette changes without resetting the counter.
-4. Read `examples/example.b4a` as the minimal starting point before exploring the other widgets documented in this guide.
+4. Read `examples/b4a_declarative_counter/example.b4a` as the minimal starting point before exploring the other widgets documented in this guide.
 
 ## 22. Stable syntax and compatibility
 
