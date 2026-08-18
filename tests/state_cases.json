@@ -1,0 +1,1163 @@
+{
+  "stateCases": [
+    {
+      "id": "S01",
+      "about": "Int values normalize to Double on init and set",
+      "initial": 5,
+      "steps": [
+        {
+          "op": "get",
+          "expect": 5.0
+        },
+        {
+          "op": "set",
+          "value": 7,
+          "expect": {
+            "value": 7.0,
+            "notified": []
+          }
+        },
+        {
+          "op": "get",
+          "expect": 7.0
+        }
+      ]
+    },
+    {
+      "id": "S02",
+      "about": "Float/Double values stay Double",
+      "initial": 2.5,
+      "steps": [
+        {
+          "op": "get",
+          "expect": 2.5
+        },
+        {
+          "op": "set",
+          "value": 3.14,
+          "expect": {
+            "value": 3.14,
+            "notified": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "S03",
+      "about": "Long values (beyond Int range) normalize to Double",
+      "initial": 2147483648,
+      "steps": [
+        {
+          "op": "get",
+          "expect": 2147483648.0
+        }
+      ]
+    },
+    {
+      "id": "S04",
+      "about": "Strings are not normalized",
+      "initial": "hola",
+      "steps": [
+        {
+          "op": "get",
+          "expect": "hola"
+        },
+        {
+          "op": "set",
+          "value": "mundo",
+          "expect": {
+            "value": "mundo",
+            "notified": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "S05",
+      "about": "Booleans are not normalized",
+      "initial": true,
+      "steps": [
+        {
+          "op": "get",
+          "expect": true
+        },
+        {
+          "op": "set",
+          "value": false,
+          "expect": {
+            "value": false,
+            "notified": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "S06",
+      "about": "SetState(2) after 2.0 is a no-op (numeric equality, no notification)",
+      "initial": 2.0,
+      "steps": [
+        {
+          "op": "set",
+          "value": 2,
+          "expect": {
+            "value": 2.0,
+            "notified": []
+          }
+        },
+        {
+          "op": "get",
+          "expect": 2.0
+        }
+      ]
+    },
+    {
+      "id": "S07",
+      "about": "String equality is case-insensitive: SetState('hola') after 'HOLA' no-ops",
+      "initial": "HOLA",
+      "steps": [
+        {
+          "op": "set",
+          "value": "hola",
+          "expect": {
+            "value": "HOLA",
+            "notified": []
+          }
+        },
+        {
+          "op": "set",
+          "value": "Mundo",
+          "expect": {
+            "value": "Mundo",
+            "notified": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "S08",
+      "about": "Null transitions notify listeners with the Null value; Null-to-Null no-ops",
+      "initial": null,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "set",
+          "value": null,
+          "expect": {
+            "value": null,
+            "notified": []
+          }
+        },
+        {
+          "op": "set",
+          "value": "x",
+          "expect": {
+            "value": "x",
+            "notified": [
+              [
+                "a",
+                "onChange",
+                "x"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "set",
+          "value": null,
+          "expect": {
+            "value": null,
+            "notified": [
+              [
+                "a",
+                "onChange",
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "S09",
+      "about": "Fan-out to multiple listeners in subscription order",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "subscribe",
+          "target": "b",
+          "event": "onChange"
+        },
+        {
+          "op": "set",
+          "value": 5,
+          "expect": {
+            "value": 5.0,
+            "notified": [
+              [
+                "a",
+                "onChange",
+                5.0
+              ],
+              [
+                "b",
+                "onChange",
+                5.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "S10",
+      "about": "Subscribing the same target+event twice is deduped",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 1.0,
+            "notified": [
+              [
+                "a",
+                "onChange",
+                1.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "S11",
+      "about": "Same target can hold several event subscriptions",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onCustom"
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 1.0,
+            "notified": [
+              [
+                "a",
+                "onChange",
+                1.0
+              ],
+              [
+                "a",
+                "onCustom",
+                1.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "S12",
+      "about": "Subscribe ignores empty/whitespace event names and Null targets",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": ""
+        },
+        {
+          "op": "subscribe",
+          "target": "null",
+          "event": "onChange"
+        },
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "  "
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 1.0,
+            "notified": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "S13",
+      "about": "A callback that changes the state triggers one extra full notification pass",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange",
+          "behavior": {
+            "set": 2
+          }
+        },
+        {
+          "op": "subscribe",
+          "target": "b",
+          "event": "onChange"
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 2.0,
+            "notified": [
+              [
+                "a",
+                "onChange",
+                1.0
+              ],
+              [
+                "b",
+                "onChange",
+                2.0
+              ],
+              [
+                "a",
+                "onChange",
+                2.0
+              ],
+              [
+                "b",
+                "onChange",
+                2.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "S14",
+      "about": "Reentrancy deeper than two passes is dropped (value kept, no further notification)",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange",
+          "behavior": {
+            "setNext": true
+          }
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 3.0,
+            "notified": [
+              [
+                "a",
+                "onChange",
+                1.0
+              ],
+              [
+                "a",
+                "onChange",
+                2.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "S15",
+      "about": "A listener removed by an earlier callback is not notified (snapshot IndexOf check)",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "subscribe",
+          "target": "b",
+          "event": "onChange",
+          "behavior": {
+            "unsubscribe": {
+              "target": "c",
+              "event": "onChange"
+            }
+          }
+        },
+        {
+          "op": "subscribe",
+          "target": "c",
+          "event": "onChange"
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 1.0,
+            "notified": [
+              [
+                "a",
+                "onChange",
+                1.0
+              ],
+              [
+                "b",
+                "onChange",
+                1.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "S16",
+      "about": "A listener can unsubscribe itself mid-notification",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange",
+          "behavior": {
+            "unsubscribe": {
+              "target": "self",
+              "event": "onChange"
+            }
+          }
+        },
+        {
+          "op": "subscribe",
+          "target": "b",
+          "event": "onChange"
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 1.0,
+            "notified": [
+              [
+                "a",
+                "onChange",
+                1.0
+              ],
+              [
+                "b",
+                "onChange",
+                1.0
+              ]
+            ]
+          }
+        },
+        {
+          "op": "set",
+          "value": 2,
+          "expect": {
+            "value": 2.0,
+            "notified": [
+              [
+                "b",
+                "onChange",
+                2.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "S17",
+      "about": "A listener added during notification is not called until the next SetState",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange",
+          "behavior": {
+            "subscribe": {
+              "target": "c",
+              "event": "onChange"
+            }
+          }
+        },
+        {
+          "op": "subscribe",
+          "target": "b",
+          "event": "onChange"
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 1.0,
+            "notified": [
+              [
+                "a",
+                "onChange",
+                1.0
+              ],
+              [
+                "b",
+                "onChange",
+                1.0
+              ]
+            ]
+          }
+        },
+        {
+          "op": "set",
+          "value": 2,
+          "expect": {
+            "value": 2.0,
+            "notified": [
+              [
+                "a",
+                "onChange",
+                2.0
+              ],
+              [
+                "b",
+                "onChange",
+                2.0
+              ],
+              [
+                "c",
+                "onChange",
+                2.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "S18",
+      "about": "A listener added while a callback also changes state is notified in the second pass",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange",
+          "behavior": {
+            "actions": [
+              {
+                "subscribe": {
+                  "target": "c",
+                  "event": "onChange"
+                }
+              },
+              {
+                "set": 2
+              }
+            ]
+          }
+        },
+        {
+          "op": "subscribe",
+          "target": "b",
+          "event": "onChange"
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 2.0,
+            "notified": [
+              [
+                "a",
+                "onChange",
+                1.0
+              ],
+              [
+                "b",
+                "onChange",
+                2.0
+              ],
+              [
+                "a",
+                "onChange",
+                2.0
+              ],
+              [
+                "b",
+                "onChange",
+                2.0
+              ],
+              [
+                "c",
+                "onChange",
+                2.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "S19",
+      "about": "Unsubscribe removes only the matching target+event pair",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onCustom"
+        },
+        {
+          "op": "subscribe",
+          "target": "b",
+          "event": "onChange"
+        },
+        {
+          "op": "unsubscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 1.0,
+            "notified": [
+              [
+                "a",
+                "onCustom",
+                1.0
+              ],
+              [
+                "b",
+                "onChange",
+                1.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "S20",
+      "about": "Unsubscribing a pair that does not exist is a no-op (idempotent)",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "subscribe",
+          "target": "b",
+          "event": "onChange"
+        },
+        {
+          "op": "unsubscribe",
+          "target": "a",
+          "event": "onOther"
+        },
+        {
+          "op": "unsubscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "unsubscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 1.0,
+            "notified": [
+              [
+                "b",
+                "onChange",
+                1.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "S21",
+      "about": "UnsubscribeTarget removes every subscription owned by the target",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onCustom"
+        },
+        {
+          "op": "subscribe",
+          "target": "b",
+          "event": "onChange"
+        },
+        {
+          "op": "unsubscribeTarget",
+          "target": "a"
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 1.0,
+            "notified": [
+              [
+                "b",
+                "onChange",
+                1.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "S22",
+      "about": "ClearListeners removes everything",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "subscribe",
+          "target": "b",
+          "event": "onChange"
+        },
+        {
+          "op": "clear"
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 1.0,
+            "notified": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "S23",
+      "about": "CoalesceNotifications defers callbacks until the next UI cycle (flush)",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "subscribe",
+          "target": "b",
+          "event": "onChange"
+        },
+        {
+          "op": "coalesce",
+          "enabled": true
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 1.0,
+            "notified": []
+          }
+        },
+        {
+          "op": "flush",
+          "expect": {
+            "notified": [
+              [
+                "a",
+                "onChange",
+                1.0
+              ],
+              [
+                "b",
+                "onChange",
+                1.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "S24",
+      "about": "Several sets before the UI cycle coalesce: one callback per pair with the latest value",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "coalesce",
+          "enabled": true
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 1.0,
+            "notified": []
+          }
+        },
+        {
+          "op": "set",
+          "value": 2,
+          "expect": {
+            "value": 2.0,
+            "notified": []
+          }
+        },
+        {
+          "op": "set",
+          "value": 3,
+          "expect": {
+            "value": 3.0,
+            "notified": []
+          }
+        },
+        {
+          "op": "flush",
+          "expect": {
+            "notified": [
+              [
+                "a",
+                "onChange",
+                3.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "S25",
+      "about": "Unsubscribe cancels a queued (not yet delivered) callback",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "coalesce",
+          "enabled": true
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 1.0,
+            "notified": []
+          }
+        },
+        {
+          "op": "unsubscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "flush",
+          "expect": {
+            "notified": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "S26",
+      "about": "Disabling coalescing cancels the queued callbacks",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "coalesce",
+          "enabled": true
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 1.0,
+            "notified": []
+          }
+        },
+        {
+          "op": "coalesce",
+          "enabled": false
+        },
+        {
+          "op": "flush",
+          "expect": {
+            "notified": []
+          }
+        },
+        {
+          "op": "set",
+          "value": 2,
+          "expect": {
+            "value": 2.0,
+            "notified": [
+              [
+                "a",
+                "onChange",
+                2.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "S27",
+      "about": "A callback that sets state during flush re-queues and is delivered in the same drain",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange",
+          "behavior": {
+            "set": 2
+          }
+        },
+        {
+          "op": "coalesce",
+          "enabled": true
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 1.0,
+            "notified": []
+          }
+        },
+        {
+          "op": "flush",
+          "expect": {
+            "value": 2.0,
+            "notified": [
+              [
+                "a",
+                "onChange",
+                1.0
+              ],
+              [
+                "a",
+                "onChange",
+                2.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "S28",
+      "about": "Coalescing keeps one queued call per target/event, latest value each",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "subscribe",
+          "target": "b",
+          "event": "onChange"
+        },
+        {
+          "op": "coalesce",
+          "enabled": true
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 1.0,
+            "notified": []
+          }
+        },
+        {
+          "op": "set",
+          "value": 2,
+          "expect": {
+            "value": 2.0,
+            "notified": []
+          }
+        },
+        {
+          "op": "flush",
+          "expect": {
+            "notified": [
+              [
+                "a",
+                "onChange",
+                2.0
+              ],
+              [
+                "b",
+                "onChange",
+                2.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "S29",
+      "about": "UnsubscribeTarget cancels the queued callbacks of that target",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "subscribe",
+          "target": "b",
+          "event": "onChange"
+        },
+        {
+          "op": "coalesce",
+          "enabled": true
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 1.0,
+            "notified": []
+          }
+        },
+        {
+          "op": "unsubscribeTarget",
+          "target": "a"
+        },
+        {
+          "op": "flush",
+          "expect": {
+            "notified": [
+              [
+                "b",
+                "onChange",
+                1.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "S30",
+      "about": "A no-op SetState (equal value) does not enqueue an extra callback",
+      "initial": 0,
+      "steps": [
+        {
+          "op": "subscribe",
+          "target": "a",
+          "event": "onChange"
+        },
+        {
+          "op": "coalesce",
+          "enabled": true
+        },
+        {
+          "op": "set",
+          "value": 1,
+          "expect": {
+            "value": 1.0,
+            "notified": []
+          }
+        },
+        {
+          "op": "set",
+          "value": 1.0,
+          "expect": {
+            "value": 1.0,
+            "notified": []
+          }
+        },
+        {
+          "op": "flush",
+          "expect": {
+            "notified": [
+              [
+                "a",
+                "onChange",
+                1.0
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

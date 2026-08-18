@@ -22,6 +22,7 @@ Version=13.7
 #Region  Activity Attributes
     #FullScreen: False
     #IncludeTitle: False
+	#IgnoreWarnings: 12
 #End Region
 
 ' "Ship It" - a developer dashboard for a side project that will definitely

@@ -5,9 +5,13 @@ AutoBackups/
 # Opcional: archivos temporales de B4A
 *.bak
 *.tmp
-*.log*.txt
+*.log
+*.txt
 !LICENSE.txt
 
 # Python tooling (check-b4x-source.py)
 __pycache__/
 *.pyc
+
+# B4A IDE 'Export as zip' artifacts
+examples/*/*.zip

@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Oracle tests (plain CLI, no dependencies)
+        run: |
+          python3 tests/test_layout.py
+          python3 tests/test_state.py
+
+      - name: Oracle tests under pytest
+        run: |
+          python3 -m pip install --quiet pytest
+          python3 -m pytest tests/test_layout.py tests/test_state.py -q
+
+      - name: Static B4X source check (strict)
+        run: python3 check-b4x-source.py --strict .
+
+      - name: Generated harness files are up to date
+        run: |
+          python3 tests/generate_harness_cases.py
+          python3 tests/generate_state_cases.py
+          git diff --exit-code -- tests/generated/
