@@ -294,26 +294,18 @@ Private Sub BezierDerivative(T As Float, Control1 As Float, Control2 As Float) A
 	Return 3 * u * u * Control1 + 6 * u * T * (Control2 - Control1) + 3 * T * T * (1 - Control2)
 End Sub
 
-' ===== Native opacity access =====
-' Android views expose alpha through View.setAlpha(View.getAlpha). The
-' library uses JavaObject here, the same way other widgets reach native
-' drawables, so application code never leaves the declarative API.
+' ===== Opacity access =====
+' B4XView.Alpha is cross-platform: View alpha on Android, Node opacity on JavaFX.
 Private Sub ApplyAlpha(Alpha As Float)
 	If mView = Null Then Return
 	If mView.IsInitialized = False Then Return
-	Dim native As JavaObject = mView
-	native.RunMethod("setAlpha", Array(Alpha))
+	mView.Alpha = Alpha
 End Sub
 
 Private Sub ReadAlpha As Float
 	If mView = Null Then Return 1.0
 	If mView.IsInitialized = False Then Return 1.0
-	Try
-		Dim native As JavaObject = mView
-		Return native.RunMethod("getAlpha", Null)
-	Catch
-		Return 1.0
-	End Try
+	Return mView.Alpha
 End Sub
 
 Private Sub ClampAlpha(Value As Float) As Float

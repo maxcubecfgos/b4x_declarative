@@ -122,10 +122,9 @@ Public Sub Render
 		needsCreate = True
 	End If
 	If needsCreate Then
-		Dim pnl As Panel
-		pnl.Initialize("")
+		Dim pnl As B4XView = xui.CreatePanel("")
 		mHost = pnl
-		mHost.Color = Colors.Transparent
+		mHost.Color = xui.Color_Transparent
 		mParent.AddView(mHost, contentLeft, contentTop, contentWidth, contentHeight)
 	Else
 		mHost.SetLayoutAnimated(0, contentLeft, contentTop, contentWidth, contentHeight)

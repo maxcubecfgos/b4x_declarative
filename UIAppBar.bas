@@ -5,6 +5,7 @@ Type=Class
 Version=13.5
 @EndOfDesignText@
 Sub Class_Globals
+	Private xui As XUI
 	Private mTitle As String
 	Private mTitleState As UIState
 	Private mColor As Int
@@ -190,8 +191,7 @@ Public Sub Render
 		needsCreate = True
 	End If
 	If needsCreate Then
-		Dim pnl As Panel
-		pnl.Initialize("")
+		Dim pnl As B4XView = xui.CreatePanel("")
 		mBaseView = pnl
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
         
@@ -233,7 +233,11 @@ Public Sub Render
 	End If
 	
 	' Keep the title vertically centered across the whole bar.
+	#If B4A
 	mTitleLabel.Gravity = Gravity.CENTER_VERTICAL
+	#Else
+	mTitleLabel.SetTextAlignment("CENTER", "CENTER")
+	#End If
 	' Refresh themeable title properties on every render.
 	mTitleLabel.TextColor = mTitleColor
 	mTitleLabel.TextSize = mTitleSize

@@ -270,8 +270,7 @@ Private Sub EnsureViews
         createOverlay = True
     End If
     If createOverlay Then
-        Dim overlayPanel As Panel
-        overlayPanel.Initialize("DialogOverlay")
+        Dim overlayPanel As B4XView = xui.CreatePanel("DialogOverlay")
         mOverlay = overlayPanel
         mParent.AddView(mOverlay, 0, 0, mParent.Width, mParent.Height)
     End If
@@ -280,8 +279,7 @@ Private Sub EnsureViews
         createCard = True
     End If
     If createCard Then
-        Dim cardPanel As Panel
-        cardPanel.Initialize("")
+        Dim cardPanel As B4XView = xui.CreatePanel("")
         mCardView = cardPanel
         mOverlay.AddView(mCardView, 0, 0, 0, 0)
     End If
@@ -346,14 +344,22 @@ Private Sub ApplyText
             titleView.Text = mTitle
             titleView.TextColor = mTitleColor
             titleView.TextSize = mTheme.TitleLarge
+            #If B4A
             titleView.Gravity = Gravity.CENTER_VERTICAL
+            #Else
+            titleView.SetTextAlignment("CENTER", "CENTER")
+            #End If
     End If
     If mMessageLabel.IsInitialized Then
             Dim messageView As Label = mMessageLabel
             messageView.Text = mMessage
             messageView.TextColor = mMessageColor
             messageView.TextSize = mTheme.BodyLarge
+            #If B4A
             messageView.Gravity = Bit.Or(Gravity.LEFT, Gravity.CENTER_VERTICAL)
+            #Else
+            messageView.SetTextAlignment("CENTER", "LEFT")
+            #End If
     End If
 End Sub
 
@@ -426,7 +432,11 @@ Private Sub LayoutDialog
         positive.Text = mPositiveText
         positive.TextColor = mButtonTextColor
         positive.TextSize = mTheme.LabelLarge
+        #If B4A
         positive.Gravity = Gravity.CENTER
+        #Else
+        positive.SetTextAlignment("CENTER", "CENTER")
+        #End If
         positive.Tag = Me
         mPositiveButton.SetLayoutAnimated(0, right - buttonWidth, buttonY, buttonWidth, mTheme.ControlHeight)
         right = right - buttonWidth - mTheme.DialogButtonSpacing
@@ -436,7 +446,11 @@ Private Sub LayoutDialog
         negative.Text = mNegativeText
         negative.TextColor = mButtonTextColor
         negative.TextSize = mTheme.LabelLarge
+        #If B4A
         negative.Gravity = Gravity.CENTER
+        #Else
+        negative.SetTextAlignment("CENTER", "CENTER")
+        #End If
         negative.Tag = Me
         mNegativeButton.SetLayoutAnimated(0, right - buttonWidth, buttonY, buttonWidth, mTheme.ControlHeight)
     End If
@@ -445,19 +459,15 @@ End Sub
 Private Sub ApplyAppearance
     If mOverlay.IsInitialized = False Then Return
     If mCardView.IsInitialized = False Then Return
-    Dim overlayPanel As Panel = mOverlay
-    overlayPanel.Color = mOverlayColor
-    Dim cardPanel As Panel = mCardView
-    Dim cardBackground As ColorDrawable
-    cardBackground.Initialize2(mSurfaceColor, mRadius, 0, Colors.Transparent)
-    cardPanel.Background = cardBackground
+    mOverlay.Color = mOverlayColor
+    mCardView.SetColorAndBorder(mSurfaceColor, 0, 0, mRadius)
     ApplyText
     If mPositiveButton.IsInitialized Then
-        mPositiveButton.SetColorAndBorder(mButtonColor, 0, Colors.Transparent, mTheme.ButtonRadius)
+        mPositiveButton.SetColorAndBorder(mButtonColor, 0, xui.Color_Transparent, mTheme.ButtonRadius)
         mPositiveButton.TextColor = mButtonTextColor
     End If
     If mNegativeButton.IsInitialized Then
-        mNegativeButton.SetColorAndBorder(mButtonColor, 0, Colors.Transparent, mTheme.ButtonRadius)
+        mNegativeButton.SetColorAndBorder(mButtonColor, 0, xui.Color_Transparent, mTheme.ButtonRadius)
         mNegativeButton.TextColor = mButtonTextColor
     End If
 End Sub
