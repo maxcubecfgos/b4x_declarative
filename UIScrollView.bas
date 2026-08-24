@@ -8,7 +8,12 @@ Sub Class_Globals
     Private xui As XUI
     Private mBridge As UIWidgetBridge
     Private mChild As Object
+    #If B4A
     Private mScrollView As ScrollView
+    #Else
+    Private mScrollView As ScrollPane
+    Private mContentPanel As B4XView
+    #End If
     Private mBaseView As B4XView
     Private mParent As B4XView
     Private mMountedChild As Object
@@ -80,9 +85,17 @@ Public Sub Render
     End If
 
     If needsCreate Then
+        #If B4A
         ' B4A ScrollView.Initialize receives the initial content height, not an event name.
         mScrollView.Initialize(0)
         mBaseView = mScrollView
+        #Else
+        ' Desktop: native ScrollPane wrapped around an inner AnchorPane.
+        mScrollView.Initialize("")
+        mScrollView.SetHScrollVisibility("NEVER")
+        mBaseView = mScrollView
+        mContentPanel = mScrollView.InnerNode
+        #End If
         mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
     End If
 
@@ -101,11 +114,11 @@ Public Sub Render
     If mMountedChild <> Null Then
 		If mMountedChild <> mChild Then
 			mBridge.Unmount(mMountedChild)
-			mScrollView.Panel.RemoveAllViews
+			ContentPanel.RemoveAllViews
 			mMountedChild = Null
 		End If
 	End If
-    mScrollView.Panel.Width = Max(0, mWidth)
+    SetContentSize(Max(0, mWidth), Max(0, mHeight))
 
     Dim viewportWidth As Int = Max(0, mWidth)
     Dim viewportHeight As Int = Max(0, mHeight)
@@ -121,9 +134,9 @@ Public Sub Render
         End If
         mContentHeight = contentHeight
 
-        mScrollView.Panel.Height = contentHeight
-        Dim contentPanel As B4XView = mScrollView.Panel
-        mBridge.SetParent(mChild, contentPanel)
+        SetContentSize(viewportWidth, contentHeight)
+        Dim surface As B4XView = ContentPanel
+        mBridge.SetParent(mChild, surface)
         mBridge.SetPosition(mChild, 0, 0)
         mBridge.SetSize(mChild, viewportWidth, contentHeight)
         mBridge.Render(mChild)
@@ -131,27 +144,56 @@ Public Sub Render
     Else
         If mMountedChild <> Null Then
             mBridge.Unmount(mMountedChild)
-            mScrollView.Panel.RemoveAllViews
+            ContentPanel.RemoveAllViews
             mMountedChild = Null
         End If
         mContentHeight = viewportHeight
-        mScrollView.Panel.Width = viewportWidth
-        mScrollView.Panel.Height = viewportHeight
+        SetContentSize(viewportWidth, viewportHeight)
     End If
+End Sub
+
+' Returns the scrollable content surface on the active platform.
+Private Sub ContentPanel As B4XView
+    #If B4A
+    Return mScrollView.Panel
+    #Else
+    Return mContentPanel
+    #End If
+End Sub
+
+' Sizes the content surface on the active platform.
+Private Sub SetContentSize(W As Int, H As Int)
+    #If B4A
+    mScrollView.Panel.Width = W
+    mScrollView.Panel.Height = H
+    #Else
+    mContentPanel.SetLayoutAnimated(0, 0, 0, W, H)
+    #End If
 End Sub
 
 ' Scrolls to an absolute vertical content position.
 Public Sub ScrollTo(Position As Int)
     If mScrollView = Null Then Return
     If mScrollView.IsInitialized = False Then Return
+    #If B4A
     mScrollView.ScrollPosition = Max(0, Min(Position, Max(0, mContentHeight - mHeight)))
+    #Else
+    ' Desktop exposes a normalized position; convert through the scrollable range.
+    Dim range As Double = Max(1, mContentHeight - mHeight)
+    mScrollView.VPosition = Max(0, Min(Position, range - 1)) / range
+    #End If
 End Sub
 
 ' Returns the current vertical scroll position.
 Public Sub GetScrollPosition As Int
     If mScrollView = Null Then Return 0
     If mScrollView.IsInitialized = False Then Return 0
+    #If B4A
     Return mScrollView.ScrollPosition
+    #Else
+    Dim range As Double = Max(1, mContentHeight - mHeight)
+    Return mScrollView.VPosition * range
+    #End If
 End Sub
 
 ' Temporarily detaches the viewport while preserving scroll position and child identity.
@@ -174,6 +216,9 @@ Public Sub Unmount
         If mBaseView.IsInitialized Then mBaseView.RemoveViewFromParent
     End If
     mScrollView = Null
+    #If B4J
+    mContentPanel = Null
+    #End If
     mBaseView = Null
     mParent = Null
     mMountedChild = Null

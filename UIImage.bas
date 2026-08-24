@@ -202,12 +202,17 @@ Private Sub ApplyViewStyle
     If mBaseView = Null Then Return
     If mBaseView.IsInitialized = False Then Return
     mBaseView.Color = mTheme.SurfaceVariant
+    #If B4A
     Dim image As ImageView = mBaseView
     If mFitMode = "fill" Then
         image.Gravity = Gravity.FILL
     Else
         image.Gravity = Gravity.CENTER
     End If
+    #Else
+    ' Desktop: SetBitmap keeps PreserveRatio=True (contain-like). The fill
+    ' and center modes fall back to contain until a dedicated desktop pass.
+    #End If
 End Sub
 
 Private Sub ApplyCurrentBitmap

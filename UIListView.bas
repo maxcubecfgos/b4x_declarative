@@ -9,7 +9,11 @@ Sub Class_Globals
     Private mBridge As UIWidgetBridge
     Private mBaseView As B4XView
     Private mContentPanel As B4XView
+    #If B4A
     Private mScrollView As ScrollView
+    #Else
+    Private mScrollView As ScrollPane
+    #End If
     Private mParent As B4XView
     Private mLeft, mTop, mWidth, mHeight As Int
     Private mItemCount As Int
@@ -163,8 +167,8 @@ Public Sub ApplyTheme(Theme As UITheme) As UIListView
 End Sub
 
 ' Scrolls to a clamped item offset and refreshes the visible window.
-' This keeps virtualization deterministic even when Android has not dispatched
-' the native ScrollView event yet.
+' This keeps virtualization deterministic even when the native viewport has not
+' dispatched its scroll event yet.
 Public Sub ScrollTo(Position As Int) As UIListView
     If mUnmounted Then Return Me
     If mScrollView = Null Then Return Me
@@ -174,7 +178,11 @@ Public Sub ScrollTo(Position As Int) As UIListView
     Dim totalHeight As Int = Max(mHeight, mItemCount * mItemHeight)
     Dim maximum As Int = Max(0, totalHeight - mHeight)
     Dim safePosition As Int = Max(0, Min(Position, maximum))
+    #If B4A
     mScrollView.ScrollPosition = safePosition
+    #Else
+    If maximum > 0 Then mScrollView.VPosition = safePosition / maximum
+    #End If
     RefreshVisibleWindow(safePosition)
     Return Me
 End Sub
@@ -182,7 +190,13 @@ End Sub
 Public Sub GetScrollPosition As Int
     If mScrollView = Null Then Return 0
     If mScrollView.IsInitialized = False Then Return 0
+    #If B4A
     Return mScrollView.ScrollPosition
+    #Else
+    Dim totalHeight As Int = Max(mHeight, mItemCount * mItemHeight)
+    Dim range As Int = Max(1, totalHeight - mHeight)
+    Return mScrollView.VPosition * range
+    #End If
 End Sub
 
 Public Sub BackgroundColor(Color As Int) As UIListView
@@ -238,14 +252,27 @@ Public Sub Render
     mBaseView.Color = mBackgroundColor
 
     Dim totalHeight As Int = Max(mHeight, mItemCount * mItemHeight)
+    #If B4A
     mContentPanel.Width = mWidth
     mContentPanel.Height = totalHeight
+    #Else
+    mContentPanel.SetLayoutAnimated(0, 0, 0, mWidth, totalHeight)
+    #End If
 
+    #If B4A
     Dim position As Int = mScrollView.ScrollPosition
+    #Else
+    Dim scrollRange As Int = Max(1, totalHeight - mHeight)
+    Dim position As Int = mScrollView.VPosition * scrollRange
+    #End If
     Dim maxPosition As Int = Max(0, totalHeight - mHeight)
     If position > maxPosition Then
         position = maxPosition
+        #If B4A
         mScrollView.ScrollPosition = position
+        #Else
+        If maxPosition > 0 Then mScrollView.VPosition = position / maxPosition
+        #End If
     End If
     RefreshVisibleWindow(position)
 End Sub
@@ -258,17 +285,30 @@ Private Sub EnsureNativeView
         createBase = True
     End If
     If createBase Then
+        #If B4A
         ' Initialize2 supplies both the initial content height and the event prefix.
         mScrollView.Initialize2(0, "mScrollView")
         mBaseView = mScrollView
         mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
         mContentPanel = mScrollView.Panel
+        #Else
+        ' Desktop: native ScrollPane; the inner AnchorPane is the content surface.
+        mScrollView.Initialize("mScrollView")
+        mScrollView.SetHScrollVisibility("NEVER")
+        mBaseView = mScrollView
+        mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
+        mContentPanel = mScrollView.InnerNode
+        #End If
     End If
+    #If B4A
+    ' Late rebind after an external reset; on desktop the InnerNode was
+    ' captured during creation and never changes.
     If mContentPanel = Null Then
         mContentPanel = mScrollView.Panel
     Else If mContentPanel.IsInitialized = False Then
         mContentPanel = mScrollView.Panel
     End If
+    #End If
 End Sub
 
 Private Sub RefreshVisibleWindow(Position As Int)
@@ -316,10 +356,8 @@ Private Sub RefreshVisibleWindow(Position As Int)
         Else
             itemView = AcquireItem(index, canBind)
             If IsWidgetProtocol(itemView) = False Then Continue
-            Dim itemPanel As Panel
-            itemPanel.Initialize("")
-            Dim itemContainer As B4XView = itemPanel
-            itemContainer.Color = Colors.Transparent
+            Dim itemContainer As B4XView = xui.CreatePanel("")
+            itemContainer.Color = xui.Color_Transparent
             mContentPanel.AddView(itemContainer, 0, index * mItemHeight, mWidth, mItemHeight)
             mVisibleContainers.Put(index, itemContainer)
             mVisibleItems.Put(index, itemView)
@@ -414,6 +452,7 @@ Private Sub IsWidgetProtocol(Widget As Object) As Boolean
     Return mBridge.IsWidgetProtocol(Widget)
 End Sub
 
+#If B4A
 Private Sub mScrollView_ScrollChanged(Position As Int)
     ' A delayed Android scroll event may arrive after terminal Unmount.
     If mUnmounted Then Return
@@ -423,6 +462,19 @@ Private Sub mScrollView_ScrollChanged(Position As Int)
     If mScrollView.IsInitialized = False Then Return
     RefreshVisibleWindow(Position)
 End Sub
+#Else
+Private Sub mScrollView_VScrollChanged(Position As Double)
+    ' Desktop delivers a normalized position (0..1); convert to pixels.
+    If mUnmounted Then Return
+    If mContentPanel = Null Then Return
+    If mContentPanel.IsInitialized = False Then Return
+    If mScrollView = Null Then Return
+    If mScrollView.IsInitialized = False Then Return
+    Dim totalHeight As Int = Max(mHeight, mItemCount * mItemHeight)
+    Dim range As Int = Max(1, totalHeight - mHeight)
+    RefreshVisibleWindow(Position * range)
+End Sub
+#End If
 
 ' The list needs a viewport; place it directly in a scaffold or inside UIExpanded.
 Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
