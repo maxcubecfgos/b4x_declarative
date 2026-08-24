@@ -26,6 +26,8 @@ Sub Class_Globals
 	Private mBaseView As B4XView
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
+	Private mMeasureHost As B4XView
+	Private mMeasureCanvas As B4XCanvas
 End Sub
 
 Public Sub Initialize As UIButton
@@ -242,6 +244,7 @@ Private Sub SetRoundedRippleBackground(ButtonView As Button)
 	If ButtonView = Null Then Return
 	If ButtonView.IsInitialized = False Then Return
 
+	#If B4A
 	Dim version As JavaObject
 	version.InitializeStatic("android.os.Build$VERSION")
 	Dim sdkInt As Int = version.GetField("SDK_INT")
@@ -273,6 +276,10 @@ Private Sub SetRoundedRippleBackground(ButtonView As Button)
 	ripple.InitializeNewInstance("android.graphics.drawable.RippleDrawable", Array(rippleColor, shape, mask))
 	Dim nativeView As JavaObject = ButtonView
 	nativeView.RunMethod("setBackground", Array(ripple))
+	#Else
+	' Desktop fallback: flat rounded background (no ripple dependency).
+	ButtonView.SetColorAndBorder(mColor, mBorderWidth, mBorderColor, mCornerRadius)
+	#End If
 End Sub
 
 ' Assigns the button text, rendering any FontAwesome glyphs (private use
@@ -284,6 +291,7 @@ Private Sub SetButtonText(ButtonView As B4XView, ButtonText As String)
         ButtonView.Text = ButtonText
         Return
     End If
+    #If B4A
     Dim csb As CSBuilder
     csb.Initialize
     Dim runStart As Int = 0
@@ -298,8 +306,17 @@ Private Sub SetButtonText(ButtonView As B4XView, ButtonText As String)
     Next
     AppendFontRun(csb, ButtonText.SubString2(runStart, ButtonText.Length), currentFont)
     ButtonView.Text = csb
+    #Else
+    ' Desktop fallback without CSBuilder: icon-only texts render with the
+    ' FontAwesome font; mixed text keeps the default font.
+    ButtonView.Text = ButtonText
+    If IsPureIconText(ButtonText) Then
+        ButtonView.Font = xui.CreateFontAwesome(mTextSize)
+    End If
+    #End If
 End Sub
 
+#If B4A
 ' Appends a run of characters with the typeface chosen by FontName.
 Private Sub AppendFontRun(csb As CSBuilder, RunText As String, FontName As String)
     If RunText.Length = 0 Then Return
@@ -308,6 +325,20 @@ Private Sub AppendFontRun(csb As CSBuilder, RunText As String, FontName As Strin
     Else
         csb.Append(RunText)
     End If
+End Sub
+#End If
+
+' True when every non-space character belongs to the FontAwesome private use area.
+Private Sub IsPureIconText(GlyphText As String) As Boolean
+    Dim hasIcon As Boolean = False
+    For i = 0 To GlyphText.Length - 1
+        If IsFontAwesomeGlyph(GlyphText, i) Then
+            hasIcon = True
+        Else If GlyphText.CharAt(i) <> " " Then
+            Return False
+        End If
+    Next
+    Return hasIcon
 End Sub
 
 Private Sub IsFontAwesomeGlyph(GlyphText As String, Index As Int) As Boolean
@@ -381,12 +412,10 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim result As List
 	result.Initialize
 	
-	' Measure the button label with the standard B4A Canvas API.
-	Dim bmp As Bitmap
-	bmp.InitializeMutable(1dip, 1dip)
-	Dim cvs As Canvas
-	cvs.Initialize2(bmp)
-	Dim textWidth As Float = cvs.MeasureStringWidth(mText, Typeface.DEFAULT, mTextSize)
+	' Measure the button label through the cross-platform B4X text engine.
+	Dim cvs As B4XCanvas = MeasureEngine
+	Dim r As B4XRect = cvs.MeasureText(mText, xui.CreateDefaultFont(mTextSize))
+	Dim textWidth As Float = r.Width
 	
 	' Use the theme's touch target and horizontal padding tokens.
 	Dim btnPadding As Int = mTheme.ButtonHorizontalPadding
@@ -401,4 +430,18 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	result.Add(Min(naturalWidth, safeMaxWidth))
 	result.Add(Min(naturalHeight, safeMaxHeight))
 	Return result
+End Sub
+
+' Returns the shared measurement engine. The host panel is never mounted,
+' so measuring cannot affect any visible view (on B4J Initialize inserts
+' the canvas as a child node of the host).
+Private Sub MeasureEngine As B4XCanvas
+	If mMeasureHost <> Null Then
+		If mMeasureHost.IsInitialized Then Return mMeasureCanvas
+	End If
+	mMeasureHost = xui.CreatePanel("")
+	Dim cvs As B4XCanvas
+	cvs.Initialize(mMeasureHost)
+	mMeasureCanvas = cvs
+	Return mMeasureCanvas
 End Sub

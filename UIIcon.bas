@@ -5,8 +5,9 @@ Type=Class
 Version=13.62
 @EndOfDesignText@
 Sub Class_Globals
+    Private xui As XUI
     Private mGlyph As String
-    Private mTypeface As Typeface
+    Private mFontKind As String
     Private mSize As Int
     Private mSizeOverridden As Boolean
     Private mColor As Int
@@ -18,12 +19,14 @@ Sub Class_Globals
     Private mBaseView As B4XView
     Private mParent As B4XView
     Private mLeft, mTop, mWidth, mHeight As Int
+    Private mMeasureHost As B4XView
+    Private mMeasureCanvas As B4XCanvas
 End Sub
 
 ' Creates an icon widget using Material Icons by default.
 Public Sub Initialize As UIIcon
     mGlyph = ""
-    mTypeface = Typeface.MATERIALICONS
+    mFontKind = "material"
     Dim defaultTheme As UITheme
     defaultTheme.Initialize
     mTheme = defaultTheme
@@ -33,21 +36,23 @@ Public Sub Initialize As UIIcon
     mColorOverridden = False
     mTarget = Null
     mEventName = ""
+    #If B4A
     mGravityValue = Bit.Or(Gravity.CENTER_HORIZONTAL, Gravity.CENTER_VERTICAL)
+    #End If
     Return Me
 End Sub
 
 ' Selects a Material Icons glyph. Pass the glyph itself, for example Chr(59530).
 Public Sub Material(Glyph As String) As UIIcon
     mGlyph = Glyph
-    mTypeface = Typeface.MATERIALICONS
+    mFontKind = "material"
     Return Me
 End Sub
 
 ' Selects a FontAwesome glyph. Pass the glyph itself, for example Chr(61664).
 Public Sub FontAwesome(Glyph As String) As UIIcon
     mGlyph = Glyph
-    mTypeface = Typeface.FONTAWESOME
+    mFontKind = "fa"
     Return Me
 End Sub
 
@@ -55,7 +60,7 @@ End Sub
 ' This is useful for platform-supported symbols such as U+1F318 (🌘).
 Public Sub Unicode(Glyph As String) As UIIcon
     mGlyph = Glyph
-    mTypeface = Typeface.DEFAULT
+    mFontKind = "default"
     Return Me
 End Sub
 
@@ -141,12 +146,24 @@ Public Sub Render
     End If
 
     mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
+    mBaseView.Text = mGlyph
+    mBaseView.TextSize = mSize
+    mBaseView.TextColor = mColor
+    mBaseView.Font = IconFont
+    #If B4A
     Dim nativeIcon As Label = mBaseView
-    nativeIcon.Text = mGlyph
-    nativeIcon.TextSize = mSize
-    nativeIcon.TextColor = mColor
     nativeIcon.Gravity = mGravityValue
-    nativeIcon.Typeface = mTypeface
+    #Else
+    ' Desktop: fixed centered alignment (Android gravity bits are not portable).
+    mBaseView.SetTextAlignment("CENTER", "CENTER")
+    #End If
+End Sub
+
+' Builds the icon font for the current glyph family and size.
+Private Sub IconFont As B4XFont
+    If mFontKind = "material" Then Return xui.CreateMaterialIcons(mSize)
+    If mFontKind = "fa" Then Return xui.CreateFontAwesome(mSize)
+    Return xui.CreateDefaultFont(mSize)
 End Sub
 
 Private Sub RedrawIfMounted
@@ -189,11 +206,9 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
     Dim result As List
     result.Initialize
 
-    Dim bmp As Bitmap
-    bmp.InitializeMutable(1dip, 1dip)
-    Dim cvs As Canvas
-    cvs.Initialize2(bmp)
-    Dim textWidth As Float = cvs.MeasureStringWidth(mGlyph, mTypeface, mSize)
+    Dim cvs As B4XCanvas = MeasureEngine
+    Dim r As B4XRect = cvs.MeasureText(mGlyph, IconFont)
+    Dim textWidth As Float = r.Width
     Dim naturalWidth As Int = Max(32dip, textWidth + 8dip)
     Dim naturalHeight As Int = Max(32dip, mSize + 12dip)
 
@@ -205,4 +220,18 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
     result.Add(Min(naturalWidth, safeMaxWidth))
     result.Add(Min(naturalHeight, safeMaxHeight))
     Return result
+End Sub
+
+' Returns the shared measurement engine. The host panel is never mounted,
+' so measuring cannot affect any visible view (on B4J Initialize inserts
+' the canvas as a child node of the host).
+Private Sub MeasureEngine As B4XCanvas
+    If mMeasureHost <> Null Then
+        If mMeasureHost.IsInitialized Then Return mMeasureCanvas
+    End If
+    mMeasureHost = xui.CreatePanel("")
+    Dim cvs As B4XCanvas
+    cvs.Initialize(mMeasureHost)
+    mMeasureCanvas = cvs
+    Return mMeasureCanvas
 End Sub
