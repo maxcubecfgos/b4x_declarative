@@ -5,6 +5,7 @@ Type=Class
 Version=13.62
 @EndOfDesignText@
 Sub Class_Globals
+	Private xui As XUI
 	Private mText As String
 	Private mTextState As UIState
 	Private mChecked As Boolean
@@ -19,13 +20,15 @@ Sub Class_Globals
 	Private mTarget As Object
 	Private mEventName As String
 	Private mBaseView As B4XView
-	Private mBasePanel As Panel
+	Private mBasePanel As B4XView
 	Private mLabelView As B4XView
 	Private mTrackView As B4XView
 	Private mThumbView As B4XView
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
 	Private mTrackWidth, mTrackHeight, mThumbSize As Int
+	Private mMeasureHost As B4XView
+	Private mMeasureCanvas As B4XCanvas
 End Sub
 
 Public Sub Initialize As UISwitch
@@ -198,11 +201,9 @@ Public Sub Render
 		needsCreate = True
 	End If
 	If needsCreate Then
-		Dim basePanel As Panel
-		basePanel.Initialize("NativeSwitchTrack")
-		mBasePanel = basePanel
+		mBasePanel = xui.CreatePanel("NativeSwitchTrack")
 		mBaseView = mBasePanel
-		mBaseView.Color = Colors.Transparent
+		mBaseView.Color = xui.Color_Transparent
 		mBaseView.Tag = Me
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 
@@ -211,14 +212,10 @@ Public Sub Render
 		mLabelView = label
 		mBaseView.AddView(mLabelView, 0, 0, 1dip, mHeight)
 
-		Dim track As Panel
-		track.Initialize("NativeSwitchTrack")
-		mTrackView = track
+		mTrackView = xui.CreatePanel("NativeSwitchTrack")
 		mBaseView.AddView(mTrackView, 0, 0, mTrackWidth, mTrackHeight)
 
-		Dim thumb As Panel
-		thumb.Initialize("NativeSwitchTrack")
-		mThumbView = thumb
+		mThumbView = xui.CreatePanel("NativeSwitchTrack")
 		mTrackView.AddView(mThumbView, 0, 0, mThumbSize, mThumbSize)
 	End If
 	If mBaseView.Parent <> mParent Then
@@ -248,8 +245,12 @@ Private Sub LayoutParts
 	Dim trackTop As Int = Max(0, (mHeight - mTrackHeight) / 2)
 	mTrackView.SetLayoutAnimated(0, 0, trackTop, trackWidth, mTrackHeight)
 	mLabelView.SetLayoutAnimated(0, labelLeft, 0, labelWidth, mHeight)
+	#If B4A
 	Dim nativeLabel As Label = mLabelView
 	nativeLabel.Gravity = Gravity.CENTER_VERTICAL
+	#Else
+	mLabelView.SetTextAlignment("CENTER", "CENTER")
+	#End If
 	Dim thumbLeft As Int = 4dip
 	If mChecked Then thumbLeft = Max(0, trackWidth - mThumbSize - 4dip)
 	Dim thumbTop As Int = (mTrackHeight - mThumbSize) / 2
@@ -280,17 +281,11 @@ Private Sub ApplyVisualState
 
 	Dim trackColor As Int = mBackgroundColor
 	If mChecked Then trackColor = mTheme.Accent
-	Dim trackDrawable As ColorDrawable
-	trackDrawable.Initialize2(trackColor, mTrackHeight / 2, 0, 0)
-	Dim nativeTrack As Panel = mTrackView
-	nativeTrack.Background = trackDrawable
+	mTrackView.SetColorAndBorder(trackColor, 0, 0, mTrackHeight / 2)
 
-	Dim thumbColor As Int = Colors.White
+	Dim thumbColor As Int = xui.Color_White
 	If mChecked = False Then thumbColor = mTheme.MutedText
-	Dim thumbDrawable As ColorDrawable
-	thumbDrawable.Initialize2(thumbColor, mThumbSize / 2, 0, 0)
-	Dim nativeThumb As Panel = mThumbView
-	nativeThumb.Background = thumbDrawable
+	mThumbView.SetColorAndBorder(thumbColor, 0, 0, mThumbSize / 2)
 	LayoutParts
 End Sub
 
@@ -303,6 +298,18 @@ End Sub
 
 Private Sub NativeSwitchTrack_Touch(Action As Int, X As Float, Y As Float)
 	If Action <> 1 Then Return
+	ToggleChecked
+End Sub
+
+#If B4J
+' Desktop equivalent of the Android touch handler.
+Private Sub NativeSwitchTrack_MouseClicked(EventData As MouseEvent)
+	ToggleChecked
+End Sub
+#End If
+
+' Shared flip logic for both platform input paths.
+Private Sub ToggleChecked
 	mChecked = Not(mChecked)
 	If mCheckedState <> Null Then
 		If mCheckedState.IsInitialized Then mCheckedState.SetState(mChecked)
@@ -370,14 +377,26 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim safeMaxHeight As Int = MaxHeight
 	If safeMaxWidth <= 0 Then safeMaxWidth = 10000
 	If safeMaxHeight <= 0 Then safeMaxHeight = 10000
-	Dim bmp As Bitmap
-	bmp.InitializeMutable(1dip, 1dip)
-	Dim cvs As Canvas
-	cvs.Initialize2(bmp)
-	Dim textWidth As Float = cvs.MeasureStringWidth(mText, Typeface.DEFAULT, mTextSize)
+	Dim cvs As B4XCanvas = MeasureEngine
+	Dim r As B4XRect = cvs.MeasureText(mText, xui.CreateDefaultFont(mTextSize))
+	Dim textWidth As Float = r.Width
 	Dim naturalWidth As Int = textWidth + 12dip + mTrackWidth
 	Dim naturalHeight As Int = Max(mTheme.ControlHeight, mTrackHeight)
 	result.Add(Min(naturalWidth, safeMaxWidth))
 	result.Add(Min(naturalHeight, safeMaxHeight))
 	Return result
+End Sub
+
+' Returns the shared measurement engine. The host panel is never mounted,
+' so measuring cannot affect any visible view (on B4J Initialize inserts
+' the canvas as a child node of the host).
+Private Sub MeasureEngine As B4XCanvas
+	If mMeasureHost <> Null Then
+		If mMeasureHost.IsInitialized Then Return mMeasureCanvas
+	End If
+	mMeasureHost = xui.CreatePanel("")
+	Dim cvs As B4XCanvas
+	cvs.Initialize(mMeasureHost)
+	mMeasureCanvas = cvs
+	Return mMeasureCanvas
 End Sub

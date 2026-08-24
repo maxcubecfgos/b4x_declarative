@@ -5,6 +5,7 @@ Type=Class
 Version=13.62
 @EndOfDesignText@
 Sub Class_Globals
+	Private xui As XUI
 	Private mOptions As List
 	Private mSelectedValue As String
 	Private mSelectedState As UIState
@@ -152,10 +153,8 @@ Public Sub Render
 		needsCreate = True
 	End If
 	If needsCreate Then
-		Dim panel As Panel
-		panel.Initialize("")
-		mBaseView = panel
-		mBaseView.Color = Colors.Transparent
+		mBaseView = xui.CreatePanel("")
+		mBaseView.Color = xui.Color_Transparent
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)

@@ -5,6 +5,7 @@ Type=Class
 Version=13.62
 @EndOfDesignText@
 Sub Class_Globals
+	Private xui As XUI
 	Private mValue As String
 	Private mText As String
 	Private mTextState As UIState
@@ -23,13 +24,15 @@ Sub Class_Globals
 	Private mTarget As Object
 	Private mEventName As String
 	Private mBaseView As B4XView
-	Private mBasePanel As Panel
-	Private mIndicatorView As Panel
-	Private mInnerView As Panel
+	Private mBasePanel As B4XView
+	Private mIndicatorView As B4XView
+	Private mInnerView As B4XView
 	Private mLabelView As B4XView
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
 	Private mIndicatorSize As Int
+	Private mMeasureHost As B4XView
+	Private mMeasureCanvas As B4XCanvas
 End Sub
 
 Public Sub Initialize As UIRadioButton
@@ -231,22 +234,16 @@ Public Sub Render
 		needsCreate = True
 	End If
 	If needsCreate Then
-		Dim basePanel As Panel
-		basePanel.Initialize("NativeRadioButton")
-		mBasePanel = basePanel
+		mBasePanel = xui.CreatePanel("NativeRadioButton")
 		mBaseView = mBasePanel
-		mBaseView.Color = Colors.Transparent
+		mBaseView.Color = xui.Color_Transparent
 		mBaseView.Tag = Me
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 
-		Dim indicator As Panel
-		indicator.Initialize("NativeRadioButton")
-		mIndicatorView = indicator
+		mIndicatorView = xui.CreatePanel("NativeRadioButton")
 		mBaseView.AddView(mIndicatorView, 0, 0, mIndicatorSize, mIndicatorSize)
 
-		Dim inner As Panel
-		inner.Initialize("NativeRadioButton")
-		mInnerView = inner
+		mInnerView = xui.CreatePanel("NativeRadioButton")
 		mIndicatorView.AddView(mInnerView, 0, 0, 0, 0)
 
 		Dim label As Label
@@ -265,8 +262,12 @@ Public Sub Render
 	Dim labelLeft As Int = mIndicatorSize + 12dip
 	Dim labelWidth As Int = Max(0, mWidth - labelLeft)
 	mLabelView.SetLayoutAnimated(0, labelLeft, 0, labelWidth, mHeight)
+	#If B4A
 	Dim nativeLabel As Label = mLabelView
 	nativeLabel.Gravity = Gravity.CENTER_VERTICAL
+	#Else
+	mLabelView.SetTextAlignment("CENTER", "CENTER")
+	#End If
 	ApplyTextToNative
 	ApplyTextColorToNative
 	ApplyTextSizeToNative
@@ -296,23 +297,30 @@ Private Sub ApplyVisualState
 	If mIndicatorView.IsInitialized = False Or mInnerView.IsInitialized = False Then Return
 	Dim outerColor As Int = mUnselectedColor
 	If mSelected Then outerColor = mSelectedColor
-	Dim outer As ColorDrawable
-	outer.Initialize2(outerColor, mIndicatorSize / 2, 2dip, outerColor)
-	mIndicatorView.Background = outer
-	Dim nativeInner As Panel = mInnerView
+	mIndicatorView.SetColorAndBorder(outerColor, 2dip, outerColor, mIndicatorSize / 2)
 	If mSelected Then
 		Dim innerSize As Int = Max(0, mIndicatorSize - 12dip)
-		Dim innerDrawable As ColorDrawable
-		innerDrawable.Initialize2(mSelectedColor, innerSize / 2, 0, 0)
-		nativeInner.Background = innerDrawable
-		nativeInner.SetLayoutAnimated(0, 6dip, 6dip, innerSize, innerSize)
+		mInnerView.SetColorAndBorder(mSelectedColor, 0, 0, innerSize / 2)
+		mInnerView.SetLayoutAnimated(0, 6dip, 6dip, innerSize, innerSize)
 	Else
-		nativeInner.SetLayoutAnimated(0, 0, 0, 0, 0)
+		mInnerView.SetLayoutAnimated(0, 0, 0, 0, 0)
 	End If
 End Sub
 
 Private Sub NativeRadioButton_Touch(Action As Int, X As Float, Y As Float)
 	If Action <> 1 Then Return
+	SelectFromInput
+End Sub
+
+#If B4J
+' Desktop equivalent of the Android touch handler.
+Private Sub NativeRadioButton_MouseClicked(EventData As MouseEvent)
+	SelectFromInput
+End Sub
+#End If
+
+' Shared selection logic for both platform input paths.
+Private Sub SelectFromInput
 	If mGroup <> Null Then
 		CallSub2(mGroup, "RadioButtonSelected", Me)
 	Else
@@ -402,14 +410,26 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim safeMaxHeight As Int = MaxHeight
 	If safeMaxWidth <= 0 Then safeMaxWidth = 10000
 	If safeMaxHeight <= 0 Then safeMaxHeight = 10000
-	Dim bmp As Bitmap
-	bmp.InitializeMutable(1dip, 1dip)
-	Dim cvs As Canvas
-	cvs.Initialize2(bmp)
-	Dim textWidth As Float = cvs.MeasureStringWidth(mText, Typeface.DEFAULT, mTextSize)
+	Dim cvs As B4XCanvas = MeasureEngine
+	Dim r As B4XRect = cvs.MeasureText(mText, xui.CreateDefaultFont(mTextSize))
+	Dim textWidth As Float = r.Width
 	Dim naturalWidth As Int = textWidth + mIndicatorSize + 12dip
 	Dim naturalHeight As Int = Max(mTheme.ControlHeight, mIndicatorSize)
 	result.Add(Min(naturalWidth, safeMaxWidth))
 	result.Add(Min(naturalHeight, safeMaxHeight))
 	Return result
+End Sub
+
+' Returns the shared measurement engine. The host panel is never mounted,
+' so measuring cannot affect any visible view (on B4J Initialize inserts
+' the canvas as a child node of the host).
+Private Sub MeasureEngine As B4XCanvas
+	If mMeasureHost <> Null Then
+		If mMeasureHost.IsInitialized Then Return mMeasureCanvas
+	End If
+	mMeasureHost = xui.CreatePanel("")
+	Dim cvs As B4XCanvas
+	cvs.Initialize(mMeasureHost)
+	mMeasureCanvas = cvs
+	Return mMeasureCanvas
 End Sub
