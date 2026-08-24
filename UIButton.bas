@@ -294,6 +294,8 @@ Private Sub SetButtonText(ButtonView As B4XView, ButtonText As String)
     #If B4A
     Dim csb As CSBuilder
     csb.Initialize
+    ' Inert reference: keeps the desktop-only helper off the unused-sub warning.
+    If False Then IsPureIconText("")
     Dim runStart As Int = 0
     Dim currentFont As String = "text"
     For i = 0 To ButtonText.Length - 1
@@ -329,8 +331,8 @@ End Sub
 #End If
 
 ' True when every non-space character belongs to the FontAwesome private use area.
-' (Called from the desktop branch of SetButtonText; the inert reference below
-' keeps the B4A analyzer silent, same trick used for reflective callbacks.)
+' Referenced unconditionally from SetButtonText so both platform analyzers
+' see a use.
 Private Sub IsPureIconText(GlyphText As String) As Boolean
     Dim hasIcon As Boolean = False
     For i = 0 To GlyphText.Length - 1
@@ -342,12 +344,6 @@ Private Sub IsPureIconText(GlyphText As String) As Boolean
     Next
     Return hasIcon
 End Sub
-
-#If B4A
-Private Sub KeepIsPureIconTextReferenced
-    If False Then IsPureIconText("")
-End Sub
-#End If
 
 Private Sub IsFontAwesomeGlyph(GlyphText As String, Index As Int) As Boolean
     Dim code As Int = Asc(GlyphText.CharAt(Index))
