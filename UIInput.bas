@@ -402,7 +402,9 @@ Public Sub Unmount
 		If mBaseView.IsInitialized Then mBaseView.RemoveViewFromParent
 	End If
 	mEditText = Null
+	#If B4J
 	mPasswordField = Null
+	#End If
 	mBaseView = Null
 	mParent = Null
 	mHasProgrammaticText = False
