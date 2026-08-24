@@ -5,6 +5,7 @@ Type=Class
 Version=13.5
 @EndOfDesignText@
 Sub Class_Globals
+	Private xui As XUI
 	Private mBaseView As B4XView
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
@@ -50,10 +51,9 @@ Public Sub Render
 		needsCreate = True
 	End If
 	If needsCreate Then
-		Dim pnl As Panel
-		pnl.Initialize("")
+		Dim pnl As B4XView = xui.CreatePanel("")
 		mBaseView = pnl
-		mBaseView.Color = Colors.Transparent
+		mBaseView.Color = xui.Color_Transparent
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)

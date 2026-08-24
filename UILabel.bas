@@ -5,6 +5,7 @@ Type=Class
 Version=13.5
 @EndOfDesignText@
 Sub Class_Globals
+	Private xui As XUI
 	Private mText As String
 	Private mTextState As UIState
 	Public mSize As Int
@@ -12,10 +13,11 @@ Sub Class_Globals
 	Private mTextColor As Int
 	Private mTextColorOverridden As Boolean
 	Private mTheme As UITheme
-	Private mGravityValue As Int
 	Private mBaseView As B4XView
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
+	Private mMeasureHost As B4XView
+	Private mMeasureCanvas As B4XCanvas
 End Sub
 
 Public Sub Initialize As UILabel
@@ -27,7 +29,6 @@ Public Sub Initialize As UILabel
 	mSizeOverridden = False
 	mTextColor = mTheme.PrimaryText
 	mTextColorOverridden = False
-	mGravityValue = Bit.Or(Gravity.CENTER_HORIZONTAL, Gravity.CENTER_VERTICAL)
 	Return Me
 End Sub
 
@@ -155,11 +156,10 @@ Public Sub Render
 	End If
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     
-	Dim NativeLabel As Label = mBaseView
-	NativeLabel.Text = mText
-	NativeLabel.TextSize = mSize
-	NativeLabel.TextColor = mTextColor
-	NativeLabel.Gravity = mGravityValue
+	mBaseView.Text = mText
+	mBaseView.TextSize = mSize
+	mBaseView.TextColor = mTextColor
+	mBaseView.SetTextAlignment("CENTER", "CENTER")
 End Sub
 
 Public Sub Detach
@@ -191,12 +191,10 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	If safeMaxWidth <= 0 Then safeMaxWidth = 10000
 	If safeMaxHeight <= 0 Then safeMaxHeight = 10000
 	
-	' Measure text width through the standard B4A Canvas API.
-	Dim bmp As Bitmap
-	bmp.InitializeMutable(1dip, 1dip)
-	Dim cvs As Canvas
-	cvs.Initialize2(bmp)
-	Dim textWidth As Float = cvs.MeasureStringWidth(mText, Typeface.DEFAULT, mSize)
+	' Measure text width through the cross-platform B4X text engine.
+	Dim cvs As B4XCanvas = MeasureEngine
+	Dim r As B4XRect = cvs.MeasureText(mText, xui.CreateDefaultFont(mSize))
+	Dim textWidth As Float = r.Width
 	
 	' Estimate how many lines Android will wrap the text into at the available
 	' width. Reserving only one line clips wrapped content (long descriptions).
@@ -214,4 +212,18 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	result.Add(Min(textWidth, safeMaxWidth))
 	result.Add(Min(textHeight, safeMaxHeight))
 	Return result
+End Sub
+
+' Returns the shared measurement engine. The host panel is never mounted,
+' so measuring cannot affect any visible view (on B4J Initialize inserts
+' the canvas as a child node of the host).
+Private Sub MeasureEngine As B4XCanvas
+	If mMeasureHost <> Null Then
+		If mMeasureHost.IsInitialized Then Return mMeasureCanvas
+	End If
+	mMeasureHost = xui.CreatePanel("")
+	Dim cvs As B4XCanvas
+	cvs.Initialize(mMeasureHost)
+	mMeasureCanvas = cvs
+	Return mMeasureCanvas
 End Sub

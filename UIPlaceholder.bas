@@ -5,10 +5,12 @@ Type=Class
 Version=13.62
 @EndOfDesignText@
 Sub Class_Globals
+	Private xui As XUI
 	Private mBaseView As B4XView
-	Private mPanel As Panel
+	Private mPanel As B4XView
 	Private mParent As B4XView
-	Private mCanvas As Canvas
+	Private mCanvas As B4XCanvas
+	Private mCanvasForPanel As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
 	Private mFallbackWidth, mFallbackHeight As Int
 	Private mColor, mStrokeWidth As Int
@@ -99,11 +101,10 @@ Public Sub Render
 		needsCreate = True
 	End If
 	If needsCreate Then
-		Dim pnl As Panel
-		pnl.Initialize("")
+		Dim pnl As B4XView = xui.CreatePanel("")
 		mPanel = pnl
 		mBaseView = mPanel
-		mBaseView.Color = Colors.Transparent
+		mBaseView.Color = xui.Color_Transparent
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
 
@@ -119,26 +120,31 @@ Private Sub DrawPlaceholder
 	EnsureCanvas
 	If mCanvas = Null Then Return
 
-	mCanvas.DrawColor(Colors.Transparent)
+	' B4XCanvas has no DrawColor; a filled rect over the target clears it.
+	mCanvas.DrawRect(mCanvas.TargetRect, xui.Color_Transparent, True, 0)
 	Dim safeStroke As Int = Max(1dip, mStrokeWidth)
 	Dim inset As Int = Max(1dip, safeStroke / 2)
 	Dim right As Int = Max(inset + 1dip, mWidth - inset)
 	Dim bottom As Int = Max(inset + 1dip, mHeight - inset)
-	Dim border As Rect
+	Dim border As B4XRect
 	border.Initialize(inset, inset, right, bottom)
 	mCanvas.DrawRect(border, mColor, False, safeStroke)
 	mCanvas.DrawLine(inset, inset, right, bottom, mColor, safeStroke)
 	mCanvas.DrawLine(right, inset, inset, bottom, mColor, safeStroke)
+	mCanvas.Invalidate
 End Sub
 
 Private Sub EnsureCanvas
 	If mPanel = Null Then Return
 	If mPanel.IsInitialized = False Then Return
-	' Canvas is a reusable wrapper. Rebind it after every remount because
-	' Unmount may have replaced the backing Panel.
-	Dim canvas As Canvas
+	' Canvas is a reusable wrapper bound once per mount. Rebind after every
+	' remount because Unmount may replace the backing Panel (and on B4J a
+	' second Initialize would insert a second canvas node).
+	If mCanvasForPanel = mPanel Then Return
+	Dim canvas As B4XCanvas
 	canvas.Initialize(mPanel)
 	mCanvas = canvas
+	mCanvasForPanel = mPanel
 End Sub
 
 Private Sub RedrawIfMounted
@@ -154,9 +160,10 @@ Public Sub Unmount
 	If mBaseView <> Null Then
 		If mBaseView.IsInitialized Then mBaseView.RemoveViewFromParent
 	End If
-	' Keep the Canvas wrapper alive; Render will rebind it to the next Panel.
 	mBaseView = Null
 	mParent = Null
+	mCanvas = Null
+	mCanvasForPanel = Null
 End Sub
 
 ' Returns the fallback size when the corresponding axis is unbounded.
