@@ -87,10 +87,9 @@ Public Sub Render
 		needsCreate = True
 	End If
 	If needsCreate Then
-		Dim pnl As Panel
-		pnl.Initialize("")
+		Dim pnl As B4XView = xui.CreatePanel("")
 		mBaseView = pnl
-		mBaseView.Color = Colors.Transparent
+		mBaseView.Color = xui.Color_Transparent
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
 	If mBaseView.Parent <> mParent Then
