@@ -233,10 +233,24 @@ Public Sub Render
 		SetRoundedRippleBackground(nativeButton)
 		mCustomBackgroundApplied = True
 	Else
+		#If B4J
+		SetButtonBackground(mBaseView, mColor)
+		#Else
 		If mBaseView.Color <> mColor Then mBaseView.Color = mColor
+		#End If
 	End If
 	If mBaseView.TextColor <> mTextColor Then mBaseView.TextColor = mTextColor
 End Sub
+
+#If B4J
+Private Sub SetButtonBackground(Btn As B4XView, ColorValue As Int)
+	' JDK 17+ Modena bug: setBackground() and setStyle() both trigger
+	' a ClassCastException in CssStyleHelper when processing TextSize.
+	' Use the simplest path — B4XView.Color — which goes through B4J's
+	' own wrapper and is the least likely to double-trigger the bug.
+	Btn.Color = ColorValue
+End Sub
+#End If
 
 ' Applies the rounded shape and preserves Android's pressed ripple state.
 ' API 21+ uses RippleDrawable; older devices keep the rounded fallback.
@@ -278,7 +292,8 @@ Private Sub SetRoundedRippleBackground(ButtonView As Button)
 	nativeView.RunMethod("setBackground", Array(ripple))
 	#Else
 	' Desktop fallback: flat rounded background (no ripple dependency).
-	ButtonView.SetColorAndBorder(mColor, mBorderWidth, mBorderColor, mCornerRadius)
+	Dim btnB4X As B4XView = ButtonView
+	btnB4X.SetColorAndBorder(mColor, mBorderWidth, mBorderColor, mCornerRadius)
 	#End If
 End Sub
 

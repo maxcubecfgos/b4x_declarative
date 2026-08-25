@@ -1,14 +1,14 @@
 ---
 name: declarative-ui-b4a
-description: Complete operating knowledge of the Declarative UI for B4A library, a Flutter-inspired, code-first declarative UI layer for native B4A Android apps. Use whenever writing, reviewing, refactoring, explaining or debugging B4A code that composes screens with the UI.* factory (UI.Text, UI.Scaffold, UI.Column...), the UI* widget classes, UIState bindings, UITheme, UIScaffold safe area, UINavigator, or the DeclarativeUI b4xlib. Triggers include declarative UI B4A, the UI.* factory, BindText, UIState, UITheme, UIScaffold, UINavigator, UIListView, UISnackBar, safe area, widget lifecycle, natural measurement and DeclarativeUI.b4xlib.
+description: Complete operating knowledge of the Declarative UI for B4X library, a Flutter-inspired, code-first declarative UI layer for native B4A (Android) and B4J (Desktop) apps. Use whenever writing, reviewing, refactoring, explaining or debugging B4X code that composes screens with the UI.* factory (UI.Text, UI.Scaffold, UI.Column...), the UI* widget classes, UIState bindings, UITheme, UIScaffold safe area, UINavigator, or the DeclarativeUI b4xlib. Triggers include declarative UI B4X, the UI.* factory, BindText, UIState, UITheme, UIScaffold, UINavigator, UIListView, UISnackBar, safe area, widget lifecycle, natural measurement and DeclarativeUI.b4xlib.
 ---
 
-# Declarative UI for B4A — library knowledge
+# Declarative UI for B4X — library knowledge
 
-This skill is the condensed operating knowledge of the **Declarative UI for B4A**
+This skill is the condensed operating knowledge of the **Declarative UI for B4X**
 library. The authoritative documents live in this same repository: `README.md`
 (overview), `GUIDE.md` (user guide), `SYNTAX.md` (stable syntax contract,
-version 2.0). Read those files when you need the full wording; this skill is the
+version 2.1). Read those files when you need the full wording; this skill is the
 reference an agent should work from when writing or reviewing application code.
 
 ## What this library is

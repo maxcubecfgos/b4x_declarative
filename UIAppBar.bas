@@ -236,12 +236,20 @@ Public Sub Render
 	#If B4A
 	mTitleLabel.Gravity = Gravity.CENTER_VERTICAL
 	#Else
-	mTitleLabel.SetTextAlignment("CENTER", "CENTER")
+	Dim titleB4X As B4XView = mTitleLabel
+	titleB4X.SetTextAlignment("CENTER", "CENTER")
 	#End If
 	' Refresh themeable title properties on every render.
+	#If B4A
 	mTitleLabel.TextColor = mTitleColor
 	mTitleLabel.TextSize = mTitleSize
 	mTitleLabel.Text = mTitle
+	#Else
+	Dim titleView As B4XView = mTitleLabel
+	titleView.TextColor = mTitleColor
+	titleView.TextSize = mTitleSize
+	titleView.Text = mTitle
+	#End If
 End Sub
 
 Public Sub Detach

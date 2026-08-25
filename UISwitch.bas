@@ -201,31 +201,54 @@ Public Sub Render
 		needsCreate = True
 	End If
 	If needsCreate Then
+		#If B4A
 		mBasePanel = xui.CreatePanel("NativeSwitchTrack")
+		#Else
+		mBasePanel = xui.CreatePanel("")
+		#End If
 		mBaseView = mBasePanel
 		mBaseView.Color = xui.Color_Transparent
 		mBaseView.Tag = Me
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 
 		Dim label As Label
+		#If B4A
 		label.Initialize("NativeSwitchTrack")
+		#Else
+		label.Initialize("")
+		#End If
 		mLabelView = label
 		mBaseView.AddView(mLabelView, 0, 0, 1dip, mHeight)
 
+		#If B4A
 		mTrackView = xui.CreatePanel("NativeSwitchTrack")
+		#Else
+		mTrackView = xui.CreatePanel("")
+		#End If
 		mBaseView.AddView(mTrackView, 0, 0, mTrackWidth, mTrackHeight)
 
+		#If B4A
 		mThumbView = xui.CreatePanel("NativeSwitchTrack")
+		#Else
+		mThumbView = xui.CreatePanel("")
+		#End If
 		mTrackView.AddView(mThumbView, 0, 0, mThumbSize, mThumbSize)
 	End If
 	If mBaseView.Parent <> mParent Then
 		If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
-	End If
+	End If		mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
+		mBaseView.Tag = Me
 
-	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
-	mBaseView.Tag = Me
-	LayoutParts
+#If B4J
+	' B4J: xui.CreatePanel prefix dispatch doesn't fire mouse events on Pane.
+	' Wire explicitly via JavaFX EventHandler.
+	Dim baseJO As JavaObject = mBaseView
+	Dim handler As Object = baseJO.CreateEvent("javafx.event.EventHandler", "SwitchClick", False)
+	baseJO.RunMethod("setOnMouseClicked", Array(handler))
+#End If
+
+		LayoutParts
 	ApplyTextToNative
 	ApplyTextColorToNative
 	ApplyTextSizeToNative
@@ -302,9 +325,10 @@ Private Sub NativeSwitchTrack_Touch(Action As Int, X As Float, Y As Float)
 End Sub
 
 #If B4J
-' Desktop equivalent of the Android touch handler.
-Private Sub NativeSwitchTrack_MouseClicked(EventData As MouseEvent)
+' B4J: Events wired via JavaObject.CreateEvent (see Render sub)
+Private Sub SwitchClick_Event(MethodName As String, Args() As Object) As Object
 	ToggleChecked
+	Return Null
 End Sub
 #End If
 

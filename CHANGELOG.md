@@ -1,4 +1,32 @@
-﻿# Declarative UI for B4A — Changelog
+﻿# Declarative UI for B4X — Changelog
+
+## 1.0 — Cross-platform (B4A + B4J)
+
+1. **Cross-platform support**: the library now compiles and runs on both B4A
+   (Android) and B4J (Desktop) from a single codebase. Platform-specific APIs
+   are isolated with `#If B4A / #Else` guards.
+2. **B4J platform adaptations**:
+   - `UIButton`: background color via CSS instead of native Android drawable.
+   - `UISwitch`: mouse click via `JavaObject.CreateEvent` (B4J Pane prefix
+     dispatch does not fire mouse events).
+   - `UIInput`: `PasswordField` uses JavaObject on B4J.
+   - `UIImage`: `GetBitmapResize` guarded for B4J.
+   - `UISnackBar` / `UIAlertDialog` / `UIAppBar` / `UIBottomNavigationBar`:
+     `TextColor`, `TextSize`, `Color` via `B4XView` on B4J.
+   - `UILabel`: added `GetView()` returning `mBaseView`.
+   - `UIWidgetBridge`: `SetColorAndBorder` guarded for B4J.
+   - `UI.bas` `AsList()`: handles Java arrays via `java.lang.reflect.Array`.
+3. **UIWindowBar** (new component): custom title bar with close/minimize/
+   maximize buttons for B4J desktop apps that do not use a layout file.
+4. **MCP tooling improvements** (b4x-mcp):
+   - `compile_project`: `build_mode` (debug/release/obfuscated/build_library),
+     `configuration`, `output_path`.
+   - `run_b4j_app`: `inject_log_redirect`, `read_log_after_run`.
+   - New tools: `read_b4j_logs`, `inject_log_redirect`, `clear_log_file`.
+5. **Manifest**: version bumped to 1.0, title updated to "Declarative UI for B4X".
+6. **Known issue**: JavaFX Modena stylesheet produces a cosmetic warning
+   (`String → Paint` in `-fx-background-color`) on JDK 17+ when Buttons
+   have TextSize set. This is a JDK bug, not a library issue.
 
 ## 0.6 — FontAwesome icons in UIButton
 

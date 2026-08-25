@@ -341,24 +341,26 @@ End Sub
 Private Sub ApplyText
     If mTitleLabel.IsInitialized Then
             Dim titleView As Label = mTitleLabel
+            Dim titleB4X As B4XView = mTitleLabel
+            titleB4X.TextColor = mTitleColor
+            titleB4X.TextSize = mTheme.TitleLarge
             titleView.Text = mTitle
-            titleView.TextColor = mTitleColor
-            titleView.TextSize = mTheme.TitleLarge
             #If B4A
             titleView.Gravity = Gravity.CENTER_VERTICAL
             #Else
-            titleView.SetTextAlignment("CENTER", "CENTER")
+            titleB4X.SetTextAlignment("CENTER", "CENTER")
             #End If
     End If
     If mMessageLabel.IsInitialized Then
             Dim messageView As Label = mMessageLabel
+            Dim messageB4X As B4XView = mMessageLabel
+            messageB4X.TextColor = mMessageColor
+            messageB4X.TextSize = mTheme.BodyLarge
             messageView.Text = mMessage
-            messageView.TextColor = mMessageColor
-            messageView.TextSize = mTheme.BodyLarge
             #If B4A
             messageView.Gravity = Bit.Or(Gravity.LEFT, Gravity.CENTER_VERTICAL)
             #Else
-            messageView.SetTextAlignment("CENTER", "LEFT")
+            messageB4X.SetTextAlignment("CENTER", "LEFT")
             #End If
     End If
 End Sub
@@ -429,13 +431,14 @@ Private Sub LayoutDialog
     Dim right As Int = dialogWidth - horizontal
     If mPositiveButton.IsInitialized Then
         Dim positive As Button = mPositiveButton
+        Dim posB4X As B4XView = mPositiveButton
+        posB4X.TextColor = mButtonTextColor
+        posB4X.TextSize = mTheme.LabelLarge
         positive.Text = mPositiveText
-        positive.TextColor = mButtonTextColor
-        positive.TextSize = mTheme.LabelLarge
         #If B4A
         positive.Gravity = Gravity.CENTER
         #Else
-        positive.SetTextAlignment("CENTER", "CENTER")
+        posB4X.SetTextAlignment("CENTER", "CENTER")
         #End If
         positive.Tag = Me
         mPositiveButton.SetLayoutAnimated(0, right - buttonWidth, buttonY, buttonWidth, mTheme.ControlHeight)
@@ -443,13 +446,14 @@ Private Sub LayoutDialog
     End If
     If mNegativeButton.IsInitialized Then
         Dim negative As Button = mNegativeButton
+        Dim negB4X As B4XView = mNegativeButton
+        negB4X.TextColor = mButtonTextColor
+        negB4X.TextSize = mTheme.LabelLarge
         negative.Text = mNegativeText
-        negative.TextColor = mButtonTextColor
-        negative.TextSize = mTheme.LabelLarge
         #If B4A
         negative.Gravity = Gravity.CENTER
         #Else
-        negative.SetTextAlignment("CENTER", "CENTER")
+        negB4X.SetTextAlignment("CENTER", "CENTER")
         #End If
         negative.Tag = Me
         mNegativeButton.SetLayoutAnimated(0, right - buttonWidth, buttonY, buttonWidth, mTheme.ControlHeight)

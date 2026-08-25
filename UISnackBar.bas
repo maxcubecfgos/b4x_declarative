@@ -285,28 +285,34 @@ Private Sub ApplyAppearance
 	If mMessageLabel <> Null Then
 		If mMessageLabel.IsInitialized Then
 			Dim nativeLabel As Label = mMessageLabel
+			Dim lblB4X As B4XView = mMessageLabel
 			nativeLabel.Text = mMessage
-			nativeLabel.TextColor = mTextColor
-			nativeLabel.TextSize = mTextSize
+			lblB4X.TextColor = mTextColor
+			lblB4X.TextSize = mTextSize
 			#If B4A
 			nativeLabel.Gravity = Bit.Or(Gravity.CENTER_VERTICAL, Gravity.LEFT)
 			#Else
-			nativeLabel.SetTextAlignment("CENTER", "LEFT")
+			lblB4X.SetTextAlignment("CENTER", "LEFT")
 			#End If
 		End If
 	End If
 	If mActionButton <> Null Then
 		If mActionButton.IsInitialized Then
 			Dim nativeButton As Button = mActionButton
+			Dim btnB4X As B4XView = mActionButton
 			nativeButton.Text = mActionText
-			nativeButton.TextColor = mActionColor
-			nativeButton.TextSize = mActionTextSize
+			btnB4X.TextColor = mActionColor
+			btnB4X.TextSize = mActionTextSize
 			#If B4A
 			nativeButton.Gravity = Gravity.CENTER
 			#Else
-			nativeButton.SetTextAlignment("CENTER", "CENTER")
+			btnB4X.SetTextAlignment("CENTER", "CENTER")
 			#End If
+			#If B4A
 			nativeButton.Color = xui.Color_Transparent
+			#Else
+			btnB4X.Color = xui.Color_Transparent
+			#End If
 			nativeButton.Tag = Me
 		End If
 	End If

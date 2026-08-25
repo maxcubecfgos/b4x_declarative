@@ -328,10 +328,11 @@ Private Sub BuildNativeItems
         icon.TextColor = mInactiveColor
         If mUseFontAwesome Then icon.Typeface = Typeface.FONTAWESOME
         #Else
-        icon.SetTextAlignment("CENTER", "CENTER")
-        icon.TextSize = mIconSize
-        icon.TextColor = mInactiveColor
-        If mUseFontAwesome Then icon.Font = xui.CreateFontAwesome(mIconSize)
+        Dim iconB4X As B4XView = icon
+        iconB4X.SetTextAlignment("CENTER", "CENTER")
+        iconB4X.TextSize = mIconSize
+        iconB4X.TextColor = mInactiveColor
+        If mUseFontAwesome Then iconB4X.Font = xui.CreateFontAwesome(mIconSize)
         #End If
         Dim navPadding As Int = mTheme.NavigationHorizontalPadding
         tabView.AddView(icon, navPadding, navPadding, Max(0, currentWidth - 2 * navPadding), mTheme.NavigationIconHeight)
@@ -340,13 +341,14 @@ Private Sub BuildNativeItems
         Dim caption As Label
         caption.Initialize("")
         caption.Text = item.GetDefault("Text", "")
+        Dim captionB4X As B4XView = caption
         #If B4A
         caption.Gravity = Gravity.CENTER
         #Else
-        caption.SetTextAlignment("CENTER", "CENTER")
+        captionB4X.SetTextAlignment("CENTER", "CENTER")
         #End If
-        caption.TextSize = mTextSize
-        caption.TextColor = mInactiveColor
+        captionB4X.TextSize = mTextSize
+        captionB4X.TextColor = mInactiveColor
         tabView.AddView(caption, navPadding, mTheme.NavigationCaptionTop, Max(0, currentWidth - 2 * navPadding), Max(0, mHeight - mTheme.NavigationCaptionTop - mTheme.NavigationLabelBottomInset))
         mTextLabels.Add(caption)
 
@@ -372,10 +374,12 @@ Private Sub ApplySelection
     For i = 0 To mItems.Size - 1
         Dim icon As Label = mIconLabels.Get(i)
         Dim caption As Label = mTextLabels.Get(i)
+        Dim iconB4X As B4XView = icon
+        Dim captionB4X As B4XView = caption
         Dim indicator As B4XView = mIndicatorViews.Get(i)
         If i = mSelectedIndex Then
-            icon.TextColor = mActiveColor
-            caption.TextColor = mActiveColor
+            iconB4X.TextColor = mActiveColor
+            captionB4X.TextColor = mActiveColor
             caption.Visible = True
             #If B4A
             If mUseFontAwesome Then
@@ -386,17 +390,17 @@ Private Sub ApplySelection
             caption.Typeface = Typeface.DEFAULT_BOLD
             #Else
             If mUseFontAwesome Then
-                icon.Font = xui.CreateFontAwesome(mIconSize)
+                iconB4X.Font = xui.CreateFontAwesome(mIconSize)
             Else
-                icon.Font = xui.CreateDefaultBoldFont(mIconSize)
+                iconB4X.Font = xui.CreateDefaultBoldFont(mIconSize)
             End If
-            caption.Font = xui.CreateDefaultBoldFont(mTextSize)
+            captionB4X.Font = xui.CreateDefaultBoldFont(mTextSize)
             #End If
             indicator.Color = mIndicatorColor
             indicator.Visible = True
         Else
-            icon.TextColor = mInactiveColor
-            caption.TextColor = mInactiveColor
+            iconB4X.TextColor = mInactiveColor
+            captionB4X.TextColor = mInactiveColor
             caption.Visible = mShowInactiveLabels
             #If B4A
             If mUseFontAwesome Then

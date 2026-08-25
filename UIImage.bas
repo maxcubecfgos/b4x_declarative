@@ -246,7 +246,11 @@ Private Sub StartNetworkLoad
     If job.Success Then
         Dim downloaded As B4XBitmap
         Try
+            #If B4A
             downloaded = job.GetBitmapResize(Max(1, mWidth), Max(1, mHeight), True)
+            #Else
+            downloaded = job.GetBitmap
+            #End If
         Catch
             mLoadStarted = False
             Notify(mErrorTarget, mErrorEventName)

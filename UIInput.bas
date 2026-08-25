@@ -31,7 +31,6 @@ Sub Class_Globals
 	Private mEditText As EditText
 	#Else
 	Private mEditText As TextField
-	Private mPasswordField As PasswordField
 	#End If
 	Private mBaseView As B4XView
 	Private mParent As B4XView
@@ -89,14 +88,13 @@ Public Sub PasswordMode(Enabled As Boolean) As UIInput
         If mEditText.IsInitialized Then mEditText.PasswordMode = Enabled
     End If
     #Else
-    ' Desktop masks through a PasswordField, recreated on the next Render.
+    ' Desktop: recreate the text field on next Render to apply password mode.
     If mBaseView <> Null Then
         If mBaseView.IsInitialized Then
             If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
         End If
     End If
     mEditText = Null
-    mPasswordField = Null
     mBaseView = Null
     mCustomBackgroundApplied = False
     mMounted = False
@@ -268,16 +266,13 @@ Public Sub Render
 		mEditText = nativeInput
 		mBaseView = mEditText
 		#Else
+		Dim tf As TextField
+		tf.Initialize("NativeInput")
+		mEditText = tf
+		mBaseView = mEditText
 		If mPasswordMode Then
-			Dim pf As PasswordField
-			pf.Initialize("NativeInput")
-			mPasswordField = pf
-			mBaseView = mPasswordField
-		Else
-			Dim tf As TextField
-			tf.Initialize("NativeInput")
-			mEditText = tf
-			mBaseView = mEditText
+			Dim jo As JavaObject = tf
+			jo.RunMethod("setPassword", Array(True))
 		End If
 		#End If
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
@@ -402,9 +397,6 @@ Public Sub Unmount
 		If mBaseView.IsInitialized Then mBaseView.RemoveViewFromParent
 	End If
 	mEditText = Null
-	#If B4J
-	mPasswordField = Null
-	#End If
 	mBaseView = Null
 	mParent = Null
 	mHasProgrammaticText = False
