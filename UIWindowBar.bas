@@ -89,6 +89,25 @@ Public Sub BarHeight(h As Int) As UIWindowBar
 	Return Me
 End Sub
 
+' Applies theme tokens (bar/title/button colors). Rebuilds the native bar
+' when mounted, because the chrome is painted at creation time.
+Public Sub ApplyTheme(Theme As UITheme) As UIWindowBar
+	If Theme = Null Then Return Me
+	If Theme.IsInitialized = False Then Return Me
+	mTheme = Theme
+	mBarColor = mTheme.DashboardBar
+	mTitleColor = mTheme.DashboardBarText
+	mButtonColor = mTheme.SecondaryText
+	If mBaseView <> Null Then
+		If mBaseView.IsInitialized Then
+			If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+			mBaseView = Null
+			Render
+		End If
+	End If
+	Return Me
+End Sub
+
 Public Sub FormTarget(f As Object) As UIWindowBar
 	mForm = f
 	Return Me
@@ -161,43 +180,23 @@ End Sub
 
 Private Sub CreateBar
 	#If B4J
-	' B4J: Build the entire bar as a single JavaFX StackPane with native nodes
-	Dim rootPane As JavaObject
-	rootPane.InitializeNewInstance("javafx.scene.layout.StackPane", Null)
+	' B4J: StackPane root + themed title label, built exclusively through the
+	' public B4XView API. No reflection into JavaFX internals (getChildren()
+	' resolves to non-exported implementation classes under JPMS).
+	Dim rootPaneJO As JavaObject
+	rootPaneJO.InitializeNewInstance("javafx.scene.layout.StackPane", Null)
+	Dim rootPane As B4XView = rootPaneJO
 	mBaseView = rootPane
+	mBaseView.Color = mBarColor
 
-	' Background via CSS (simple and reliable)
-	Dim css As String = "-fx-background-color: rgb(" & Bit.And(Bit.ShiftRight(mBarColor, 16), 0xFF) & "," & Bit.And(Bit.ShiftRight(mBarColor, 8), 0xFF) & "," & Bit.And(mBarColor, 0xFF) & ");"
-	rootPane.RunMethod("setStyle", Array(css))
-	Dim initW As Double = mWidth
-	Dim initH As Double = mBarHeight
-	rootPane.RunMethod("resize", Array(initW, initH))
-
-	' Title label with text color via CSS
-	Dim titleLabel As JavaObject
-	titleLabel.InitializeNewInstance("javafx.scene.control.Label", Null)
-	titleLabel.RunMethod("setText", Array(mTitle))
-	Dim tCss As String = "-fx-text-fill: rgb(" & Bit.And(Bit.ShiftRight(mTitleColor, 16), 0xFF) & "," & Bit.And(Bit.ShiftRight(mTitleColor, 8), 0xFF) & "," & Bit.And(mTitleColor, 0xFF) & ");"
-	titleLabel.RunMethod("setStyle", Array(tCss))
-	Dim titleLeft As Double = 12dip
-	Dim titleTop As Double = 0
-	Dim titleW As Double = Max(0, mWidth - 180dip)
-	Dim titleH As Double = mBarHeight
-	titleLabel.RunMethod("relocate", Array(titleLeft, titleTop))
-	titleLabel.RunMethod("resize", Array(titleW, titleH))
-	Dim children As JavaObject = rootPane.RunMethod("getChildren", Null)
-	children.RunMethod("add", Array(titleLabel))
-
-	' Add to parent
-	Dim parentJO As JavaObject = mParent
-	Dim parentChildren As JavaObject = parentJO.RunMethod("getChildren", Null)
-	parentChildren.RunMethod("add", Array(rootPane))
-	Dim baseLeft As Double = mLeft
-	Dim baseTop As Double = mTop
-	Dim baseW As Double = mWidth
-	Dim baseH As Double = mBarHeight
-	rootPane.RunMethod("relocate", Array(baseLeft, baseTop))
-	rootPane.RunMethod("resize", Array(baseW, baseH))
+	Dim titleLabel As Label
+	titleLabel.Initialize("")
+	mTitleLabel = titleLabel
+	mTitleLabel.Text = mTitle
+	mTitleLabel.TextColor = mTitleColor
+	mTitleLabel.TextSize = 14
+	mTitleLabel.SetTextAlignment("CENTER", "LEFT")
+	rootPane.AddView(mTitleLabel, 12dip, 0, Max(0, mWidth - 180dip), mBarHeight)
 	#Else
 	mBaseView = xui.CreatePanel("")
 	mBaseView.Color = mBarColor
@@ -207,7 +206,7 @@ Private Sub CreateBar
 	mTitleLabel.Color = mBarColor
 	mTitleLabel.TextColor = mTitleColor
 	mTitleLabel.Text = mTitle
-	mTitleLabel.Gravity = Bit.Or(Gravity.CENTER_VERTICAL, Gravity.LEFT)
+	mTitleLabel.SetTextAlignment("CENTER", "LEFT")
 	mBaseView.AddView(mTitleLabel, 12dip, 0, Max(0, mWidth - 180dip), mBarHeight)
 	mParent.AddView(mBaseView, mLeft, mTop, mWidth, mBarHeight)
 	#End If

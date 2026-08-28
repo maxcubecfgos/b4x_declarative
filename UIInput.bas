@@ -433,6 +433,12 @@ Private Sub MeasureEngine As B4XCanvas
 		If mMeasureHost.IsInitialized Then Return mMeasureCanvas
 	End If
 	mMeasureHost = xui.CreatePanel("")
+	#If B4A
+	Dim measureLp As JavaObject
+	measureLp.InitializeNewInstance("android.view.ViewGroup$LayoutParams", Array(2048, 512))
+	Dim measureHostJO As JavaObject = mMeasureHost
+	measureHostJO.RunMethod("setLayoutParams", Array(measureLp))
+	#End If
 	Dim cvs As B4XCanvas
 	cvs.Initialize(mMeasureHost)
 	mMeasureCanvas = cvs

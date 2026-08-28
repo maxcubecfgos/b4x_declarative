@@ -179,6 +179,17 @@ Private Sub IconView_Click
     instance.DispatchClick
 End Sub
 
+#If B4J
+' JavaFX Labels raise MouseClicked (not Click). Without this handler,
+' OnClick silently does nothing on desktop.
+Private Sub IconView_MouseClicked (EventData As MouseEvent)
+    Dim label As Label = Sender
+    Dim instance As UIIcon = label.Tag
+    If instance = Null Then Return
+    instance.DispatchClick
+End Sub
+#End If
+
 Private Sub DispatchClick
     If mTarget = Null Or mEventName.Trim = "" Then Return
     If SubExists(mTarget, mEventName) Then
@@ -230,6 +241,12 @@ Private Sub MeasureEngine As B4XCanvas
         If mMeasureHost.IsInitialized Then Return mMeasureCanvas
     End If
     mMeasureHost = xui.CreatePanel("")
+    #If B4A
+    Dim measureLp As JavaObject
+    measureLp.InitializeNewInstance("android.view.ViewGroup$LayoutParams", Array(2048, 512))
+    Dim measureHostJO As JavaObject = mMeasureHost
+    measureHostJO.RunMethod("setLayoutParams", Array(measureLp))
+    #End If
     Dim cvs As B4XCanvas
     cvs.Initialize(mMeasureHost)
     mMeasureCanvas = cvs

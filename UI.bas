@@ -321,6 +321,7 @@ End Sub
 
 Public Sub ThemeDark As UITheme
 	Dim t As UITheme
+	t.Initialize
 	t.InitializeDark
 	Return t
 End Sub

@@ -104,7 +104,8 @@ try {
         'Modification=Testing and local project modifications welcome'
         'ReverseEngineering=Study, debugging and experimentation welcome'
         'Redistribution=Please do not repackage the implementation as your own library'
-        'DependsOn=XUI, JavaObject, OkHttpUtils2'
+        'B4A.DependsOn=XUI, JavaObject, OkHttpUtils2'
+        'B4J.DependsOn=jXUI, JavaObject, jOkHttpUtils2'
     ) -join [Environment]::NewLine
     [IO.File]::WriteAllText((Join-Path $stage 'manifest.txt'), $manifest, $utf8NoBom)
 

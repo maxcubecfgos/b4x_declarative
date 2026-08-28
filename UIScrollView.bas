@@ -19,6 +19,7 @@ Sub Class_Globals
     Private mMountedChild As Object
     Private mLeft, mTop, mWidth, mHeight As Int
     Private mContentHeight As Int
+    Private mTheme As UITheme
 End Sub
 
 ' Creates an empty declarative scroll container.
@@ -30,6 +31,7 @@ Public Sub Initialize As UIScrollView
     mParent = Null
     mMountedChild = Null
     mContentHeight = 0
+    mTheme = Null
     Return Me
 End Sub
 
@@ -44,15 +46,80 @@ Public Sub GetChild As Object
     Return mChild
 End Sub
 
-' Propagates the active theme to the scrollable child.
+' Propagates the active theme to the scroll surface and to the child.
 Public Sub ApplyTheme(Theme As UITheme) As UIScrollView
     If Theme = Null Then Return Me
     If Theme.IsInitialized = False Then Return Me
+    mTheme = Theme
+    ApplyThemeSurface
     If mChild <> Null Then
         If SubExists(mChild, "ApplyTheme") Then CallSub2(mChild, "ApplyTheme", Theme)
     End If
     Return Me
 End Sub
+
+' Styles the native scroll surface with the theme background so the viewport
+' never shows platform-default colors (white ScrollPane on B4J).
+Private Sub ApplySelfBackground
+    If mTheme = Null Then Return
+    If mTheme.IsInitialized = False Then Return
+    If mBaseView = Null Then Return
+    If mBaseView.IsInitialized = False Then Return
+    #If B4J
+    Dim css As String = "-fx-background-color: " & RgbOf(mTheme.Background) & ";"
+    Dim scrollJO As JavaObject = mBaseView
+    scrollJO.RunMethod("setStyle", Array(css))
+    If mContentPanel <> Null Then
+        If mContentPanel.IsInitialized Then
+            Dim contentJO As JavaObject = mContentPanel
+            contentJO.RunMethod("setStyle", Array(css))
+        End If
+    End If
+    ' Scrollbar chrome: transparent track/buttons, themed thumb. Skins only
+    ' exist after a layout pulse, so this runs best-effort here and again
+    ' from the deferred pass in ApplyThemeSurface.
+    StyleScrollPart(scrollJO, ".scroll-bar", "-fx-background-color: transparent; -fx-background-radius: 0;")
+    StyleScrollPart(scrollJO, ".track", "-fx-background-color: transparent; -fx-background-radius: 0;")
+    StyleScrollPart(scrollJO, ".thumb", "-fx-background-color: " & RgbOf(mTheme.SecondaryBar) & "; -fx-background-radius: 4; -fx-background-insets: 2;")
+    StyleScrollPart(scrollJO, ".decrement-button", "-fx-background-color: transparent;")
+    StyleScrollPart(scrollJO, ".increment-button", "-fx-background-color: transparent;")
+    StyleScrollPart(scrollJO, ".decrement-arrow", "-fx-background-color: transparent;")
+    StyleScrollPart(scrollJO, ".increment-arrow", "-fx-background-color: transparent;")
+    #Else
+    mScrollView.Panel.Color = mTheme.Background
+    #End If
+End Sub
+
+' Immediate styling plus one deferred pass: JavaFX creates scrollbar skin
+' nodes during the first layout pulse, so a second pass is required for the
+' lookups to find them.
+Private Sub ApplyThemeSurface
+    ApplySelfBackground
+    Sleep(0)
+    ApplySelfBackground
+End Sub
+
+' Applies an inline CSS rule to every node matching Selector under ParentJO.
+#If B4J
+Private Sub StyleScrollPart(ParentJO As JavaObject, Selector As String, Css As String)
+    Dim nodes As JavaObject = ParentJO.RunMethod("lookupAll", Array(Selector))
+    Dim arr As Object = nodes.RunMethod("toArray", Null)
+    Dim reflector As JavaObject
+    reflector.InitializeStatic("java.lang.reflect.Array")
+    Dim count As Int = reflector.RunMethod("getLength", Array(arr))
+    For i = 0 To count - 1
+        Dim node As JavaObject = reflector.RunMethod("get", Array(arr, i))
+        node.RunMethod("setStyle", Array(Css))
+    Next
+End Sub
+#End If
+
+' ARGB int to the rgb(...) fragment used by JavaFX inline CSS.
+#If B4J
+Private Sub RgbOf(Color As Int) As String
+    Return "rgb(" & Bit.And(Bit.ShiftRight(Color, 16), 0xFF) & "," & Bit.And(Bit.ShiftRight(Color, 8), 0xFF) & "," & Bit.And(Color, 0xFF) & ")"
+End Sub
+#End If
 
 ' Assigns the native parent container used during rendering.
 Public Sub SetParent(Parent As B4XView)
@@ -106,6 +173,8 @@ Public Sub Render
         If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
         mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
     End If
+
+    ApplyThemeSurface
 
     mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     ' Keep the native ScrollView and the same declarative child mounted during

@@ -85,6 +85,18 @@ Public Sub GoBack As Boolean
 	Return True
 End Sub
 
+' Consumes one back step when the virtual history can go back.
+' First-class integration point for host back buttons (B4XPages/
+' Activity KeyPress): return True when handled, False to let the host
+' apply its default (close page / exit).
+Public Sub HandleBack As Boolean
+	If CanGoBack Then
+		GoBack
+		Return True
+	End If
+	Return False
+End Sub
+
 Public Sub SetParent(Parent As B4XView)
 	If mHost <> Null Then
 		If mHost.IsInitialized Then Unmount
