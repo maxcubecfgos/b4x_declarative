@@ -1,0 +1,82 @@
+{
+  "textCases": [
+    {
+      "id": "T01",
+      "desc": "numeric whole double -> integer (the key 30 vs 30.0 split)",
+      "fn": "numeric",
+      "input": 30.0,
+      "expect": "30"
+    },
+    {
+      "id": "T02",
+      "desc": "raw whole double keeps the fractional .0",
+      "fn": "raw",
+      "input": 30.0,
+      "expect": "30.0"
+    },
+    {
+      "id": "T03",
+      "desc": "numeric Null -> 'null' (lowercase, inherited behavior)",
+      "fn": "numeric",
+      "input": null,
+      "expect": "null"
+    },
+    {
+      "id": "T04",
+      "desc": "raw Null -> '' (empty, NOT 'null')",
+      "fn": "raw",
+      "input": null,
+      "expect": ""
+    },
+    {
+      "id": "T05",
+      "desc": "numeric non-whole is NOT re-formatted",
+      "fn": "numeric",
+      "input": 30.5,
+      "expect": "30.5"
+    },
+    {
+      "id": "T06",
+      "desc": "raw non-whole stringifies directly",
+      "fn": "raw",
+      "input": 30.5,
+      "expect": "30.5"
+    },
+    {
+      "id": "T07",
+      "desc": "numeric non-number passes through unchanged",
+      "fn": "numeric",
+      "input": "hello",
+      "expect": "hello"
+    },
+    {
+      "id": "T08",
+      "desc": "raw non-number stringifies directly",
+      "fn": "raw",
+      "input": "hello",
+      "expect": "hello"
+    },
+    {
+      "id": "T09",
+      "desc": "numeric boundary: Abs(number) < 1e12 is exclusive, raw text at 1e12",
+      "fn": "numeric",
+      "input": 1000000000000.0,
+      "expect": "1000000000000.0",
+      "note": "Algorithm boundary only. B4X Double stringification may differ (scientific notation); the on-device harness is authoritative for the exact literal."
+    },
+    {
+      "id": "R01",
+      "desc": "ripple FAB case: borderWidth=0 -> no stroke",
+      "fn": "ripple",
+      "input": {"borderWidth": 0},
+      "expect": {"hasStroke": false, "strokeWidth": 0}
+    },
+    {
+      "id": "R02",
+      "desc": "ripple Button case: borderWidth>0 -> setStroke emitted",
+      "fn": "ripple",
+      "input": {"borderWidth": 4},
+      "expect": {"hasStroke": true, "strokeWidth": 4}
+    }
+  ]
+}

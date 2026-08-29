@@ -20,6 +20,9 @@ on-device B4A harness against the real classes.
 | `state_cases.json` | Shared UIState cases (single source of truth). 30 cases (S01..S30). |
 | `state_oracle.py` | Python port of UIState.bas + UIRebuildScheduler.bas. |
 | `test_state.py` | Runs every state case against the oracle, plus 4 oracle-only reference-semantics checks. CLI and pytest. |
+| `text_cases.json` | Shared text/ripple cases (single source of truth). |
+| `text_oracle.py` | Python port of UIStateTextBinding.bas (ToTextNumeric/ToTextRaw) + the border-stroke decision of UIRoundedSurface.ApplyRipple. |
+| `test_text.py` | Runs every text case against the oracle. CLI and pytest. |
 | `generate_state_cases.py` | Regenerates `generated/state_cases.bas` from the state JSON. |
 | `UIStateTestRunner.bas` + `StateProbe.bas` | On-device state harness (real UIState, behavior-driven probes). |
 | `generated/harness_cases.bas`, `generated/state_cases.bas` | Generated modules (StaticCode) exposing `GetMeasureCases`/`GetLayoutCases`/`GetStateCases`. Do not edit by hand. |
@@ -28,9 +31,10 @@ on-device B4A harness against the real classes.
 
     python3 tests/test_layout.py
     python3 tests/test_state.py
-    python3 -m pytest tests/test_layout.py tests/test_state.py -q
+    python3 tests/test_text.py
+    python3 -m pytest tests/test_layout.py tests/test_state.py tests/test_text.py -q
 
-All exit 0 only when every case passes (55 layout + 30 state + 4 extra).
+All exit 0 only when every case passes (55 layout + 30 state + 4 extra + 11 text).
 The Python side is an *oracle port*, not the real code: it is the fast spec
 check and regression net. The B4X source in the library stays authoritative.
 
@@ -84,12 +88,26 @@ State:
 - Coalescing: deferred delivery, latest-value-wins, cancel on unsubscribe or
   disable, flush-time reentrancy, no-op-set-does-not-enqueue.
 
+Text:
+
+- `ToTextNumeric` vs `ToTextRaw` preserve the two original variants that the
+  deduplication merged: `30.0` -> `"30"` (numeric) but `"30.0"` (raw);
+  `Null` -> `"null"` (numeric) but `""` (raw). These distinctions are exactly
+  what a careless future refactor would collapse.
+- Non-whole numbers and non-numbers pass through in both modes (no silent
+  re-formatting).
+- The `Abs(number) < 1000000000000` boundary in numeric mode is exclusive; at
+  the limit the raw text is returned (T09 pins this algorithm boundary).
+- `ApplyRipple` border-stroke decision: `borderWidth > 0` emits a stroke
+  (Button), `borderWidth = 0` does not (FAB). The two cases come from the
+  actual call sites, so this guards against folding the branches.
+
 ## CI
 
 `.github/workflows/ci.yml` runs on every push and pull request:
 
-1. Both oracle suites as plain CLI scripts (no dependencies).
-2. Both suites under pytest.
+1. All oracle suites as plain CLI scripts (no dependencies).
+2. All suites under pytest.
 3. `python3 check-b4x-source.py --strict .` over the whole repo.
 4. A freshness guard: regenerating the harness modules must produce no diff,
    so editing a JSON without regenerating fails CI.
@@ -100,11 +118,13 @@ State:
 - UIScrollView / UIListView virtualization math.
 - Safe-area insets and other Android-only paths (need a device).
 - The UIDaisy adapter (out of scope for the layout/state layers).
+- The text/ripple tier currently has a Python oracle only; there is no
+  on-device TextProbe harness yet (the logic is purely functional).
 
 ## Maintenance rules
 
-1. `layout_cases.json` and `state_cases.json` are the sources of truth: add
-   cases there, not in code.
+1. `layout_cases.json`, `state_cases.json` and `text_cases.json` are the
+   sources of truth: add cases there, not in code.
 2. When the B4X math or state code changes, update the matching oracle to
    mirror it and regenerate the harness modules
    (`python3 tests/generate_harness_cases.py`,
