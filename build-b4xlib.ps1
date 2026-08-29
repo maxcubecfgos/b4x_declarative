@@ -28,6 +28,7 @@ $expectedModules = @(
     'UIInput.bas'
     'UILabel.bas'
     'UIListView.bas'
+    'UIMeasureEngine.bas'
     'UINative.bas'
     'UINavigator.bas'
     'UIPadding.bas'
@@ -35,6 +36,7 @@ $expectedModules = @(
     'UIProgressBar.bas'
     'UIRadioButton.bas'
     'UIRadioGroup.bas'
+    'UIRoundedSurface.bas'
     'UIRebuildScheduler.bas'
     'UIRow.bas'
     'UIScaffold.bas'
@@ -43,6 +45,7 @@ $expectedModules = @(
     'UISpace.bas'
     'UIStack.bas'
     'UIState.bas'
+    'UIStateTextBinding.bas'
     'UISwitch.bas'
     'UITheme.bas'
     'UIVisibility.bas'
@@ -120,7 +123,7 @@ try {
         $actualEntries = @($entries | ForEach-Object FullName)
         $missingEntries = @($expectedEntries | Where-Object { $_ -notin $actualEntries })
         $unexpectedEntries = @($actualEntries | Where-Object { $_ -notin $expectedEntries })
-        if ($entries.Count -ne 43 -or $missingEntries.Count -gt 0 -or $unexpectedEntries.Count -gt 0) {
+        if ($entries.Count -ne 46 -or $missingEntries.Count -gt 0 -or $unexpectedEntries.Count -gt 0) {
             throw ('Package entry mismatch. Missing: ' + ($missingEntries -join ', ') + '; unexpected: ' + ($unexpectedEntries -join ', '))
         }
 
@@ -153,7 +156,7 @@ try {
     Write-Host ('File: ' + $output)
     Write-Host ('Size: ' + $fileInfo.Length + ' bytes')
     Write-Host ('SHA-256: ' + $hash)
-    Write-Host 'Contents: 41 UI modules + manifest.txt + LICENSE.txt'
+    Write-Host 'Contents: 44 UI modules + manifest.txt + LICENSE.txt'
 }
 catch {
     Write-Error ('The b4xlib could not be created or validated: ' + $_.Exception.Message)
