@@ -5,6 +5,7 @@ Type=Class
 Version=13.5
 @EndOfDesignText@
 Sub Class_Globals
+	Private xui As XUI
 	Private mText As String
 	Private mTextState As UIState
 	Public mSize As Int
@@ -12,14 +13,15 @@ Sub Class_Globals
 	Private mTextColor As Int
 	Private mTextColorOverridden As Boolean
 	Private mTheme As UITheme
-	Private mGravityValue As Int
 	Private mBaseView As B4XView
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
+	Private mMeasure As UIMeasureEngine
 End Sub
 
 Public Sub Initialize As UILabel
 	mText = ""
+	mMeasure.Initialize(xui)
 	Dim defaultTheme As UITheme
 	defaultTheme.Initialize
 	mTheme = defaultTheme
@@ -27,7 +29,6 @@ Public Sub Initialize As UILabel
 	mSizeOverridden = False
 	mTextColor = mTheme.PrimaryText
 	mTextColorOverridden = False
-	mGravityValue = Bit.Or(Gravity.CENTER_HORIZONTAL, Gravity.CENTER_VERTICAL)
 	Return Me
 End Sub
 
@@ -45,7 +46,7 @@ Public Sub BindText(State As UIState) As UILabel
 	mTextState = State
 	If mTextState <> Null Then
 		If mTextState.IsInitialized Then
-			mText = StateText(mTextState.GetState)
+			mText = UIStateTextBinding.ToTextNumeric(mTextState.GetState)
 			mTextState.Subscribe(Me, "TextState_Changed")
 			If mParent <> Null Then
 				If mParent.IsInitialized Then
@@ -69,24 +70,14 @@ End Sub
 
 Private Sub TextState_Changed(State As UIState)
 	If State = Null Then Return
-	mText = StateText(State.GetState)
+	mText = UIStateTextBinding.ToTextNumeric(State.GetState)
 	Render
 	UI.Invalidate(Me)
 End Sub
 
 ' Converts any state value to display text without relying on B4A type tests.
 ' UIState commonly contains Int values, which must not be parsed as Boolean.
-Private Sub StateText(Value As Object) As String
-	Dim valueText As String = ("" & Value).Trim
-	If IsNumber(valueText) Then
-		Dim number As Double = valueText
-		Dim groupingUsed As Boolean = False
-		If number = Floor(number) And Abs(number) < 1000000000000 Then
-			Return NumberFormat2(number, 0, 12, 0, groupingUsed)
-		End If
-	End If
-	Return valueText
-End Sub
+
 
 Public Sub Size(s As Int) As UILabel
 	mSize = Max(1, s)
@@ -132,7 +123,7 @@ Public Sub Render
 	If mParent.IsInitialized = False Then Return
 	If mTextState <> Null Then
 		If mTextState.IsInitialized Then
-			mText = StateText(mTextState.GetState)
+			mText = UIStateTextBinding.ToTextNumeric(mTextState.GetState)
 			mTextState.Subscribe(Me, "TextState_Changed")
 		End If
 	End If
@@ -155,11 +146,10 @@ Public Sub Render
 	End If
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     
-	Dim NativeLabel As Label = mBaseView
-	NativeLabel.Text = mText
-	NativeLabel.TextSize = mSize
-	NativeLabel.TextColor = mTextColor
-	NativeLabel.Gravity = mGravityValue
+	mBaseView.Text = mText
+	mBaseView.TextSize = mSize
+	mBaseView.TextColor = mTextColor
+	mBaseView.SetTextAlignment("CENTER", "CENTER")
 End Sub
 
 Public Sub Detach
@@ -169,6 +159,14 @@ Public Sub Detach
 		End If
 	End If
 	mParent = Null
+End Sub
+
+' Returns the mounted native view, or Null before the first Render
+' or after Unmount. Enables opt-in transitions such as UIAnimation.
+Public Sub GetView As B4XView
+	If mBaseView = Null Then Return Null
+	If mBaseView.IsInitialized = False Then Return Null
+	Return mBaseView
 End Sub
 
 Public Sub Unmount
@@ -191,12 +189,10 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	If safeMaxWidth <= 0 Then safeMaxWidth = 10000
 	If safeMaxHeight <= 0 Then safeMaxHeight = 10000
 	
-	' Measure text width through the standard B4A Canvas API.
-	Dim bmp As Bitmap
-	bmp.InitializeMutable(1dip, 1dip)
-	Dim cvs As Canvas
-	cvs.Initialize2(bmp)
-	Dim textWidth As Float = cvs.MeasureStringWidth(mText, Typeface.DEFAULT, mSize)
+	' Measure text width through the cross-platform B4X text engine.
+	Dim cvs As B4XCanvas = mMeasure.GetCanvas
+	Dim r As B4XRect = cvs.MeasureText(mText, xui.CreateDefaultFont(mSize))
+	Dim textWidth As Float = r.Width
 	
 	' Estimate how many lines Android will wrap the text into at the available
 	' width. Reserving only one line clips wrapped content (long descriptions).
@@ -215,3 +211,4 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	result.Add(Min(textHeight, safeMaxHeight))
 	Return result
 End Sub
+

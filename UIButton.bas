@@ -26,10 +26,12 @@ Sub Class_Globals
 	Private mBaseView As B4XView
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
+	Private mMeasure As UIMeasureEngine
 End Sub
 
 Public Sub Initialize As UIButton
 	mText = ""
+	mMeasure.Initialize(xui)
 	Dim defaultTheme As UITheme
 	defaultTheme.Initialize
 	mTheme = defaultTheme
@@ -69,7 +71,7 @@ Public Sub BindText(State As UIState) As UIButton
 	mTextState = State
 	If mTextState <> Null Then
 		If mTextState.IsInitialized Then
-			mText = StateText(mTextState.GetState)
+			mText = UIStateTextBinding.ToTextNumeric(mTextState.GetState)
 			mTextState.Subscribe(Me, "TextState_Changed")
 			If mParent <> Null Then
 				If mParent.IsInitialized Then Render
@@ -91,23 +93,11 @@ End Sub
 Private Sub TextState_Changed(State As UIState)
 	If State = Null Then Return
 	If State.IsInitialized = False Then Return
-	mText = StateText(State.GetState)
+	mText = UIStateTextBinding.ToTextNumeric(State.GetState)
 	Render
 End Sub
 
-' Converts any state value to display text without relying on B4A type tests.
-' UIState commonly contains Int values, which must not be parsed as Boolean.
-Private Sub StateText(Value As Object) As String
-	Dim valueText As String = ("" & Value).Trim
-	If IsNumber(valueText) Then
-		Dim number As Double = valueText
-		Dim groupingUsed As Boolean = False
-		If number = Floor(number) And Abs(number) < 1000000000000 Then
-			Return NumberFormat2(number, 0, 12, 0, groupingUsed)
-		End If
-	End If
-	Return valueText
-End Sub
+
 
 Public Sub BackgroundColor(c As Int) As UIButton
 	mColor = c
@@ -188,7 +178,7 @@ Public Sub Render
 	End If
 	If mTextState <> Null Then
 		If mTextState.IsInitialized Then
-			mText = StateText(mTextState.GetState)
+			mText = UIStateTextBinding.ToTextNumeric(mTextState.GetState)
 			mTextState.Subscribe(Me, "TextState_Changed")
 		End If
 	End If
@@ -227,53 +217,29 @@ Public Sub Render
 	SetButtonText(mBaseView, mText)
 	mBaseView.TextSize = mTextSize
 	If mCornerRadius > 0 Or mBorderWidth > 0 Then
-		Dim nativeButton As Button = mBaseView
-		SetRoundedRippleBackground(nativeButton)
+		UIRoundedSurface.ApplyRipple(mBaseView, mColor, mCornerRadius, mBorderWidth, mBorderColor, mTheme.RippleColor)
 		mCustomBackgroundApplied = True
 	Else
+		#If B4J
+		SetButtonBackground(mBaseView, mColor)
+		#Else
 		If mBaseView.Color <> mColor Then mBaseView.Color = mColor
+		#End If
 	End If
 	If mBaseView.TextColor <> mTextColor Then mBaseView.TextColor = mTextColor
 End Sub
 
-' Applies the rounded shape and preserves Android's pressed ripple state.
-' API 21+ uses RippleDrawable; older devices keep the rounded fallback.
-Private Sub SetRoundedRippleBackground(ButtonView As Button)
-	If ButtonView = Null Then Return
-	If ButtonView.IsInitialized = False Then Return
-
-	Dim version As JavaObject
-	version.InitializeStatic("android.os.Build$VERSION")
-	Dim sdkInt As Int = version.GetField("SDK_INT")
-	If sdkInt < 21 Then
-		Dim fallback As ColorDrawable
-		fallback.Initialize2(mColor, mCornerRadius, mBorderWidth, mBorderColor)
-		ButtonView.Background = fallback
-		Return
-	End If
-
-	Dim shape As JavaObject
-	shape.InitializeNewInstance("android.graphics.drawable.GradientDrawable", Null)
-	shape.RunMethod("setColor", Array(mColor))
-	Dim radiusFloat As Float = mCornerRadius
-	shape.RunMethod("setCornerRadius", Array(radiusFloat))
-	If mBorderWidth > 0 Then shape.RunMethod("setStroke", Array(mBorderWidth, mBorderColor))
-
-	' RippleDrawable owns both objects. Keep the mask independent so the
-	' content drawable and its clipping drawable do not share mutable state.
-	Dim mask As JavaObject
-	mask.InitializeNewInstance("android.graphics.drawable.GradientDrawable", Null)
-	mask.RunMethod("setColor", Array(Colors.White))
-	mask.RunMethod("setCornerRadius", Array(radiusFloat))
-
-	Dim colorStateList As JavaObject
-	colorStateList.InitializeStatic("android.content.res.ColorStateList")
-	Dim rippleColor As JavaObject = colorStateList.RunMethodJO("valueOf", Array(mTheme.RippleColor))
-	Dim ripple As JavaObject
-	ripple.InitializeNewInstance("android.graphics.drawable.RippleDrawable", Array(rippleColor, shape, mask))
-	Dim nativeView As JavaObject = ButtonView
-	nativeView.RunMethod("setBackground", Array(ripple))
+#If B4J
+Private Sub SetButtonBackground(Btn As B4XView, ColorValue As Int)
+	' JDK 17+ Modena bug: setBackground() and setStyle() both trigger
+	' a ClassCastException in CssStyleHelper when processing TextSize.
+	' Use the simplest path — B4XView.Color — which goes through B4J's
+	' own wrapper and is the least likely to double-trigger the bug.
+	Btn.Color = ColorValue
 End Sub
+#End If
+
+
 
 ' Assigns the button text, rendering any FontAwesome glyphs (private use
 ' area U+F000..U+F8FF) with the FontAwesome typeface while the surrounding
@@ -284,8 +250,11 @@ Private Sub SetButtonText(ButtonView As B4XView, ButtonText As String)
         ButtonView.Text = ButtonText
         Return
     End If
+    #If B4A
     Dim csb As CSBuilder
     csb.Initialize
+    ' Inert reference: keeps the desktop-only helper off the unused-sub warning.
+    If False Then IsPureIconText("")
     Dim runStart As Int = 0
     Dim currentFont As String = "text"
     For i = 0 To ButtonText.Length - 1
@@ -298,8 +267,17 @@ Private Sub SetButtonText(ButtonView As B4XView, ButtonText As String)
     Next
     AppendFontRun(csb, ButtonText.SubString2(runStart, ButtonText.Length), currentFont)
     ButtonView.Text = csb
+    #Else
+    ' Desktop fallback without CSBuilder: icon-only texts render with the
+    ' FontAwesome font; mixed text keeps the default font.
+    ButtonView.Text = ButtonText
+    If IsPureIconText(ButtonText) Then
+        ButtonView.Font = xui.CreateFontAwesome(mTextSize)
+    End If
+    #End If
 End Sub
 
+#If B4A
 ' Appends a run of characters with the typeface chosen by FontName.
 Private Sub AppendFontRun(csb As CSBuilder, RunText As String, FontName As String)
     If RunText.Length = 0 Then Return
@@ -308,6 +286,22 @@ Private Sub AppendFontRun(csb As CSBuilder, RunText As String, FontName As Strin
     Else
         csb.Append(RunText)
     End If
+End Sub
+#End If
+
+' True when every non-space character belongs to the FontAwesome private use area.
+' Referenced unconditionally from SetButtonText so both platform analyzers
+' see a use.
+Private Sub IsPureIconText(GlyphText As String) As Boolean
+    Dim hasIcon As Boolean = False
+    For i = 0 To GlyphText.Length - 1
+        If IsFontAwesomeGlyph(GlyphText, i) Then
+            hasIcon = True
+        Else If GlyphText.CharAt(i) <> " " Then
+            Return False
+        End If
+    Next
+    Return hasIcon
 End Sub
 
 Private Sub IsFontAwesomeGlyph(GlyphText As String, Index As Int) As Boolean
@@ -381,12 +375,10 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim result As List
 	result.Initialize
 	
-	' Measure the button label with the standard B4A Canvas API.
-	Dim bmp As Bitmap
-	bmp.InitializeMutable(1dip, 1dip)
-	Dim cvs As Canvas
-	cvs.Initialize2(bmp)
-	Dim textWidth As Float = cvs.MeasureStringWidth(mText, Typeface.DEFAULT, mTextSize)
+	' Measure the button label through the cross-platform B4X text engine.
+	Dim cvs As B4XCanvas = mMeasure.GetCanvas
+	Dim r As B4XRect = cvs.MeasureText(mText, xui.CreateDefaultFont(mTextSize))
+	Dim textWidth As Float = r.Width
 	
 	' Use the theme's touch target and horizontal padding tokens.
 	Dim btnPadding As Int = mTheme.ButtonHorizontalPadding
@@ -402,3 +394,4 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	result.Add(Min(naturalHeight, safeMaxHeight))
 	Return result
 End Sub
+

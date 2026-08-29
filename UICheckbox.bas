@@ -5,6 +5,7 @@ Type=Class
 Version=13.62
 @EndOfDesignText@
 Sub Class_Globals
+    Private xui As XUI
     Private mText As String
     Private mTextState As UIState
     Private mChecked As Boolean
@@ -23,10 +24,12 @@ Sub Class_Globals
     Private mCheckBox As CheckBox
     Private mParent As B4XView
     Private mLeft, mTop, mWidth, mHeight As Int
+    Private mMeasure As UIMeasureEngine
 End Sub
 
 Public Sub Initialize As UICheckbox
     mText = ""
+    mMeasure.Initialize(xui)
     mChecked = False
     mTextState = Null
     mCheckedState = Null
@@ -35,7 +38,7 @@ Public Sub Initialize As UICheckbox
     defaultTheme.Initialize
     mTheme = defaultTheme
     mTextColor = mTheme.PrimaryText
-    mBackgroundColor = Colors.Transparent
+    mBackgroundColor = xui.Color_Transparent
     mTextSize = mTheme.BodyLarge
     mTextColorOverridden = False
     mBackgroundColorOverridden = False
@@ -51,8 +54,8 @@ End Sub
 Public Sub Text(Value As String) As UICheckbox
     UnbindText
     mText = Value
-    If mCheckBox <> Null Then
-        If mCheckBox.IsInitialized Then mCheckBox.Text = mText
+    If mBaseView <> Null Then
+        If mBaseView.IsInitialized Then mBaseView.Text = mText
     End If
     Return Me
 End Sub
@@ -62,10 +65,10 @@ Public Sub BindText(State As UIState) As UICheckbox
     mTextState = State
     If mTextState <> Null Then
         If mTextState.IsInitialized Then
-            mText = StateText(mTextState.GetState)
+            mText = UIStateTextBinding.ToTextRaw(mTextState.GetState)
             mTextState.Subscribe(Me, "TextState_Changed")
-            If mCheckBox <> Null Then
-                If mCheckBox.IsInitialized Then mCheckBox.Text = mText
+            If mBaseView <> Null Then
+                If mBaseView.IsInitialized Then mBaseView.Text = mText
             End If
         End If
     End If
@@ -126,8 +129,8 @@ End Sub
 Public Sub TextColor(Color As Int) As UICheckbox
     mTextColor = Color
     mTextColorOverridden = True
-    If mCheckBox <> Null Then
-        If mCheckBox.IsInitialized Then mCheckBox.TextColor = mTextColor
+    If mBaseView <> Null Then
+        If mBaseView.IsInitialized Then mBaseView.TextColor = mTextColor
     End If
     Return Me
 End Sub
@@ -135,8 +138,8 @@ End Sub
 Public Sub BackgroundColor(Color As Int) As UICheckbox
     mBackgroundColor = Color
     mBackgroundColorOverridden = True
-    If mCheckBox <> Null Then
-        If mCheckBox.IsInitialized Then mCheckBox.Color = mBackgroundColor
+    If mBaseView <> Null Then
+        If mBaseView.IsInitialized Then mBaseView.Color = mBackgroundColor
     End If
     Return Me
 End Sub
@@ -144,8 +147,8 @@ End Sub
 Public Sub TextSize(Size As Int) As UICheckbox
     mTextSize = Max(1, Size)
     mTextSizeOverridden = True
-    If mCheckBox <> Null Then
-        If mCheckBox.IsInitialized Then mCheckBox.TextSize = mTextSize
+    If mBaseView <> Null Then
+        If mBaseView.IsInitialized Then mBaseView.TextSize = mTextSize
     End If
     Return Me
 End Sub
@@ -155,7 +158,7 @@ Public Sub ApplyTheme(Theme As UITheme) As UICheckbox
     If Theme.IsInitialized = False Then Return Me
     mTheme = Theme
     If mTextColorOverridden = False Then mTextColor = mTheme.PrimaryText
-    If mBackgroundColorOverridden = False Then mBackgroundColor = Colors.Transparent
+    If mBackgroundColorOverridden = False Then mBackgroundColor = xui.Color_Transparent
     If mTextSizeOverridden = False Then mTextSize = mTheme.BodyLarge
     If mParent <> Null Then
         If mParent.IsInitialized Then Render
@@ -182,7 +185,7 @@ Public Sub Render
     If mParent.IsInitialized = False Then Return
     If mTextState <> Null Then
         If mTextState.IsInitialized Then
-            mText = StateText(mTextState.GetState)
+            mText = UIStateTextBinding.ToTextRaw(mTextState.GetState)
             mTextState.Subscribe(Me, "TextState_Changed")
         End If
     End If
@@ -214,11 +217,14 @@ Public Sub Render
 
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     mBaseView.Tag = Me
-    mCheckBox.Text = mText
-    mCheckBox.TextColor = mTextColor
-    mCheckBox.TextSize = mTextSize
-    mCheckBox.Color = mBackgroundColor
-    mCheckBox.Gravity = Gravity.CENTER_VERTICAL
+    mBaseView.Text = mText
+    mBaseView.TextColor = mTextColor
+    mBaseView.TextSize = mTextSize
+    mBaseView.Color = mBackgroundColor
+    #If B4A
+    Dim nativeCheckBox As CheckBox = mBaseView
+    nativeCheckBox.Gravity = Gravity.CENTER_VERTICAL
+    #End If
     ApplyCheckedToNative
 End Sub
 
@@ -234,9 +240,9 @@ End Sub
 Private Sub TextState_Changed(State As UIState)
     If State = Null Then Return
     If State.IsInitialized = False Then Return
-    mText = StateText(State.GetState)
-    If mCheckBox <> Null Then
-        If mCheckBox.IsInitialized Then mCheckBox.Text = mText
+    mText = UIStateTextBinding.ToTextRaw(State.GetState)
+    If mBaseView <> Null Then
+        If mBaseView.IsInitialized Then mBaseView.Text = mText
     End If
 End Sub
 
@@ -270,10 +276,7 @@ Private Sub ReadBoolean(Value As Object) As Boolean
     Return False
 End Sub
 
-Private Sub StateText(Value As Object) As String
-    If Value = Null Then Return ""
-    Return "" & Value
-End Sub
+
 
 Public Sub Detach
     If mBaseView <> Null Then
@@ -312,14 +315,16 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
     Dim safeMaxHeight As Int = MaxHeight
     If safeMaxWidth <= 0 Then safeMaxWidth = 10000
     If safeMaxHeight <= 0 Then safeMaxHeight = 10000
-    Dim bmp As Bitmap
-    bmp.InitializeMutable(1dip, 1dip)
-    Dim cvs As Canvas
-    cvs.Initialize2(bmp)
-    Dim textWidth As Float = cvs.MeasureStringWidth(mText, Typeface.DEFAULT, mTextSize)
+    Dim cvs As B4XCanvas = mMeasure.GetCanvas
+    Dim r As B4XRect = cvs.MeasureText(mText, xui.CreateDefaultFont(mTextSize))
+    Dim textWidth As Float = r.Width
     Dim naturalWidth As Int = textWidth + 52dip
     Dim naturalHeight As Int = Max(mTheme.ControlHeight, mTextSize * 1.6 + 10dip)
     result.Add(Min(naturalWidth, safeMaxWidth))
     result.Add(Min(naturalHeight, safeMaxHeight))
     Return result
 End Sub
+
+' Returns the shared measurement engine. The host panel is never mounted,
+' so measuring cannot affect any visible view (on B4J Initialize inserts
+' the canvas as a child node of the host).

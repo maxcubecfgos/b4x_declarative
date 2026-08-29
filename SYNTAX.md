@@ -1,16 +1,17 @@
-﻿# Declarative UI for B4A — Syntax and API Contract
+﻿# Declarative UI for B4X — Syntax and API Contract
 
-**Contract version:** 2.0  
-**Library baseline:** 0.6  
+**Contract version:** 2.1  
+**Library baseline:** 1.0  
+**Platforms:** B4A (Android), B4J (Desktop)  
 **Status:** Stable syntax baseline; the `UI.*` factory (Contract 2.0) is the preferred entry point for new code
 
-This document defines the syntax and compatibility rules of Declarative UI for B4A. It is a contract for application authors and for future library development.
+This document defines the syntax and compatibility rules of Declarative UI for B4X. It is a contract for application authors and for future library development.
 
 The goal is simple: a user who learns this API should not have to learn a different language or a different composition model every few months.
 
 ## 1. What this library is — and is not
 
-Declarative UI for B4A is a small, code-first composition layer built with normal B4A classes and native Android views.
+Declarative UI for B4X is a small, code-first composition layer built with normal B4X classes. On B4A it uses native Android views; on B4J it uses JavaFX views via `B4XView`.
 
 It is:
 

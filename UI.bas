@@ -252,6 +252,12 @@ Public Sub AppBar(Title As String) As UIAppBar
 	Return w
 End Sub
 
+Public Sub WindowBar(Title As String) As UIWindowBar
+	Dim w As UIWindowBar
+	w.Initialize.Title(Title)
+	Return w
+End Sub
+
 Public Sub BottomNavigationBar As UIBottomNavigationBar
 	Dim w As UIBottomNavigationBar
 	w.Initialize
@@ -315,6 +321,7 @@ End Sub
 
 Public Sub ThemeDark As UITheme
 	Dim t As UITheme
+	t.Initialize
 	t.InitializeDark
 	Return t
 End Sub
@@ -505,6 +512,26 @@ Private Sub AsList(Value As Object) As List
 		Next
 		Return result
 	End If
+	' Accepts B4A Array(...) literals of any element type, read through
+	' java.lang.reflect.Array so mixed widget arrays work without knowing
+	' the element type.
+	#If B4A OR B4J
+	Dim reflector As JavaObject
+	reflector.InitializeStatic("java.lang.reflect.Array")
+	Dim arrLen As Int = -1
+	Try
+		arrLen = reflector.RunMethod("getLength", Array(Value))
+	Catch
+		arrLen = -1
+	End Try
+	If arrLen >= 0 Then
+		For i = 0 To arrLen - 1
+			dim item As Object = reflector.RunMethod("get", Array(Value, i))
+			If item <> Null Then result.Add(item)
+		Next
+		Return result
+	End If
+	#End If
 	result.Add(Value)
 	Return result
 End Sub

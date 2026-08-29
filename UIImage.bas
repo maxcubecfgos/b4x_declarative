@@ -202,12 +202,17 @@ Private Sub ApplyViewStyle
     If mBaseView = Null Then Return
     If mBaseView.IsInitialized = False Then Return
     mBaseView.Color = mTheme.SurfaceVariant
+    #If B4A
     Dim image As ImageView = mBaseView
     If mFitMode = "fill" Then
         image.Gravity = Gravity.FILL
     Else
         image.Gravity = Gravity.CENTER
     End If
+    #Else
+    ' Desktop: SetBitmap keeps PreserveRatio=True (contain-like). The fill
+    ' and center modes fall back to contain until a dedicated desktop pass.
+    #End If
 End Sub
 
 Private Sub ApplyCurrentBitmap
@@ -241,7 +246,11 @@ Private Sub StartNetworkLoad
     If job.Success Then
         Dim downloaded As B4XBitmap
         Try
+            #If B4A
             downloaded = job.GetBitmapResize(Max(1, mWidth), Max(1, mHeight), True)
+            #Else
+            downloaded = job.GetBitmap
+            #End If
         Catch
             mLoadStarted = False
             Notify(mErrorTarget, mErrorEventName)

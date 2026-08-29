@@ -11,6 +11,7 @@ $expectedModules = @(
     'UIAlertDialog.bas'
     'UIAnimation.bas'
     'UIAppBar.bas'
+    'UIAsyncState.bas'
     'UIBottomNavigationBar.bas'
     'UIBox.bas'
     'UIButton.bas'
@@ -22,11 +23,12 @@ $expectedModules = @(
     'UIDivider.bas'
     'UIExpanded.bas'
     'UIFloatingActionButton.bas'
-    'UIInput.bas'
     'UIIcon.bas'
     'UIImage.bas'
-    'UIListView.bas'
+    'UIInput.bas'
     'UILabel.bas'
+    'UIListView.bas'
+    'UIMeasureEngine.bas'
     'UINative.bas'
     'UINavigator.bas'
     'UIPadding.bas'
@@ -34,6 +36,8 @@ $expectedModules = @(
     'UIProgressBar.bas'
     'UIRadioButton.bas'
     'UIRadioGroup.bas'
+    'UIRoundedSurface.bas'
+    'UIRebuildScheduler.bas'
     'UIRow.bas'
     'UIScaffold.bas'
     'UIScrollView.bas'
@@ -41,12 +45,12 @@ $expectedModules = @(
     'UISpace.bas'
     'UIStack.bas'
     'UIState.bas'
+    'UIStateTextBinding.bas'
     'UISwitch.bas'
-    'UIAsyncState.bas'
     'UITheme.bas'
     'UIVisibility.bas'
     'UIWidgetBridge.bas'
-    'UIRebuildScheduler.bas'
+    'UIWindowBar.bas'
 )
 
 try {
@@ -93,8 +97,8 @@ try {
 
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
     $manifest = @(
-        'Version=0.6'
-        'Title=Declarative UI for B4A'
+        'Version=1.0'
+        'Title=Declarative UI for B4X'
         'Author=Maxel Chark Guzm' + [char]0xE1 + 'n'
         'Contact=maxelcfgos@gmail.com'
         'License=Public Development Release - see LICENSE.txt'
@@ -103,7 +107,8 @@ try {
         'Modification=Testing and local project modifications welcome'
         'ReverseEngineering=Study, debugging and experimentation welcome'
         'Redistribution=Please do not repackage the implementation as your own library'
-        'DependsOn=XUI, JavaObject, OkHttpUtils2'
+        'B4A.DependsOn=XUI, JavaObject, OkHttpUtils2'
+        'B4J.DependsOn=jXUI, JavaObject, jOkHttpUtils2'
     ) -join [Environment]::NewLine
     [IO.File]::WriteAllText((Join-Path $stage 'manifest.txt'), $manifest, $utf8NoBom)
 
@@ -118,7 +123,7 @@ try {
         $actualEntries = @($entries | ForEach-Object FullName)
         $missingEntries = @($expectedEntries | Where-Object { $_ -notin $actualEntries })
         $unexpectedEntries = @($actualEntries | Where-Object { $_ -notin $expectedEntries })
-        if ($entries.Count -ne 42 -or $missingEntries.Count -gt 0 -or $unexpectedEntries.Count -gt 0) {
+        if ($entries.Count -ne 46 -or $missingEntries.Count -gt 0 -or $unexpectedEntries.Count -gt 0) {
             throw ('Package entry mismatch. Missing: ' + ($missingEntries -join ', ') + '; unexpected: ' + ($unexpectedEntries -join ', '))
         }
 
@@ -151,7 +156,7 @@ try {
     Write-Host ('File: ' + $output)
     Write-Host ('Size: ' + $fileInfo.Length + ' bytes')
     Write-Host ('SHA-256: ' + $hash)
-    Write-Host 'Contents: 40 UI modules + manifest.txt + LICENSE.txt'
+    Write-Host 'Contents: 44 UI modules + manifest.txt + LICENSE.txt'
 }
 catch {
     Write-Error ('The b4xlib could not be created or validated: ' + $_.Exception.Message)

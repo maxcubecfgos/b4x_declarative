@@ -27,10 +27,15 @@ Sub Class_Globals
 	Private mCornerRadiusOverridden As Boolean
 	Private mBorderWidth As Int
 	Private mCustomBackgroundApplied As Boolean
+	#If B4A
 	Private mEditText As EditText
+	#Else
+	Private mEditText As TextField
+	#End If
 	Private mBaseView As B4XView
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
+	Private mMeasure As UIMeasureEngine
 	Private mApplyingState As Boolean
 	Private mMounted As Boolean
 	Private mProgrammaticText As String
@@ -40,6 +45,7 @@ End Sub
 ' Creates an empty native text input.
 Public Sub Initialize As UIInput
 	mText = ""
+	mMeasure.Initialize(xui)
 	mHint = ""
 	mPasswordMode = False
 	Dim defaultTheme As UITheme
@@ -77,17 +83,33 @@ End Sub
 ' Sets a static text value and removes any state binding.
 Public Sub PasswordMode(Enabled As Boolean) As UIInput
     mPasswordMode = Enabled
+    #If B4A
     If mEditText <> Null Then
         If mEditText.IsInitialized Then mEditText.PasswordMode = Enabled
     End If
+    #Else
+    ' Desktop: recreate the text field on next Render to apply password mode.
+    If mBaseView <> Null Then
+        If mBaseView.IsInitialized Then
+            If mBaseView.Parent <> Null Then mBaseView.RemoveViewFromParent
+        End If
+    End If
+    mEditText = Null
+    mBaseView = Null
+    mCustomBackgroundApplied = False
+    mMounted = False
+    If mParent <> Null Then
+        If mParent.IsInitialized Then Render
+    End If
+    #End If
     Return Me
 End Sub
 
 Public Sub Text(Value As String) As UIInput
 	UnbindText
 	mText = Value
-	If mEditText <> Null Then
-		If mEditText.IsInitialized Then ApplyTextToNative
+	If mBaseView <> Null Then
+		If mBaseView.IsInitialized Then ApplyTextToNative
 	End If
 	Return Me
 End Sub
@@ -99,10 +121,10 @@ Public Sub BindText(State As UIState) As UIInput
 	mTextState = State
 	If mTextState <> Null Then
 		If mTextState.IsInitialized Then
-			mText = StateText(mTextState.GetState)
+			mText = UIStateTextBinding.ToTextNumeric(mTextState.GetState)
 			mTextState.Subscribe(Me, "TextState_Changed")
-			If mEditText <> Null Then
-				If mEditText.IsInitialized Then ApplyTextToNative
+			If mBaseView <> Null Then
+				If mBaseView.IsInitialized Then ApplyTextToNative
 			End If
 		End If
 	End If
@@ -142,9 +164,11 @@ End Sub
 Public Sub HintColor(Color As Int) As UIInput
 	mHintColor = Color
 	mHintColorOverridden = True
+	#If B4A
 	If mEditText <> Null Then
 		If mEditText.IsInitialized Then mEditText.HintColor = mHintColor
 	End If
+	#End If
 	Return Me
 End Sub
 
@@ -189,8 +213,8 @@ End Sub
 
 ' Returns the currently displayed text.
 Public Sub GetText As String
-	If mEditText <> Null Then
-		If mEditText.IsInitialized Then Return mEditText.Text
+	If mBaseView <> Null Then
+		If mBaseView.IsInitialized Then Return mBaseView.Text
 	End If
 	Return mText
 End Sub
@@ -214,7 +238,7 @@ Public Sub Render
 	If mParent.IsInitialized = False Then Return
 	If mTextState <> Null Then
 		If mTextState.IsInitialized Then
-			mText = StateText(mTextState.GetState)
+			mText = UIStateTextBinding.ToTextNumeric(mTextState.GetState)
 			mTextState.Subscribe(Me, "TextState_Changed")
 		End If
 	End If
@@ -236,10 +260,21 @@ Public Sub Render
 		needsCreate = True
 	End If
 	If needsCreate Then
+		#If B4A
 		Dim nativeInput As EditText
 		nativeInput.Initialize("NativeInput")
 		mEditText = nativeInput
 		mBaseView = mEditText
+		#Else
+		Dim tf As TextField
+		tf.Initialize("NativeInput")
+		mEditText = tf
+		mBaseView = mEditText
+		If mPasswordMode Then
+			Dim jo As JavaObject = tf
+			jo.RunMethod("setPassword", Array(True))
+		End If
+		#End If
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
 	If mBaseView = Null Then Return
@@ -250,9 +285,10 @@ Public Sub Render
 	End If
 
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
-	mEditText.TextColor = mTextColor
+	mBaseView.TextColor = mTextColor
+	mBaseView.TextSize = mTextSize
+	#If B4A
 	mEditText.HintColor = mHintColor
-	mEditText.TextSize = mTextSize
 	mEditText.PasswordMode = mPasswordMode
 	If mCornerRadius > 0 Or mBorderWidth > 0 Then
 		Dim inputBackground As ColorDrawable
@@ -266,50 +302,48 @@ Public Sub Render
 	End If
 	mEditText.Hint = mHint
 	mEditText.Gravity = Gravity.CENTER_VERTICAL
+	#Else
+	If mEditText <> Null Then mEditText.PromptText = mHint
+	If mCornerRadius > 0 Or mBorderWidth > 0 Then
+		mBaseView.SetColorAndBorder(mBackgroundColor, mBorderWidth, mBorderColor, mCornerRadius)
+		mCustomBackgroundApplied = True
+	Else
+		mBaseView.Color = mBackgroundColor
+	End If
+	#End If
 	ApplyTextToNative
 	mMounted = True
 End Sub
 
 Private Sub ApplyTextToNative
-	If mEditText = Null Then Return
-	If mEditText.IsInitialized = False Then Return
-	If mEditText.Text = mText Then Return
+	If mBaseView = Null Then Return
+	If mBaseView.IsInitialized = False Then Return
+	If mBaseView.Text = mText Then Return
 	' Programmatic updates must not be reported as user edits.
-	' Keep a marker as well as the guard because some native EditText events
-	' may be delivered after the assignment returns.
+	' Keep a marker as well as the guard because some native text-control
+	' events may be delivered after the assignment returns.
 	mApplyingState = True
 	mProgrammaticText = mText
 	mHasProgrammaticText = True
-	mEditText.Text = mText
+	mBaseView.Text = mText
 	mApplyingState = False
 End Sub
 
 Private Sub TextState_Changed(State As UIState)
 	If State = Null Then Return
 	If State.IsInitialized = False Then Return
-	mText = StateText(State.GetState)
+	mText = UIStateTextBinding.ToTextNumeric(State.GetState)
 	ApplyTextToNative
 End Sub
 
 ' Converts any state value to display text without relying on B4A type tests.
 ' UIState commonly contains Int values, which must not be parsed as Boolean.
-Private Sub StateText(Value As Object) As String
-	Dim valueText As String = ("" & Value).Trim
-	If IsNumber(valueText) Then
-		Dim number As Double = valueText
-		Dim groupingUsed As Boolean = False
-		If number = Floor(number) And Abs(number) < 1000000000000 Then
-			Return NumberFormat2(number, 0, 12, 0, groupingUsed)
-		End If
-	End If
-	Return valueText
-End Sub
 
-' Native B4A EditText event. The callback is intentionally not a two-way binding.
+
+' Native text-control event (EditText on B4A, TextField/PasswordField on B4J).
+' The callback is intentionally not a two-way binding.
 Private Sub NativeInput_TextChanged(Old As String, New As String)
-	Dim source As EditText = Sender
 	If mMounted = False Then Return
-	If mEditText = Null Or source <> mEditText Then Return
 	If mParent = Null Then Return
 	If mParent.IsInitialized = False Then Return
 	If mApplyingState Then Return
@@ -366,11 +400,9 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 
 	Dim measureText As String = mText
 	If measureText = "" Then measureText = mHint
-	Dim bmp As Bitmap
-	bmp.InitializeMutable(1dip, 1dip)
-	Dim cvs As Canvas
-	cvs.Initialize2(bmp)
-	Dim textWidth As Float = cvs.MeasureStringWidth(measureText, Typeface.DEFAULT, mTextSize)
+	Dim cvs As B4XCanvas = mMeasure.GetCanvas
+	Dim r As B4XRect = cvs.MeasureText(measureText, xui.CreateDefaultFont(mTextSize))
+	Dim textWidth As Float = r.Width
 	Dim naturalWidth As Int = textWidth + 2 * mTheme.InputHorizontalPadding
 	Dim naturalHeight As Int = mTheme.ControlHeight
 
@@ -382,3 +414,4 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	result.Add(Min(naturalHeight, safeMaxHeight))
 	Return result
 End Sub
+

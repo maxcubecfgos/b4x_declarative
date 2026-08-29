@@ -5,6 +5,7 @@ Type=Class
 Version=13.62
 @EndOfDesignText@
 Sub Class_Globals
+    Private xui As XUI
     Private mDark As Boolean
     Private mSeedColor As Int
 End Sub
@@ -71,25 +72,25 @@ End Sub
 
 ' Returns the main application background color.
 Public Sub Background As Int
-    If mDark Then Return MixColors(mSeedColor, Colors.Black, 0.88)
-    Return MixColors(Colors.White, mSeedColor, 0.03)
+    If mDark Then Return MixColors(mSeedColor, xui.Color_Black, 0.88)
+    Return MixColors(xui.Color_White, mSeedColor, 0.03)
 End Sub
 
 ' Returns the default card and surface color.
 Public Sub Surface As Int
-    If mDark Then Return MixColors(mSeedColor, Colors.Black, 0.72)
-    Return MixColors(Colors.White, mSeedColor, 0.01)
+    If mDark Then Return MixColors(mSeedColor, xui.Color_Black, 0.72)
+    Return MixColors(xui.Color_White, mSeedColor, 0.01)
 End Sub
 
 ' Returns a secondary surface color for controls and muted buttons.
 Public Sub SurfaceVariant As Int
-    If mDark Then Return MixColors(mSeedColor, Colors.Black, 0.52)
-    Return MixColors(Colors.White, mSeedColor, 0.14)
+    If mDark Then Return MixColors(mSeedColor, xui.Color_Black, 0.52)
+    Return MixColors(xui.Color_White, mSeedColor, 0.14)
 End Sub
 
 ' Returns the primary readable text color.
 Public Sub PrimaryText As Int
-    If mDark Then Return EnsureContrast(MixColors(Colors.White, mSeedColor, 0.08), Surface, True)
+    If mDark Then Return EnsureContrast(MixColors(xui.Color_White, mSeedColor, 0.08), Surface, True)
     Return EnsureContrast(MixColors(0xFF132238, mSeedColor, 0.08), Surface, False)
 End Sub
 
@@ -112,7 +113,7 @@ End Sub
 
 ' Returns the dashboard app bar color.
 Public Sub DashboardBar As Int
-    If mDark Then Return MixColors(mSeedColor, Colors.Black, 0.55)
+    If mDark Then Return MixColors(mSeedColor, xui.Color_Black, 0.55)
     Return mSeedColor
 End Sub
 
@@ -123,8 +124,8 @@ End Sub
 
 ' Returns the secondary app bar color.
 Public Sub SecondaryBar As Int
-    If mDark Then Return MixColors(mSeedColor, Colors.Black, 0.82)
-    Return MixColors(mSeedColor, Colors.Black, 0.64)
+    If mDark Then Return MixColors(mSeedColor, xui.Color_Black, 0.82)
+    Return MixColors(mSeedColor, xui.Color_Black, 0.64)
 End Sub
 
 ' Returns the scrim color used behind modal dialogs.
@@ -154,15 +155,15 @@ End Sub
 
 ' Returns the highlighted dashboard hero surface.
 Public Sub HeroSurface As Int
-    If mDark Then Return MixColors(mSeedColor, Colors.Black, 0.60)
-    Return MixColors(Colors.White, mSeedColor, 0.12)
+    If mDark Then Return MixColors(mSeedColor, xui.Color_Black, 0.60)
+    Return MixColors(xui.Color_White, mSeedColor, 0.12)
 End Sub
 
 ' Returns the primary teal accent color.
 Public Sub Accent As Int
     ' Accent is used as a filled background by FABs and progress indicators,
     ' and as a foreground by navigation. Keep it readable in both roles.
-    If mDark Then Return EnsureContrast(MixColors(mSeedColor, Colors.White, 0.08), Surface, True)
+    If mDark Then Return EnsureContrast(MixColors(mSeedColor, xui.Color_White, 0.08), Surface, True)
     Return EnsureContrast(mSeedColor, Surface, False)
 End Sub
 
@@ -178,14 +179,14 @@ End Sub
 
 ' Returns the divider color.
 Public Sub Divider As Int
-    If mDark Then Return MixColors(mSeedColor, Colors.White, 0.24)
-    Return MixColors(Colors.White, mSeedColor, 0.12)
+    If mDark Then Return MixColors(mSeedColor, xui.Color_White, 0.24)
+    Return MixColors(xui.Color_White, mSeedColor, 0.12)
 End Sub
 
 ' Returns the card border color.
 Public Sub Border As Int
-    If mDark Then Return MixColors(mSeedColor, Colors.White, 0.16)
-    Return MixColors(Colors.White, mSeedColor, 0.18)
+    If mDark Then Return MixColors(mSeedColor, xui.Color_White, 0.16)
+    Return MixColors(xui.Color_White, mSeedColor, 0.18)
 End Sub
 
 ' Returns the readable text color for buttons placed on variant surfaces.
@@ -195,7 +196,7 @@ End Sub
 
 ' Returns the background used by the theme action button.
 Public Sub ThemeAction As Int
-    Return MixColors(mSeedColor, Colors.Black, 0.74)
+    Return MixColors(mSeedColor, xui.Color_Black, 0.74)
 End Sub
 
 ' Returns a readable foreground for the theme action button.
@@ -468,9 +469,9 @@ End Sub
 
 ' Returns either a dark or light foreground with useful contrast against Value.
 Private Sub OnColor(Value As Int) As Int
-    Dim lightContrast As Float = ContrastRatio(Value, Colors.White)
+    Dim lightContrast As Float = ContrastRatio(Value, xui.Color_White)
     Dim darkContrast As Float = ContrastRatio(Value, 0xFF132238)
-    If lightContrast >= darkContrast Then Return Colors.White
+    If lightContrast >= darkContrast Then Return xui.Color_White
     Return 0xFF132238
 End Sub
 
@@ -536,17 +537,17 @@ Private Sub EnsureContrast(Foreground As Int, SurfaceColor As Int, TowardWhite A
     If ContrastRatio(SurfaceColor, result) >= 4.5 Then Return result
     For i = 1 To 20
         If TowardWhite Then
-            result = MixColors(result, Colors.White, 0.08)
+            result = MixColors(result, xui.Color_White, 0.08)
         Else
-            result = MixColors(result, Colors.Black, 0.08)
+            result = MixColors(result, xui.Color_Black, 0.08)
         End If
         If ContrastRatio(SurfaceColor, result) >= 4.5 Then Return result
     Next
     ' An extreme seed can already be white or black. Choose the better of
     ' the two deterministic foregrounds instead of returning a failed mix.
-    Dim whiteContrast As Float = ContrastRatio(SurfaceColor, Colors.White)
+    Dim whiteContrast As Float = ContrastRatio(SurfaceColor, xui.Color_White)
     Dim darkContrast As Float = ContrastRatio(SurfaceColor, 0xFF132238)
-    If whiteContrast >= darkContrast Then Return Colors.White
+    If whiteContrast >= darkContrast Then Return xui.Color_White
     Return 0xFF132238
 End Sub
 

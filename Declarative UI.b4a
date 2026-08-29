@@ -42,6 +42,10 @@ Module38=UITheme
 Module39=UIVisibility
 Module4=UIAppBar
 Module40=UIWidgetBridge
+Module41=UIMeasureEngine
+Module42=UIStateTextBinding
+Module43=UIRoundedSurface
+Module44=UIWindowBar
 Module5=UIAsyncState
 Module6=UIBottomNavigationBar
 Module7=UIBox
@@ -49,7 +53,7 @@ Module8=UIButton
 Module9=UICard
 NumberOfFiles=1
 NumberOfLibraries=4
-NumberOfModules=40
+NumberOfModules=44
 Version=13.7
 @EndOfDesignText@
 #Region  Project Attributes

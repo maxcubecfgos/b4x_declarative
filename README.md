@@ -1,10 +1,10 @@
-# Declarative UI for B4A
+# Declarative UI for B4X
 
-A small, code-first declarative UI layer for native B4A applications.
+A small, code-first declarative UI layer for native **B4A** (Android) and **B4J** (Desktop) applications from a single codebase.
 
 > **Documentation:** See [GUIDE.md](GUIDE.md) for installation, examples, widget APIs, lifecycle, layout, events, themes, navigation and troubleshooting. See [SYNTAX.md](SYNTAX.md) for the stable syntax and API compatibility contract.
 
-This project explores a Flutter-inspired way to compose Android interfaces in B4A while keeping the result native, lightweight, and understandable. It does not try to recreate Flutter internally. Instead, it provides a focused set of composable widgets with a predictable mount, measure, layout, render, and unmount lifecycle.
+This project explores a Flutter-inspired way to compose interfaces in B4X while keeping the result native, lightweight, and understandable. Cross-platform support uses `#If B4A / #Else` guards to isolate platform-specific APIs. It does not try to recreate Flutter internally. Instead, it provides a focused set of composable widgets with a predictable mount, measure, layout, render, and unmount lifecycle.
 
 The included example is intentionally a **minimal Flutter-style counter** designed to make the core benefit readable at a glance:
 

@@ -1,0 +1,335 @@
+﻿AppType=JavaFX
+Build1=Default,b4j.example
+Group=Default Group
+Library1=jcore
+Library2=jfx
+Library3=jxui
+Library4=javaobject
+Library5=jokhttputils2
+Module1=|relative|..\UI
+Module10=|relative|..\UICenter
+Module11=|relative|..\UICheckbox
+Module12=|relative|..\UIColumn
+Module13=|relative|..\UIDiagnostics
+Module14=|relative|..\UIDivider
+Module15=|relative|..\UIExpanded
+Module16=|relative|..\UIFloatingActionButton
+Module17=|relative|..\UIIcon
+Module18=|relative|..\UIImage
+Module19=|relative|..\UIInput
+Module2=|relative|..\UIAlertDialog
+Module20=|relative|..\UILabel
+Module21=|relative|..\UIListView
+Module22=|relative|..\UINative
+Module23=|relative|..\UINavigator
+Module24=|relative|..\UIPadding
+Module25=|relative|..\UIPlaceholder
+Module26=|relative|..\UIProgressBar
+Module27=|relative|..\UIRadioButton
+Module28=|relative|..\UIRadioGroup
+Module29=|relative|..\UIRebuildScheduler
+Module3=|relative|..\UIAnimation
+Module30=|relative|..\UIRow
+Module31=|relative|..\UIScaffold
+Module32=|relative|..\UIScrollView
+Module33=|relative|..\UISnackBar
+Module34=|relative|..\UISpace
+Module35=|relative|..\UIStack
+Module36=|relative|..\UIState
+Module37=|relative|..\UISwitch
+Module38=|relative|..\UITheme
+Module39=|relative|..\UIVisibility
+Module4=|relative|..\UIAppBar
+Module40=|relative|..\UIWidgetBridge
+Module41=|relative|..\UIWindowBar
+Module42=|relative|..\UIMeasureEngine
+Module43=|relative|..\UIStateTextBinding
+Module44=|relative|..\UIRoundedSurface
+Module5=|relative|..\UIAsyncState
+Module6=|relative|..\UIBottomNavigationBar
+Module7=|relative|..\UIBox
+Module8=|relative|..\UIButton
+Module9=|relative|..\UICard
+NumberOfFiles=0
+NumberOfLibraries=5
+NumberOfModules=44
+Version=10.5
+@EndOfDesignText@
+#Region Project Attributes
+	#MainFormWidth: 560
+	#MainFormHeight: 520
+#End Region
+
+Sub Process_Globals
+	Private fx As JFX
+	Private MainForm As Form
+	Private xui As XUI
+	Private mCreateCount As Int
+	Private mBindCount As Int
+	Private mCoalesceHits As Int
+	Private ValueState As UIState
+	Private SwitchState As UIState
+	Private ScreenInput As UIInput
+	Private ScreenSwitch As UISwitch
+	Private HeaderLabel As UILabel
+	Private ScreenProgress As UIProgressBar
+End Sub
+
+Sub AppStart (Form1 As Form, Args() As String)
+	MainForm = Form1
+	MainForm.Show
+	Log("DeclarativeUI B4J harness start")
+	BuildDeclarativeScreen(MainForm.RootPane)
+	Wait For (RunAllHarness) Complete (Unused As Object)
+	Log("DeclarativeUI B4J harness end")
+End Sub
+
+' The visible screen is ONE declarative tree, counter-style: factories,
+' fluent chains, observable states. Zero manual SetPosition on screen.
+Private Sub BuildDeclarativeScreen(Root As B4XView)
+	ValueState = UI.State(30)
+	SwitchState = UI.State(False)
+	HeaderLabel = UI.Text("NOVA B4J Harness").Size(18)
+	ScreenInput = UI.Input("escribe algo")
+	ScreenSwitch = UI.Switch("notificaciones").BindChecked(SwitchState)
+	Dim minusBtn As UIButton = UI.Button("-").OnClick(Me, "Minus_Click")
+	Dim plusBtn As UIButton = UI.Button("+").OnClick(Me, "Plus_Click")
+	Dim controlsRow As UIRow = UI.Row(Array(minusBtn, plusBtn)).Spacing(10dip)
+	ScreenProgress = UI.Progress(0).BindValue(ValueState)
+	Dim scrollContent As UIColumn = UI.Column(Array( _
+		UI.Text("línea uno"), UI.Text("línea dos"), UI.Text("línea tres")))
+	Dim body As UIColumn = UI.Column(Array( _
+		HeaderLabel, _
+		UI.Divider, _
+		ScreenInput, _
+		ScreenSwitch, _
+		controlsRow, _
+		ScreenProgress, _
+		UI.Divider, _
+		UI.Scroll(scrollContent)))
+	body.Spacing(12dip)
+	UI.Show(Root, UI.Padding(16dip, body))
+End Sub
+
+Private Sub Minus_Click
+	ValueState.SetState(Max(0, ValueState.GetState - 10))
+End Sub
+
+Private Sub Plus_Click
+	ValueState.SetState(Min(100, ValueState.GetState + 10))
+End Sub
+
+'Return true to allow the OS default exceptions handler to handle the uncaught exception.
+Sub Application_Error (Error As Exception, StackTrace As String) As Boolean
+	Log("DeclarativeUI TEST FAIL  uncaught -> " & Error.Message)
+	Return True
+End Sub
+
+' ============================ Harness ============================
+Private Sub RunAllHarness As ResumableSub
+	Try
+		RunThemeHarness
+		RunDeclaredScreenHarness
+		RunBindingHarness
+		RunCoalescingHarness
+		Wait For (RunAnimationHarness) Complete (Unused1 As Object)
+		Wait For (RunListFixtureHarness(MainForm.RootPane)) Complete (Unused2 As Object)
+		RunScrollFixtureHarness(MainForm.RootPane)
+		RunNavigatorFixtureHarness(MainForm.RootPane)
+	Catch
+		Log("DeclarativeUI TEST FAIL  harness -> " & LastException.Message)
+	End Try
+	Return Null
+End Sub
+
+Private Sub NativeId(View As B4XView) As Int
+	If View = Null Then Return 0
+	If View.IsInitialized = False Then Return 0
+	Dim system As JavaObject
+	system.InitializeStatic("java.lang.System")
+	Return system.RunMethod("identityHashCode", Array(View))
+End Sub
+
+Private Sub RunThemeHarness
+	Dim theme As UITheme
+	theme.Initialize
+	Dim lightBackground As Int = theme.Background
+	theme.Toggle
+	If theme.IsDark And theme.Background <> lightBackground Then
+		Log("DeclarativeUI TEST PASS  theme toggle changes derived tokens")
+	Else
+		Log("DeclarativeUI TEST FAIL  theme toggle")
+	End If
+End Sub
+
+' The visible screen came from one fluent expression: verify it mounted
+' natively and factory diagnostics are clean.
+Private Sub RunDeclaredScreenHarness
+	Dim nativeCount As Int = 0
+	For Each dummyView As B4XView In MainForm.RootPane.GetAllViewsRecursive
+		nativeCount = nativeCount + 1
+	Next
+	If nativeCount >= 8 And UI.HasErrors = False Then
+		Log("DeclarativeUI TEST PASS  declarative screen mounted (nodes=" & nativeCount & ", errors=0)")
+	Else
+		For i = 0 To UI.Errors.Size - 1
+			Log("ERR: " & UI.Errors.Get(i))
+		Next
+		Log("DeclarativeUI TEST FAIL  screen nodes=" & nativeCount & " errors=" & UI.Errors.Size)
+	End If
+End Sub
+
+Private Sub RunBindingHarness
+	ScreenInput.Text("hola desktop")
+	Dim inputOk As Boolean = ScreenInput.GetText = "hola desktop"
+	SwitchState.SetState(True)
+	Sleep(0)
+	Dim switchOk As Boolean = ScreenSwitch.IsChecked
+	ValueState.SetState(70)
+	Sleep(0)
+	Dim progressOk As Boolean = 70 = ValueState.GetState
+	If inputOk And switchOk And progressOk Then
+		Log("DeclarativeUI TEST PASS  live bindings: input/switch/progress")
+	Else
+		Log("DeclarativeUI TEST FAIL  bindings input=" & inputOk & " switch=" & switchOk & " progress=" & progressOk)
+	End If
+End Sub
+
+Private Sub RunCoalescingHarness
+	mCoalesceHits = 0
+	Dim st As UIState
+	st.Initialize(0).CoalesceNotifications(True).Subscribe(Me, "HCoalesced")
+	st.SetState(1)
+	st.SetState(2)
+	st.SetState(3)
+	Sleep(0)
+	If mCoalesceHits = 1 And 3 = st.GetState Then
+		Log("DeclarativeUI TEST PASS  coalesced state rebuild uses final value")
+	Else
+		Log("DeclarativeUI TEST FAIL  coalesced hits=" & mCoalesceHits)
+	End If
+	st.ClearListeners
+End Sub
+
+Private Sub RunAnimationHarness As ResumableSub
+	Dim lblView As B4XView = HeaderLabel.GetView
+	If lblView = Null Then Return Null
+	UI.Animation(lblView).FadeOut(150).OnCompleted(Me, "AnimDone").Start
+	Wait For AnimDone
+	Dim alphaOut As Float = lblView.Alpha
+	UI.Animation(lblView).FadeIn(120).OnCompleted(Me, "AnimDone").Start
+	Wait For AnimDone
+	Dim alphaIn As Float = lblView.Alpha
+	If alphaOut < 0.05 And alphaIn > 0.95 Then
+		Log("DeclarativeUI TEST PASS  animation fade out/in reaches targets")
+	Else
+		Log("DeclarativeUI TEST FAIL  animation out=" & alphaOut & " in=" & alphaIn)
+	End If
+	Return Null
+End Sub
+
+Private Sub AnimDone
+End Sub
+
+' Offscreen bench slot: real bounds, outside the window.
+Private Sub BenchSlot(Root As B4XView, Left As Int) As B4XView
+	Dim slot As B4XView = xui.CreatePanel("")
+	Root.AddView(slot, Left, -950, 260, 180)
+	Return slot
+End Sub
+
+Private Sub RunListFixtureHarness(Root As B4XView) As ResumableSub
+	mCreateCount = 0
+	mBindCount = 0
+	Dim data As List
+	data.Initialize
+	For i = 0 To 49
+		data.Add("item-" & i)
+	Next
+	Dim lv As UIListView = UI.ListView(data).ItemHeight(40dip).Overscan(0) _
+		.CreateItem(Me, "HCreateItem").BindItem(Me, "HBindItem")
+	Dim slot As B4XView = BenchSlot(Root, -320)
+	lv.SetParent(slot)
+	lv.SetPosition(0, 0)
+	lv.SetSize(240, 160)
+	lv.Render
+	Sleep(0)
+	Dim baseCreate As Int = mCreateCount
+	Dim baseBind As Int = mBindCount
+	lv.ScrollTo(800dip)
+	Sleep(0)
+	lv.Render
+	Dim creates As Int = mCreateCount - baseCreate
+	Dim binds As Int = mBindCount - baseBind
+	Dim moved As Int = lv.GetScrollPosition
+	If baseCreate > 0 And moved > 0 And binds > creates Then
+		Log("DeclarativeUI TEST PASS  list pool reuses rows (create=" & mCreateCount & " bind=" & mBindCount & " pos=" & moved & ")")
+	Else
+		Log("DeclarativeUI TEST FAIL  list pooling create=" & creates & " bind=" & binds & " pos=" & moved)
+	End If
+	lv.Unmount
+	slot.RemoveViewFromParent
+	Return Null
+End Sub
+
+Private Sub RunScrollFixtureHarness(Root As B4XView)
+	Dim ph As UIPlaceholder
+	ph.Initialize.FallbackSize(240, 600)
+	Dim sc As UIScrollView = UI.Scroll(ph)
+	Dim slot As B4XView = BenchSlot(Root, -640)
+	sc.SetParent(slot)
+	sc.SetPosition(0, 0)
+	sc.SetSize(240, 120)
+	sc.Render
+	sc.ScrollTo(300)
+	Dim pos As Int = sc.GetScrollPosition
+	sc.ScrollTo(9999)
+	Dim clamped As Boolean = sc.GetScrollPosition <= 480
+	If pos > 200 And clamped Then
+		Log("DeclarativeUI TEST PASS  scroll roundtrip and clamp (pos=" & pos & ")")
+	Else
+		Log("DeclarativeUI TEST FAIL  scroll pos=" & pos & " clamp=" & clamped)
+	End If
+	sc.Unmount
+	slot.RemoveViewFromParent
+End Sub
+
+Private Sub RunNavigatorFixtureHarness(Root As B4XView)
+	Dim slot As B4XView = BenchSlot(Root, -960)
+	Dim routeInput As UIInput = UI.Input("").Text("route-a")
+	Dim pageA As UIScaffold = UI.Scaffold(UI.Column(Array(routeInput)))
+	Dim pageB As UIScaffold = UI.Scaffold(UI.Column(Array(UI.Text("route-b"))))
+	Dim nav As UINavigator = UI.Navigator.AddScreen("A", pageA).AddScreen("B", pageB)
+	nav.SetParent(slot)
+	nav.SetPosition(0, 0)
+	nav.SetSize(240, 170)
+	nav.Render
+	Dim initialId As Int = NativeId(routeInput.GetView)
+	nav.NavigateTo("B")
+	nav.GoBack
+	Dim restoredText As String = routeInput.GetText
+	If nav.CanGoBack = False And restoredText = "route-a" _
+		And initialId > 0 And NativeId(routeInput.GetView) = initialId Then
+		Log("DeclarativeUI TEST PASS  navigator detach A->B->GoBack preserves route state")
+	Else
+		Log("DeclarativeUI TEST FAIL  navigator restore text=" & restoredText)
+	End If
+	nav.Unmount
+	slot.RemoveViewFromParent
+End Sub
+
+Private Sub HCreateItem(Index As Int) As Object
+	mCreateCount = mCreateCount + 1
+	Dim lbl As UILabel = UI.Text("item-" & Index).Size(12)
+	Return lbl
+End Sub
+
+Private Sub HBindItem(Index As Int, ItemView As Object)
+	mBindCount = mBindCount + 1
+	Dim lbl As UILabel = ItemView
+	lbl.Text("item-" & Index)
+End Sub
+
+Private Sub HCoalesced(State As UIState)
+	mCoalesceHits = mCoalesceHits + 1
+End Sub

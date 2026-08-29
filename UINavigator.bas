@@ -85,6 +85,18 @@ Public Sub GoBack As Boolean
 	Return True
 End Sub
 
+' Consumes one back step when the virtual history can go back.
+' First-class integration point for host back buttons (B4XPages/
+' Activity KeyPress): return True when handled, False to let the host
+' apply its default (close page / exit).
+Public Sub HandleBack As Boolean
+	If CanGoBack Then
+		GoBack
+		Return True
+	End If
+	Return False
+End Sub
+
 Public Sub SetParent(Parent As B4XView)
 	If mHost <> Null Then
 		If mHost.IsInitialized Then Unmount
@@ -122,10 +134,9 @@ Public Sub Render
 		needsCreate = True
 	End If
 	If needsCreate Then
-		Dim pnl As Panel
-		pnl.Initialize("")
+		Dim pnl As B4XView = xui.CreatePanel("")
 		mHost = pnl
-		mHost.Color = Colors.Transparent
+		mHost.Color = xui.Color_Transparent
 		mParent.AddView(mHost, contentLeft, contentTop, contentWidth, contentHeight)
 	Else
 		mHost.SetLayoutAnimated(0, contentLeft, contentTop, contentWidth, contentHeight)

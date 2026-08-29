@@ -101,8 +101,7 @@ Public Sub Render
 		needsCreate = True
 	End If
 	If needsCreate Then
-		Dim pnl As Panel
-		pnl.Initialize("")
+		Dim pnl As B4XView = xui.CreatePanel("")
 		mBaseView = pnl
 		mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
 	End If
@@ -112,10 +111,7 @@ Public Sub Render
 	End If
 	mBaseView.SetLayoutAnimated(0, mLeft, mTop, mWidth, mHeight)
     
-	Dim NativePanel As Panel = mBaseView
-	Dim cd As ColorDrawable
-	cd.Initialize2(mBgColor, mRadius, mTheme.BorderWidth, mBorderColor)
-	NativePanel.Background = cd
+	mBaseView.SetColorAndBorder(mBgColor, mTheme.BorderWidth, mBorderColor, mRadius)
     
 	If mChild <> Null Then
 		mBridge.SetParent(mChild, mBaseView)

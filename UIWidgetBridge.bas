@@ -170,10 +170,8 @@ End Sub
 ' Returns the safe content rectangle (system bars excluded) in the local
 ' coordinate space of Root. Result list: (left, top, width, height).
 ' Root is normally the Activity or the panel the widget is mounted on.
-
-' Returns the safe content rectangle (system bars excluded) in the local
-' coordinate space of Root. Result list: (left, top, width, height).
-' Root is normally the Activity or the panel the widget is mounted on.
+' B4J: a desktop window has no system bars inside RootPane, so the
+' requested rectangle is returned unchanged.
 Public Sub GetSafeBounds(Root As B4XView, Left As Int, Top As Int, Width As Int, Height As Int) As List
 	Dim result As List
 	result.Initialize
@@ -181,6 +179,7 @@ Public Sub GetSafeBounds(Root As B4XView, Left As Int, Top As Int, Width As Int,
 	result.Add(Top)
 	result.Add(Max(0, Width))
 	result.Add(Max(0, Height))
+	#If B4A
 	If Root = Null Then Return result
 	If Root.IsInitialized = False Then Return result
 	Try
@@ -248,6 +247,7 @@ Public Sub GetSafeBounds(Root As B4XView, Left As Int, Top As Int, Width As Int,
 		result.Add(Max(0, Width))
 		result.Add(Max(0, Height))
 	End Try
+	#End If
 	Return result
 End Sub
 

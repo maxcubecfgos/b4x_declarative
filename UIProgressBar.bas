@@ -5,6 +5,7 @@ Type=Class
 Version=13.62
 @EndOfDesignText@
 Sub Class_Globals
+    Private xui As XUI
     Private mTheme As UITheme
     Private mParent As B4XView
     Private mBaseView As B4XView
@@ -169,8 +170,7 @@ Public Sub Render
         needsCreate = True
     End If
     If needsCreate Then
-        Dim panel As Panel
-        panel.Initialize("")
+        Dim panel As B4XView = xui.CreatePanel("")
         mBaseView = panel
         mParent.AddView(mBaseView, mLeft, mTop, mWidth, EffectiveHeight)
         mTrackView = Null
@@ -195,8 +195,7 @@ Private Sub EnsureBars
         createTrack = True
     End If
     If createTrack Then
-        Dim track As Panel
-        track.Initialize("")
+        Dim track As B4XView = xui.CreatePanel("")
         mTrackView = track
         mBaseView.AddView(mTrackView, 0, 0, mWidth, EffectiveHeight)
     End If
@@ -207,8 +206,7 @@ Private Sub EnsureBars
         createProgress = True
     End If
     If createProgress Then
-        Dim progress As Panel
-        progress.Initialize("")
+        Dim progress As B4XView = xui.CreatePanel("")
         mProgressView = progress
         mBaseView.AddView(mProgressView, 0, 0, 0, EffectiveHeight)
     End If
@@ -221,18 +219,12 @@ Private Sub ApplyAppearance
     Dim effectiveBarHeight As Int = EffectiveHeight
     If effectiveBarHeight <= 0 Then effectiveBarHeight = mHeight
     mTrackView.SetLayoutAnimated(0, 0, 0, mWidth, effectiveBarHeight)
-    Dim trackPanel As Panel = mTrackView
-    Dim trackDrawable As ColorDrawable
-    trackDrawable.Initialize2(mTrackColor, Min(mCornerRadius, effectiveBarHeight / 2), 0, Colors.Transparent)
-    trackPanel.Background = trackDrawable
+    mTrackView.SetColorAndBorder(mTrackColor, 0, 0, Min(mCornerRadius, effectiveBarHeight / 2))
 
     Dim progressWidth As Int = 0
     If mIndeterminate = False Then progressWidth = Round(mWidth * mValue / 100)
     mProgressView.SetLayoutAnimated(0, 0, 0, Max(0, progressWidth), effectiveBarHeight)
-    Dim progressPanel As Panel = mProgressView
-    Dim progressDrawable As ColorDrawable
-    progressDrawable.Initialize2(mProgressColor, Min(mCornerRadius, effectiveBarHeight / 2), 0, Colors.Transparent)
-    progressPanel.Background = progressDrawable
+    mProgressView.SetColorAndBorder(mProgressColor, 0, 0, Min(mCornerRadius, effectiveBarHeight / 2))
     mProgressView.BringToFront
 End Sub
 

@@ -269,8 +269,7 @@ Public Sub Render
         needsCreate = True
     End If
     If needsCreate Then
-        Dim pnl As Panel
-        pnl.Initialize("")
+        Dim pnl As B4XView = xui.CreatePanel("")
         mBaseView = pnl
         mParent.AddView(mBaseView, mLeft, mTop, mWidth, mHeight)
         mBuilt = False
@@ -305,8 +304,7 @@ Private Sub BuildNativeItems
     mTextLabels.Initialize
     mIndicatorViews.Initialize
 
-    Dim divider As Panel
-    divider.Initialize("")
+    Dim divider As B4XView = xui.CreatePanel("")
     divider.Color = mDividerColor
     mBaseView.AddView(divider, 0, 0, mWidth, mTheme.NavigationDividerHeight)
 
@@ -317,19 +315,25 @@ Private Sub BuildNativeItems
         Dim currentWidth As Int = itemWidth
         If i = mItems.Size - 1 Then currentWidth = mWidth - currentLeft
 
-        Dim tabPanel As Panel
-        tabPanel.Initialize("")
-        Dim tabView As B4XView = tabPanel
-        tabView.Color = Colors.Transparent
+        Dim tabView As B4XView = xui.CreatePanel("")
+        tabView.Color = xui.Color_Transparent
         mBaseView.AddView(tabView, currentLeft, mTheme.NavigationDividerHeight, currentWidth, Max(0, mHeight - mTheme.NavigationDividerHeight))
 
         Dim icon As Label
         icon.Initialize("")
         icon.Text = item.GetDefault("Icon", "")
+        #If B4A
         icon.Gravity = Gravity.CENTER
         icon.TextSize = mIconSize
         icon.TextColor = mInactiveColor
         If mUseFontAwesome Then icon.Typeface = Typeface.FONTAWESOME
+        #Else
+        Dim iconB4X As B4XView = icon
+        iconB4X.SetTextAlignment("CENTER", "CENTER")
+        iconB4X.TextSize = mIconSize
+        iconB4X.TextColor = mInactiveColor
+        If mUseFontAwesome Then iconB4X.Font = xui.CreateFontAwesome(mIconSize)
+        #End If
         Dim navPadding As Int = mTheme.NavigationHorizontalPadding
         tabView.AddView(icon, navPadding, navPadding, Max(0, currentWidth - 2 * navPadding), mTheme.NavigationIconHeight)
         mIconLabels.Add(icon)
@@ -337,24 +341,25 @@ Private Sub BuildNativeItems
         Dim caption As Label
         caption.Initialize("")
         caption.Text = item.GetDefault("Text", "")
+        Dim captionB4X As B4XView = caption
+        #If B4A
         caption.Gravity = Gravity.CENTER
-        caption.TextSize = mTextSize
-        caption.TextColor = mInactiveColor
+        #Else
+        captionB4X.SetTextAlignment("CENTER", "CENTER")
+        #End If
+        captionB4X.TextSize = mTextSize
+        captionB4X.TextColor = mInactiveColor
         tabView.AddView(caption, navPadding, mTheme.NavigationCaptionTop, Max(0, currentWidth - 2 * navPadding), Max(0, mHeight - mTheme.NavigationCaptionTop - mTheme.NavigationLabelBottomInset))
         mTextLabels.Add(caption)
 
-        Dim indicator As Panel
-        indicator.Initialize("")
-        indicator.Color = mIndicatorColor
-        Dim indicatorView As B4XView = indicator
+        Dim indicatorView As B4XView = xui.CreatePanel("")
+        indicatorView.Color = mIndicatorColor
         Dim indicatorInset As Int = mTheme.NavigationIndicatorInset
         tabView.AddView(indicatorView, indicatorInset, Max(0, mHeight - mTheme.NavigationIndicatorHeight), Max(0, currentWidth - 2 * indicatorInset), mTheme.NavigationIndicatorHeight)
         mIndicatorViews.Add(indicatorView)
 
-        Dim clickSurface As Panel
-        clickSurface.Initialize("NativeTab")
-        Dim clickView As B4XView = clickSurface
-        clickView.Color = Colors.Transparent
+        Dim clickView As B4XView = xui.CreatePanel("NativeTab")
+        clickView.Color = xui.Color_Transparent
         clickView.Tag = i
         tabView.AddView(clickView, 0, 0, currentWidth, Max(0, mHeight - mTheme.NavigationDividerHeight))
         currentLeft = currentLeft + currentWidth
@@ -369,39 +374,68 @@ Private Sub ApplySelection
     For i = 0 To mItems.Size - 1
         Dim icon As Label = mIconLabels.Get(i)
         Dim caption As Label = mTextLabels.Get(i)
+        Dim iconB4X As B4XView = icon
+        Dim captionB4X As B4XView = caption
         Dim indicator As B4XView = mIndicatorViews.Get(i)
         If i = mSelectedIndex Then
-            icon.TextColor = mActiveColor
-            caption.TextColor = mActiveColor
+            iconB4X.TextColor = mActiveColor
+            captionB4X.TextColor = mActiveColor
             caption.Visible = True
+            #If B4A
             If mUseFontAwesome Then
                 icon.Typeface = Typeface.FONTAWESOME
             Else
                 icon.Typeface = Typeface.DEFAULT_BOLD
             End If
             caption.Typeface = Typeface.DEFAULT_BOLD
+            #Else
+            If mUseFontAwesome Then
+                iconB4X.Font = xui.CreateFontAwesome(mIconSize)
+            Else
+                iconB4X.Font = xui.CreateDefaultBoldFont(mIconSize)
+            End If
+            captionB4X.Font = xui.CreateDefaultBoldFont(mTextSize)
+            #End If
             indicator.Color = mIndicatorColor
             indicator.Visible = True
         Else
-            icon.TextColor = mInactiveColor
-            caption.TextColor = mInactiveColor
+            iconB4X.TextColor = mInactiveColor
+            captionB4X.TextColor = mInactiveColor
             caption.Visible = mShowInactiveLabels
+            #If B4A
             If mUseFontAwesome Then
                 icon.Typeface = Typeface.FONTAWESOME
             Else
                 icon.Typeface = Typeface.DEFAULT
             End If
             caption.Typeface = Typeface.DEFAULT
+            #Else
+            If mUseFontAwesome Then
+                icon.Font = xui.CreateFontAwesome(mIconSize)
+            Else
+                icon.Font = xui.CreateDefaultFont(mIconSize)
+            End If
+            caption.Font = xui.CreateDefaultFont(mTextSize)
+            #End If
             indicator.Visible = False
         End If
     Next
 End Sub
 
+#If B4A
 Private Sub NativeTab_Click
     Dim clickSurface As Panel = Sender
     Dim index As Int = clickSurface.Tag
     SetActiveIndex(index, True)
 End Sub
+#Else
+' Desktop equivalent of the Android click handler.
+Private Sub NativeTab_MouseClicked(EventData As MouseEvent)
+    Dim clickView As B4XView = Sender
+    Dim index As Int = clickView.Tag
+    SetActiveIndex(index, True)
+End Sub
+#End If
 
 Private Sub SetActiveIndex(Index As Int, Notify As Boolean)
     If Index < 0 Or Index >= mItems.Size Then Return
