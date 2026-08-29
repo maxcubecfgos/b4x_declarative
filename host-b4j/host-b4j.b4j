@@ -42,6 +42,9 @@ Module39=|relative|..\UIVisibility
 Module4=|relative|..\UIAppBar
 Module40=|relative|..\UIWidgetBridge
 Module41=|relative|..\UIWindowBar
+Module42=|relative|..\UIMeasureEngine
+Module43=|relative|..\UIStateTextBinding
+Module44=|relative|..\UIRoundedSurface
 Module5=|relative|..\UIAsyncState
 Module6=|relative|..\UIBottomNavigationBar
 Module7=|relative|..\UIBox
@@ -49,7 +52,7 @@ Module8=|relative|..\UIButton
 Module9=|relative|..\UICard
 NumberOfFiles=0
 NumberOfLibraries=5
-NumberOfModules=41
+NumberOfModules=44
 Version=10.5
 @EndOfDesignText@
 #Region Project Attributes

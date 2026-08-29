@@ -58,7 +58,7 @@ Public Sub BindTitle(State As UIState) As UIAppBar
 	mTitleState = State
 	If mTitleState <> Null Then
 		If mTitleState.IsInitialized Then
-			mTitle = StateText(mTitleState.GetState)
+			mTitle = UIStateTextBinding.ToTextNumeric(mTitleState.GetState)
 			mTitleState.Subscribe(Me, "TitleState_Changed")
 			If mParent <> Null Then
 				If mParent.IsInitialized Then Render
@@ -80,23 +80,13 @@ End Sub
 Private Sub TitleState_Changed(State As UIState)
 	If State = Null Then Return
 	If State.IsInitialized = False Then Return
-	mTitle = StateText(State.GetState)
+	mTitle = UIStateTextBinding.ToTextNumeric(State.GetState)
 	Render
 End Sub
 
 ' Converts any state value to display text without relying on B4A type tests.
 ' UIState commonly contains Int values, which must not be parsed as Boolean.
-Private Sub StateText(Value As Object) As String
-	Dim valueText As String = ("" & Value).Trim
-	If IsNumber(valueText) Then
-		Dim number As Double = valueText
-		Dim groupingUsed As Boolean = False
-		If number = Floor(number) And Abs(number) < 1000000000000 Then
-			Return NumberFormat2(number, 0, 12, 0, groupingUsed)
-		End If
-	End If
-	Return valueText
-End Sub
+
 
 Public Sub BackgroundColor(c As Int) As UIAppBar
 	mColor = c
@@ -179,7 +169,7 @@ Public Sub Render
 	If mParent.IsInitialized = False Then Return
 	If mTitleState <> Null Then
 		If mTitleState.IsInitialized Then
-			mTitle = StateText(mTitleState.GetState)
+			mTitle = UIStateTextBinding.ToTextNumeric(mTitleState.GetState)
 			mTitleState.Subscribe(Me, "TitleState_Changed")
 		End If
 	End If

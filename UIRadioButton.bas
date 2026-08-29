@@ -31,12 +31,12 @@ Sub Class_Globals
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
 	Private mIndicatorSize As Int
-	Private mMeasureHost As B4XView
-	Private mMeasureCanvas As B4XCanvas
+	Private mMeasure As UIMeasureEngine
 End Sub
 
 Public Sub Initialize As UIRadioButton
 	mValue = ""
+	mMeasure.Initialize(xui)
 	mText = ""
 	mTextState = Null
 	mSelected = False
@@ -86,7 +86,7 @@ Public Sub BindText(State As UIState) As UIRadioButton
 	mTextState = State
 	If mTextState <> Null Then
 		If mTextState.IsInitialized Then
-			mText = StateText(mTextState.GetState)
+			mText = UIStateTextBinding.ToTextRaw(mTextState.GetState)
 			mTextState.Subscribe(Me, "TextState_Changed")
 			ApplyTextToNative
 		End If
@@ -216,7 +216,7 @@ Public Sub Render
 	If mParent.IsInitialized = False Then Return
 	If mTextState <> Null Then
 		If mTextState.IsInitialized Then
-			mText = StateText(mTextState.GetState)
+			mText = UIStateTextBinding.ToTextRaw(mTextState.GetState)
 			mTextState.Subscribe(Me, "TextState_Changed")
 		End If
 	End If
@@ -342,7 +342,7 @@ End Sub
 Private Sub TextState_Changed(State As UIState)
 	If State = Null Then Return
 	If State.IsInitialized = False Then Return
-	mText = StateText(State.GetState)
+	mText = UIStateTextBinding.ToTextRaw(State.GetState)
 	ApplyTextToNative
 End Sub
 
@@ -365,10 +365,7 @@ Private Sub ReadBoolean(InputValue As Object) As Boolean
 	Return False
 End Sub
 
-Private Sub StateText(InputValue As Object) As String
-	If InputValue = Null Then Return ""
-	Return "" & InputValue
-End Sub
+
 
 Public Sub Detach
 	If mBaseView <> Null Then
@@ -410,7 +407,7 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Dim safeMaxHeight As Int = MaxHeight
 	If safeMaxWidth <= 0 Then safeMaxWidth = 10000
 	If safeMaxHeight <= 0 Then safeMaxHeight = 10000
-	Dim cvs As B4XCanvas = MeasureEngine
+	Dim cvs As B4XCanvas = mMeasure.GetCanvas
 	Dim r As B4XRect = cvs.MeasureText(mText, xui.CreateDefaultFont(mTextSize))
 	Dim textWidth As Float = r.Width
 	Dim naturalWidth As Int = textWidth + mIndicatorSize + 12dip
@@ -420,22 +417,3 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Return result
 End Sub
 
-' Returns the shared measurement engine. The host panel is never mounted,
-' so measuring cannot affect any visible view (on B4J Initialize inserts
-' the canvas as a child node of the host).
-Private Sub MeasureEngine As B4XCanvas
-	If mMeasureHost <> Null Then
-		If mMeasureHost.IsInitialized Then Return mMeasureCanvas
-	End If
-	mMeasureHost = xui.CreatePanel("")
-	#If B4A
-	Dim measureLp As JavaObject
-	measureLp.InitializeNewInstance("android.view.ViewGroup$LayoutParams", Array(2048, 512))
-	Dim measureHostJO As JavaObject = mMeasureHost
-	measureHostJO.RunMethod("setLayoutParams", Array(measureLp))
-	#End If
-	Dim cvs As B4XCanvas
-	cvs.Initialize(mMeasureHost)
-	mMeasureCanvas = cvs
-	Return mMeasureCanvas
-End Sub

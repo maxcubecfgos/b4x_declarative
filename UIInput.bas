@@ -35,8 +35,7 @@ Sub Class_Globals
 	Private mBaseView As B4XView
 	Private mParent As B4XView
 	Private mLeft, mTop, mWidth, mHeight As Int
-	Private mMeasureHost As B4XView
-	Private mMeasureCanvas As B4XCanvas
+	Private mMeasure As UIMeasureEngine
 	Private mApplyingState As Boolean
 	Private mMounted As Boolean
 	Private mProgrammaticText As String
@@ -46,6 +45,7 @@ End Sub
 ' Creates an empty native text input.
 Public Sub Initialize As UIInput
 	mText = ""
+	mMeasure.Initialize(xui)
 	mHint = ""
 	mPasswordMode = False
 	Dim defaultTheme As UITheme
@@ -121,7 +121,7 @@ Public Sub BindText(State As UIState) As UIInput
 	mTextState = State
 	If mTextState <> Null Then
 		If mTextState.IsInitialized Then
-			mText = StateText(mTextState.GetState)
+			mText = UIStateTextBinding.ToTextNumeric(mTextState.GetState)
 			mTextState.Subscribe(Me, "TextState_Changed")
 			If mBaseView <> Null Then
 				If mBaseView.IsInitialized Then ApplyTextToNative
@@ -238,7 +238,7 @@ Public Sub Render
 	If mParent.IsInitialized = False Then Return
 	If mTextState <> Null Then
 		If mTextState.IsInitialized Then
-			mText = StateText(mTextState.GetState)
+			mText = UIStateTextBinding.ToTextNumeric(mTextState.GetState)
 			mTextState.Subscribe(Me, "TextState_Changed")
 		End If
 	End If
@@ -332,23 +332,13 @@ End Sub
 Private Sub TextState_Changed(State As UIState)
 	If State = Null Then Return
 	If State.IsInitialized = False Then Return
-	mText = StateText(State.GetState)
+	mText = UIStateTextBinding.ToTextNumeric(State.GetState)
 	ApplyTextToNative
 End Sub
 
 ' Converts any state value to display text without relying on B4A type tests.
 ' UIState commonly contains Int values, which must not be parsed as Boolean.
-Private Sub StateText(Value As Object) As String
-	Dim valueText As String = ("" & Value).Trim
-	If IsNumber(valueText) Then
-		Dim number As Double = valueText
-		Dim groupingUsed As Boolean = False
-		If number = Floor(number) And Abs(number) < 1000000000000 Then
-			Return NumberFormat2(number, 0, 12, 0, groupingUsed)
-		End If
-	End If
-	Return valueText
-End Sub
+
 
 ' Native text-control event (EditText on B4A, TextField/PasswordField on B4J).
 ' The callback is intentionally not a two-way binding.
@@ -410,7 +400,7 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 
 	Dim measureText As String = mText
 	If measureText = "" Then measureText = mHint
-	Dim cvs As B4XCanvas = MeasureEngine
+	Dim cvs As B4XCanvas = mMeasure.GetCanvas
 	Dim r As B4XRect = cvs.MeasureText(measureText, xui.CreateDefaultFont(mTextSize))
 	Dim textWidth As Float = r.Width
 	Dim naturalWidth As Int = textWidth + 2 * mTheme.InputHorizontalPadding
@@ -425,22 +415,3 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
 	Return result
 End Sub
 
-' Returns the shared measurement engine. The host panel is never mounted,
-' so measuring cannot affect any visible view (on B4J Initialize inserts
-' the canvas as a child node of the host).
-Private Sub MeasureEngine As B4XCanvas
-	If mMeasureHost <> Null Then
-		If mMeasureHost.IsInitialized Then Return mMeasureCanvas
-	End If
-	mMeasureHost = xui.CreatePanel("")
-	#If B4A
-	Dim measureLp As JavaObject
-	measureLp.InitializeNewInstance("android.view.ViewGroup$LayoutParams", Array(2048, 512))
-	Dim measureHostJO As JavaObject = mMeasureHost
-	measureHostJO.RunMethod("setLayoutParams", Array(measureLp))
-	#End If
-	Dim cvs As B4XCanvas
-	cvs.Initialize(mMeasureHost)
-	mMeasureCanvas = cvs
-	Return mMeasureCanvas
-End Sub

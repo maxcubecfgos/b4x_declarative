@@ -61,7 +61,7 @@ Public Sub BindText(State As UIState) As UIFloatingActionButton
 	mTextState = State
 	If mTextState <> Null Then
 		If mTextState.IsInitialized Then
-			mText = StateText(mTextState.GetState)
+			mText = UIStateTextBinding.ToTextNumeric(mTextState.GetState)
 			mTextState.Subscribe(Me, "TextState_Changed")
 			If mParent <> Null Then
 				If mParent.IsInitialized Then Render
@@ -83,23 +83,13 @@ End Sub
 Private Sub TextState_Changed(State As UIState)
 	If State = Null Then Return
 	If State.IsInitialized = False Then Return
-	mText = StateText(State.GetState)
+	mText = UIStateTextBinding.ToTextNumeric(State.GetState)
 	Render
 End Sub
 
 ' Converts any state value to display text without relying on B4A type tests.
 ' UIState commonly contains Int values, which must not be parsed as Boolean.
-Private Sub StateText(Value As Object) As String
-	Dim valueText As String = ("" & Value).Trim
-	If IsNumber(valueText) Then
-		Dim number As Double = valueText
-		Dim groupingUsed As Boolean = False
-		If number = Floor(number) And Abs(number) < 1000000000000 Then
-			Return NumberFormat2(number, 0, 12, 0, groupingUsed)
-		End If
-	End If
-	Return valueText
-End Sub
+
 
 Public Sub BackgroundColor(c As Int) As UIFloatingActionButton
 	mBgColor = c
@@ -171,7 +161,7 @@ Public Sub Render
 	End If
 	If mTextState <> Null Then
 		If mTextState.IsInitialized Then
-			mText = StateText(mTextState.GetState)
+			mText = UIStateTextBinding.ToTextNumeric(mTextState.GetState)
 			mTextState.Subscribe(Me, "TextState_Changed")
 		End If
 	End If
@@ -200,50 +190,10 @@ Public Sub Render
 	mBaseView.TextSize = mTextSize
 	mBaseView.TextColor = mTextColor
     
-	SetRoundedRippleBackground(mBaseView)
+	UIRoundedSurface.ApplyRipple(mBaseView, mBgColor, mRadius, 0, 0, mTheme.RippleColor)
 End Sub
 
-' Applies the rounded FAB shape and preserves the pressed ripple state.
-' API 21+ uses RippleDrawable; older devices retain the rounded fallback.
-Private Sub SetRoundedRippleBackground(ButtonView As B4XView)
-	If ButtonView = Null Then Return
-	If ButtonView.IsInitialized = False Then Return
 
-	#If B4A
-	Dim nb As Button = ButtonView
-	Dim version As JavaObject
-	version.InitializeStatic("android.os.Build$VERSION")
-	Dim sdkInt As Int = version.GetField("SDK_INT")
-	If sdkInt < 21 Then
-		Dim fallback As ColorDrawable
-		fallback.Initialize2(mBgColor, mRadius, 0, 0)
-		nb.Background = fallback
-		Return
-	End If
-
-	Dim shape As JavaObject
-	shape.InitializeNewInstance("android.graphics.drawable.GradientDrawable", Null)
-	shape.RunMethod("setColor", Array(mBgColor))
-	Dim radiusFloat As Float = mRadius
-	shape.RunMethod("setCornerRadius", Array(radiusFloat))
-
-	Dim mask As JavaObject
-	mask.InitializeNewInstance("android.graphics.drawable.GradientDrawable", Null)
-	mask.RunMethod("setColor", Array(Colors.White))
-	mask.RunMethod("setCornerRadius", Array(radiusFloat))
-
-	Dim colorStateList As JavaObject
-	colorStateList.InitializeStatic("android.content.res.ColorStateList")
-	Dim rippleColor As JavaObject = colorStateList.RunMethodJO("valueOf", Array(mTheme.RippleColor))
-	Dim ripple As JavaObject
-	ripple.InitializeNewInstance("android.graphics.drawable.RippleDrawable", Array(rippleColor, shape, mask))
-	Dim nativeView As JavaObject = nb
-	nativeView.RunMethod("setBackground", Array(ripple))
-	#Else
-	' Desktop fallback: flat rounded background (no ripple dependency).
-	ButtonView.SetColorAndBorder(mBgColor, 0, 0, mRadius)
-	#End If
-End Sub
 
 Public Sub Detach
 	If mBaseView <> Null Then

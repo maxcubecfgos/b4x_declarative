@@ -86,7 +86,7 @@ Public Sub BindSelected(State As UIState) As UIRadioGroup
 	mSelectedState = State
 	If mSelectedState <> Null Then
 		If mSelectedState.IsInitialized Then
-			mSelectedValue = StateText(mSelectedState.GetState)
+			mSelectedValue = UIStateTextBinding.ToTextRaw(mSelectedState.GetState)
 			mSelectedState.Subscribe(Me, "SelectedState_Changed")
 			SelectValue(mSelectedValue, False)
 		End If
@@ -141,7 +141,7 @@ Public Sub Render
 	If mParent.IsInitialized = False Then Return
 	If mSelectedState <> Null Then
 		If mSelectedState.IsInitialized Then
-			mSelectedValue = StateText(mSelectedState.GetState)
+			mSelectedValue = UIStateTextBinding.ToTextRaw(mSelectedState.GetState)
 			mSelectedState.Subscribe(Me, "SelectedState_Changed")
 			SelectValue(mSelectedValue, False)
 		End If
@@ -210,14 +210,11 @@ End Sub
 Private Sub SelectedState_Changed(State As UIState)
 	If State = Null Then Return
 	If State.IsInitialized = False Then Return
-	mSelectedValue = StateText(State.GetState)
+	mSelectedValue = UIStateTextBinding.ToTextRaw(State.GetState)
 	SelectValue(mSelectedValue, False)
 End Sub
 
-Private Sub StateText(InputValue As Object) As String
-	If InputValue = Null Then Return ""
-	Return "" & InputValue
-End Sub
+
 
 Public Sub Unmount
 	For Each option As UIRadioButton In mOptions

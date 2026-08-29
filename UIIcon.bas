@@ -19,13 +19,13 @@ Sub Class_Globals
     Private mBaseView As B4XView
     Private mParent As B4XView
     Private mLeft, mTop, mWidth, mHeight As Int
-    Private mMeasureHost As B4XView
-    Private mMeasureCanvas As B4XCanvas
+    Private mMeasure As UIMeasureEngine
 End Sub
 
 ' Creates an icon widget using Material Icons by default.
 Public Sub Initialize As UIIcon
     mGlyph = ""
+    mMeasure.Initialize(xui)
     mFontKind = "material"
     Dim defaultTheme As UITheme
     defaultTheme.Initialize
@@ -217,7 +217,7 @@ Public Sub GetContentSize(MaxWidth As Int, MaxHeight As Int) As List
     Dim result As List
     result.Initialize
 
-    Dim cvs As B4XCanvas = MeasureEngine
+    Dim cvs As B4XCanvas = mMeasure.GetCanvas
     Dim r As B4XRect = cvs.MeasureText(mGlyph, IconFont)
     Dim textWidth As Float = r.Width
     Dim naturalWidth As Int = Max(32dip, textWidth + 8dip)
@@ -236,19 +236,3 @@ End Sub
 ' Returns the shared measurement engine. The host panel is never mounted,
 ' so measuring cannot affect any visible view (on B4J Initialize inserts
 ' the canvas as a child node of the host).
-Private Sub MeasureEngine As B4XCanvas
-    If mMeasureHost <> Null Then
-        If mMeasureHost.IsInitialized Then Return mMeasureCanvas
-    End If
-    mMeasureHost = xui.CreatePanel("")
-    #If B4A
-    Dim measureLp As JavaObject
-    measureLp.InitializeNewInstance("android.view.ViewGroup$LayoutParams", Array(2048, 512))
-    Dim measureHostJO As JavaObject = mMeasureHost
-    measureHostJO.RunMethod("setLayoutParams", Array(measureLp))
-    #End If
-    Dim cvs As B4XCanvas
-    cvs.Initialize(mMeasureHost)
-    mMeasureCanvas = cvs
-    Return mMeasureCanvas
-End Sub
